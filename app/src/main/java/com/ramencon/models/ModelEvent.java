@@ -1,4 +1,4 @@
-package com.ramencon.cache.skel;
+package com.ramencon.models;
 
 public class ModelEvent
 {

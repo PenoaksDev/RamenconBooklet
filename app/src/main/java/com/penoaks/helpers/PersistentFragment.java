@@ -1,8 +1,8 @@
-package com.penoaks.ui;
+package com.penoaks.helpers;
 
 import android.os.Bundle;
 
-public interface CryogenFragment
+public interface PersistentFragment
 {
 	void saveState(Bundle bundle);
 

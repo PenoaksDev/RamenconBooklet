@@ -13,9 +13,4 @@
         android:summary="When would you like a reminder before an event?"
         android:title="Event Reminder Delay"/>
 
-    <Preference
-        android:key="pref_download"
-        android:summary="Forcibly downloads the booklet data from servers"
-        android:title="Redownload Booklet Data"/>
-
 </PreferenceScreen>

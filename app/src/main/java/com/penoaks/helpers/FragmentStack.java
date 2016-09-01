@@ -1,4 +1,4 @@
-package com.penoaks.ui;
+package com.penoaks.helpers;
 
 import android.app.Fragment;
 import android.app.FragmentManager;
@@ -13,121 +13,6 @@ import java.util.Map;
 
 public class FragmentStack
 {
-	class FragmentSaveState
-	{
-		Class<? extends Fragment> clz;
-		Bundle state = new Bundle();
-		Fragment fragment;
-
-		public FragmentSaveState(Class<? extends Fragment> clz)
-		{
-			this.clz = clz;
-		}
-
-		public FragmentSaveState(Fragment fragment)
-		{
-			this.clz = fragment.getClass();
-			this.fragment = fragment;
-		}
-
-		public boolean isCurrent()
-		{
-			Fragment frag = mgr.findFragmentByTag(clz.getSimpleName());
-			return frag != null && frag.isVisible();
-		}
-
-		public void show(boolean withBack)
-		{
-			if (fragment == null)
-				init();
-			if (fragment.isVisible())
-				return;
-
-			// Instruct visible fragments to save state
-			for( FragmentSaveState state : states.values() )
-				if ( state.fragment != null && state.fragment.isVisible() )
-					state.saveState();
-
-			if ( state != null && !state.isEmpty() )
-				loadState();
-
-			FragmentTransaction trans = mgr.beginTransaction();
-			trans.replace(containerId, fragment, fragment.getClass().getSimpleName());
-			if (withBack)
-				trans.addToBackStack(null);
-			trans.commit();
-		}
-
-		public Bundle saveState()
-		{
-			if (fragment != null && fragment instanceof CryogenFragment)
-				((CryogenFragment) fragment).saveState(state);
-			// TODO Make other ways to save a fragment state
-
-			state.putSerializable("fragmentClass", clz);
-			return state;
-		}
-
-		public void loadState()
-		{
-			if (fragment != null && fragment instanceof CryogenFragment)
-				((CryogenFragment) fragment).loadState(state);
-			// TODO Make other ways to load a fragment state
-		}
-
-		private Fragment init()
-		{
-			return init(false);
-		}
-
-		private Fragment init(boolean force)
-		{
-			Log.i("APP", "Init " + clz.getSimpleName());
-
-			if (fragment != null && !force)
-				return fragment;
-
-			// Check FragmentManager for instance of fragment
-			Fragment instance = mgr.findFragmentByTag(clz.getSimpleName());
-
-			if ( instance != null )
-				Log.i("APP", "Fragment was loaded by FragmentManager");
-
-			if (instance == null)
-				try
-				{
-					Method method = clz.getMethod("instance");
-					if (method.getReturnType().isAssignableFrom(Fragment.class))
-					{
-						Fragment frag = (Fragment) method.invoke(null);
-
-						if (frag != null)
-							instance = frag;
-					}
-				}
-				catch (Exception e)
-				{
-					Log.e("APP", "Failed the invoke instance() method of fragment class [" + clz.getSimpleName() + "]");
-					e.printStackTrace();
-				}
-
-			if (instance == null)
-				try
-				{
-					Constructor constructor = clz.getConstructor();
-					instance = (Fragment) constructor.newInstance();
-				}
-				catch (Exception e)
-				{
-					Log.e("APP", "Failed to invoke a zero argument constructor in fragment class [" + clz.getSimpleName() + "]");
-					e.printStackTrace();
-				}
-
-			this.fragment = instance;
-			return instance;
-		}
-	}
-
 	private Map<Integer, Class<? extends Fragment>> registeredFragments = new HashMap<>();
 	private Map<String, FragmentSaveState> states = new HashMap<>();
 
@@ -252,5 +137,120 @@ public class FragmentStack
 			return; // Has this fragment already been made visible?
 
 		state.show(withBack);
+	}
+
+	class FragmentSaveState
+	{
+		Class<? extends Fragment> clz;
+		Bundle state = new Bundle();
+		Fragment fragment;
+
+		public FragmentSaveState(Class<? extends Fragment> clz)
+		{
+			this.clz = clz;
+		}
+
+		public FragmentSaveState(Fragment fragment)
+		{
+			this.clz = fragment.getClass();
+			this.fragment = fragment;
+		}
+
+		public boolean isCurrent()
+		{
+			Fragment frag = mgr.findFragmentByTag(clz.getSimpleName());
+			return frag != null && frag.isVisible();
+		}
+
+		public void show(boolean withBack)
+		{
+			if (fragment == null)
+				init();
+			if (fragment.isVisible())
+				return;
+
+			// Instruct visible fragments to save state
+			for (FragmentSaveState state : states.values())
+				if (state.fragment != null && state.fragment.isVisible())
+					state.saveState();
+
+			if (state != null && !state.isEmpty())
+				loadState();
+
+			FragmentTransaction trans = mgr.beginTransaction();
+			trans.replace(containerId, fragment, fragment.getClass().getSimpleName());
+			if (withBack)
+				trans.addToBackStack(null);
+			trans.commit();
+		}
+
+		public Bundle saveState()
+		{
+			if (fragment != null && fragment instanceof PersistentFragment)
+				((PersistentFragment) fragment).saveState(state);
+			// TODO Make other ways to save a fragment state
+
+			state.putSerializable("fragmentClass", clz);
+			return state;
+		}
+
+		public void loadState()
+		{
+			if (fragment != null && fragment instanceof PersistentFragment)
+				((PersistentFragment) fragment).loadState(state);
+			// TODO Make other ways to load a fragment state
+		}
+
+		private Fragment init()
+		{
+			return init(false);
+		}
+
+		private Fragment init(boolean force)
+		{
+			Log.i("APP", "Init " + clz.getSimpleName());
+
+			if (fragment != null && !force)
+				return fragment;
+
+			// Check FragmentManager for instance of fragment
+			Fragment instance = mgr.findFragmentByTag(clz.getSimpleName());
+
+			if (instance != null)
+				Log.i("APP", "Fragment was loaded by FragmentManager");
+
+			if (instance == null)
+				try
+				{
+					Method method = clz.getMethod("instance");
+					if (method.getReturnType().isAssignableFrom(Fragment.class))
+					{
+						Fragment frag = (Fragment) method.invoke(null);
+
+						if (frag != null)
+							instance = frag;
+					}
+				}
+				catch (Exception e)
+				{
+					Log.e("APP", "Failed the invoke instance() method of fragment class [" + clz.getSimpleName() + "]");
+					e.printStackTrace();
+				}
+
+			if (instance == null)
+				try
+				{
+					Constructor constructor = clz.getConstructor();
+					instance = (Fragment) constructor.newInstance();
+				}
+				catch (Exception e)
+				{
+					Log.e("APP", "Failed to invoke a zero argument constructor in fragment class [" + clz.getSimpleName() + "]");
+					e.printStackTrace();
+				}
+
+			this.fragment = instance;
+			return instance;
+		}
 	}
 }

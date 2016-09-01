@@ -1,4 +1,4 @@
-package com.penoaks;
+package com.penoaks.helpers;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;

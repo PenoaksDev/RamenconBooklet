@@ -1,6 +1,7 @@
 package com.ramencon.ui;
 
 import android.app.FragmentManager;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -13,22 +14,16 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.penoaks.ui.FragmentStack;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.penoaks.helpers.FragmentStack;
+import com.penoaks.helpers.DataManager;
 import com.ramencon.R;
-import com.ramencon.ui.schedule.ScheduleFragment;
 
-import org.acra.ACRA;
-import org.acra.config.ACRAConfiguration;
-import org.acra.config.ConfigurationBuilder;
-
-public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener
+public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, DataManager.OnDataListener
 {
 	public static HomeActivity instance;
-
 	public FragmentStack stacker;
-	// private long lastClick = 0;
-	// private int clickCount = 0;
-	// private Toast lastToast;
 
 	public HomeActivity()
 	{
@@ -36,7 +31,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 		stacker = new FragmentStack(getFragmentManager(), R.id.content_frame);
 
-		stacker.registerFragment(-1, DeveloperFragment.class);
 		stacker.registerFragment(R.id.nav_welcome, WelcomeFragment.class);
 		stacker.registerFragment(R.id.nav_schedule, ScheduleFragment.class);
 		// stacker.registerFragment(R.id.nav_exhibitors_guests, .class);
@@ -44,6 +38,15 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 		// stacker.registerFragment(R.id.nav_share, .class);
 		// stacker.registerFragment(R.id.nav_friends, .class);
 		stacker.registerFragment(R.id.nav_settings, SettingsFragment.class);
+
+		try
+		{
+			FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+		}
+		catch (Exception ignore)
+		{
+
+		}
 	}
 
 	@Override
@@ -102,46 +105,36 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 		navigationView.getMenu().getItem(0).setChecked(true);
 
-		/*
-		View header = navigationView.getHeaderView(0);
-		header.setOnClickListener(new View.OnClickListener()
-		{
-			@Override
-			public void onClick(View v)
-			{
-				if (lastClick - System.currentTimeMillis() < 1000)
-					clickCount++;
-				else
-					clickCount = 1;
-
-				lastClick = System.currentTimeMillis();
-
-				if (lastToast != null)
-					lastToast.cancel();
-
-				if (clickCount >= 7 && clickCount < 12)
-				{
-					lastToast = Toast.makeText(HomeActivity.this, (12 - clickCount) + " clicks until developer", Toast.LENGTH_SHORT);
-					lastToast.show();
-				}
-
-				if (clickCount == 12)
-					navigationView.getMenu().add(0, -1, 0, "Developer Tools").setIcon(R.drawable.ic_developer);
-			}
-		});
-		*/
-
 		if (savedInstanceState == null)
+		{
 			stacker.setFragment(LoadingFragment.class);
+			DataManager.instance().setListener(this).checkConnection();
+		}
 		else
 			stacker.loadInstanceState(savedInstanceState);
+	}
+
+	public void onConnected()
+	{
+		stacker.setFragmentById(R.id.nav_welcome);
+	}
+
+	public void onError(DatabaseError error)
+	{
+		startActivityForResult(new Intent(this, ErroredActivity.class).putExtra("errorMessage", error.getMessage()), 99);
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data)
+	{
+		if (requestCode == 99 && resultCode == RESULT_OK)
+			DataManager.instance().setListener(this).checkConnection();
 	}
 
 	@Override
 	protected void onSaveInstanceState(Bundle outState)
 	{
 		super.onSaveInstanceState(outState);
-
 		stacker.saveInstanceState(outState);
 	}
 
@@ -159,9 +152,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 	@Override
 	public boolean onNavigationItemSelected(MenuItem item)
 	{
-		// if (stacker.setFragmentById(item.getItemId()))
-		//	setTitle(item.getTitle());
-
 		stacker.setFragmentById(item.getItemId());
 
 		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

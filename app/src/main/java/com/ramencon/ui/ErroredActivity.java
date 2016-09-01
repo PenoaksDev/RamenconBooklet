@@ -23,22 +23,22 @@ public class ErroredActivity extends AppCompatActivity
 
 		Intent intent = getIntent();
 
-		if ( intent.hasExtra("errorMessage") )
+		if (intent.hasExtra("errorMessage"))
 		{
-			TextView msg = (TextView) findViewById( R.id.errored_msg );
+			TextView msg = (TextView) findViewById(R.id.errored_msg);
 
-			msg.setText( intent.getStringExtra( "errorMessage" ) );
+			msg.setText(intent.getStringExtra("errorMessage"));
 
 			generalException = true;
 		}
 
-		if( intent.hasExtra("exception") )
+		if (intent.hasExtra("exception"))
 		{
-			TextView msg = (TextView) findViewById( R.id.errored_msg );
+			TextView msg = (TextView) findViewById(R.id.errored_msg);
 
 			Exception e = (Exception) intent.getSerializableExtra("exception");
 
-			msg.setText( e.getMessage() );
+			msg.setText(e.getMessage());
 
 			generalException = true;
 		}
@@ -50,10 +50,8 @@ public class ErroredActivity extends AppCompatActivity
 			@Override
 			public void onClick(View v)
 			{
-				if ( generalException || Common.haveNetworkConnection())
-					startActivity(new Intent(activity, HomeActivity.class).putExtra("download", true));
-				else
-					Toast.makeText( activity, "We're sorry, it seems we are still having issues.", Toast.LENGTH_SHORT ).show();
+				setResult(RESULT_OK);
+				finish();
 			}
 		});
 	}

@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:gravity="center"
     android:orientation="horizontal"
-    tools:context=".ui.schedule.ScheduleFragment">
+    tools:context=".ui.ScheduleFragment">
 
     <ProgressBar
         android:id="@+id/progressBar"

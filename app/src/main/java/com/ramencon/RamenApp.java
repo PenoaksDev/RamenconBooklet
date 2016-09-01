@@ -3,6 +3,8 @@ package com.ramencon;
 import android.app.Application;
 import android.content.Context;
 
+import com.google.firebase.database.FirebaseDatabase;
+
 import org.acra.ACRA;
 import org.acra.annotation.ReportsCrashes;
 

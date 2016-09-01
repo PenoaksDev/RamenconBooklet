@@ -1,4 +1,4 @@
-package com.ramencon.ui.schedule;
+package com.ramencon.data.schedule;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -14,8 +14,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.ramencon.R;
-import com.ramencon.cache.skel.ModelEvent;
-import com.ramencon.cache.skel.ModelLocation;
+import com.ramencon.models.ModelEvent;
+import com.ramencon.models.ModelLocation;
+import com.ramencon.ui.ScheduleViewFragment;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
