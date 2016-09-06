@@ -21,7 +21,7 @@ public class ScheduleViewFragment extends Fragment
 {
 	public static ScheduleAdapter adapter;
 
-	public static ScheduleViewFragment newInstance(int id)
+	public static ScheduleViewFragment instance(int id)
 	{
 		Bundle bundle = new Bundle();
 		bundle.putInt("event", id);

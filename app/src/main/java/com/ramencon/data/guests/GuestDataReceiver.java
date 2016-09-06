@@ -15,7 +15,7 @@ public class GuestDataReceiver implements DataReceiver
 	@Override
 	public String getReferenceUri()
 	{
-		return null;
+		return "booklet-data/guests";
 	}
 
 	@Override
@@ -31,6 +31,6 @@ public class GuestDataReceiver implements DataReceiver
 		{
 		};
 
-		guests = data.child("guests").getValue(tGuests);
+		guests = data.getValue(tGuests);
 	}
 }

@@ -4,4 +4,14 @@
     <color name="colorPrimaryDark">#4CAF50</color>
     <color name="colorAccent">#ff4081</color>
     <color name="lighter_gray">#cccccc</color>
+
+    <color name="google">#dc4b38</color>
+    <color name="google_dark">#8f3124</color>
+    <color name="google_gray">#dc8479</color>
+    <color name="facebook">#527cbd</color>
+    <color name="facebook_dark">#314a70</color>
+    <color name="facebook_gray">#8a9ebd</color>
+    <color name="twitter">#76cdf0</color>
+    <color name="twitter_dark">#508ba3</color>
+    <color name="twitter_gray">#bee2f0</color>
 </resources>

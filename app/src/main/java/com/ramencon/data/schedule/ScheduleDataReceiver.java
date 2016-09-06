@@ -1,5 +1,7 @@
 package com.ramencon.data.schedule;
 
+import android.util.Log;
+
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.GenericTypeIndicator;
@@ -32,12 +34,14 @@ public class ScheduleDataReceiver implements DataReceiver
 	@Override
 	public String getReferenceUri()
 	{
-		return null;
+		return "booklet-data";
 	}
 
 	@Override
 	public void onCancelled(DatabaseError databaseError)
 	{
+		Log.i("APP", "Exception Details: (" + databaseError.getCode() + ") " + databaseError.getDetails());
+
 		throw databaseError.toException();
 	}
 
@@ -64,6 +68,8 @@ public class ScheduleDataReceiver implements DataReceiver
 		schedule = new TreeMap<>();
 		for (ModelEvent event : scheduleData)
 		{
+			event.resolveDataSnapshot();
+
 			try
 			{
 				Date epoch = format.parse(event.date + " " + event.time);

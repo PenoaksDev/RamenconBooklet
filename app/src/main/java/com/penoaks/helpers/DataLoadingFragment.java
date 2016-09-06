@@ -1,8 +1,8 @@
 package com.penoaks.helpers;
 
-import android.app.Fragment;
 import android.app.ProgressDialog;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,13 +23,7 @@ public abstract class DataLoadingFragment extends Fragment
 	}
 
 	@Override
-	public void onCreate(Bundle savedInstanceState)
-	{
-		super.onCreate(savedInstanceState);
-	}
-
-	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+	public final View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 	{
 		mDialog = new ProgressDialog(getActivity());
 		mDialog.setMessage("Loading Data...");
@@ -47,7 +41,7 @@ public abstract class DataLoadingFragment extends Fragment
 		handleDataReceiver();
 	}
 
-	private void handleDataReceiver()
+	private final void handleDataReceiver()
 	{
 		// Test that the prerequisites were met
 		// DataManager was provided, DataReceiver is set, and view was created
@@ -57,7 +51,7 @@ public abstract class DataLoadingFragment extends Fragment
 
 	public abstract View onPopulateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState);
 
-	public void onDataLoaded0(DataSnapshot dataSnapshot)
+	public final void onDataLoaded0(DataSnapshot dataSnapshot)
 	{
 		mDialog.cancel();
 		onDataLoaded(dataSnapshot);
@@ -65,7 +59,7 @@ public abstract class DataLoadingFragment extends Fragment
 
 	public abstract void onDataLoaded(DataSnapshot dataSnapshot);
 
-	public void onCancelled0(DatabaseError databaseError)
+	public final void onCancelled0(DatabaseError databaseError)
 	{
 		mDialog.cancel();
 		onCancelled(databaseError);

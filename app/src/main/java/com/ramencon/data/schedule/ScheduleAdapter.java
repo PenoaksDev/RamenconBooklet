@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.BaseExpandableListAdapter;
 import android.widget.ExpandableListAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -23,39 +24,29 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-public class ScheduleAdapter implements ExpandableListAdapter
+public class ScheduleAdapter extends BaseExpandableListAdapter
 {
 	public static final SimpleDateFormat DISPLAY_FORMAT_DATE = new SimpleDateFormat("MM/dd/yyyy");
 	public static final SimpleDateFormat DISPLAY_FORMAT_TIME12 = new SimpleDateFormat("hh:mm a");
 	public static final SimpleDateFormat DISPLAY_FORMAT_TIME24 = new SimpleDateFormat("HH:mm");
 
+	private LayoutInflater inflater = null;
 	private Context context;
+
 	public SimpleDateFormat dateFormat;
 	public SimpleDateFormat timeFormat;
-	private LayoutInflater inflater = null;
 	public List<ModelLocation> locations;
 	public List<ModelEvent> events;
 
 	public ScheduleAdapter(Context context, SimpleDateFormat dateFormat, SimpleDateFormat timeFormat, List<ModelLocation> locations, List<ModelEvent> events)
 	{
+		this.inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		this.context = context;
+
 		this.dateFormat = dateFormat;
 		this.timeFormat = timeFormat;
-		this.inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		this.locations = locations;
 		this.events = events;
-	}
-
-	@Override
-	public void registerDataSetObserver(DataSetObserver observer)
-	{
-
-	}
-
-	@Override
-	public void unregisterDataSetObserver(DataSetObserver observer)
-	{
-
 	}
 
 	@Override
@@ -103,7 +94,7 @@ public class ScheduleAdapter implements ExpandableListAdapter
 	@Override
 	public View getGroupView(final int position, boolean isExpanded, View convertView, ViewGroup parent)
 	{
-		View rowView = inflater.inflate(R.layout.listview_item, null);
+		View rowView = convertView == null ? inflater.inflate(R.layout.schedule_listitem, null) : convertView;
 
 		TextView tv_title = (TextView) rowView.findViewById(R.id.title);
 		TextView tv_time = (TextView) rowView.findViewById(R.id.time);
@@ -155,11 +146,11 @@ public class ScheduleAdapter implements ExpandableListAdapter
 	@Override
 	public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent)
 	{
-		View childView = inflater.inflate(R.layout.scheduleview_child, null);
+		View childView = convertView == null ? inflater.inflate(R.layout.schedule_listitem_child, null) : convertView;
 
 		TextView tv_description = (TextView) childView.findViewById(R.id.description);
 
-		ModelEvent event = events.get(groupPosition);
+		final ModelEvent event = events.get(groupPosition);
 
 		final ImageView iv_heart = (ImageView) childView.findViewById(R.id.heart);
 
@@ -170,7 +161,9 @@ public class ScheduleAdapter implements ExpandableListAdapter
 			@Override
 			public void onClick(final View v)
 			{
-				startPopAnimation(v, true);
+				event.setHearted(!v.isSelected());
+
+				startAnimation(v, true);
 			}
 		});
 
@@ -181,7 +174,7 @@ public class ScheduleAdapter implements ExpandableListAdapter
 			@Override
 			public void onClick(final View v)
 			{
-				startPopAnimation(v, false);
+				startAnimation(v, false);
 			}
 		});
 
@@ -190,9 +183,9 @@ public class ScheduleAdapter implements ExpandableListAdapter
 		return childView;
 	}
 
-	public void startPopAnimation(final View v, final boolean overpop)
+	public void startAnimation(final View v, final boolean overpop)
 	{
-		Animation pop = AnimationUtils.loadAnimation(context, R.anim.icon_shinkout);
+		Animation pop = AnimationUtils.loadAnimation(context, R.anim.icon_fadeout);
 
 		pop.setAnimationListener(new Animation.AnimationListener()
 		{
@@ -260,7 +253,7 @@ public class ScheduleAdapter implements ExpandableListAdapter
 	@Override
 	public boolean isEmpty()
 	{
-		return false;
+		return events.isEmpty();
 	}
 
 	@Override

@@ -1,6 +1,7 @@
 package com.ramencon.ui;
 
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -36,16 +37,24 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 	}
 
 	public DefaultScheduleFilter currentFilter = new DefaultScheduleFilter();
-
-	private Bundle savedState = null;
 	private ScheduleDayAdapter scheduleDayAdapter;
 	private ScheduleAdapter scheduleAdapter;
+
 	public ScheduleDataReceiver receiver = new ScheduleDataReceiver();
+	private Bundle savedState = null;
 
 	public ScheduleFragment()
 	{
 		instance = this;
 		setReceiver(receiver);
+	}
+
+	@Override
+	public void onCreate(@Nullable Bundle savedInstanceState)
+	{
+		super.onCreate(savedInstanceState);
+
+		getActivity().setTitle("Convention Schedule");
 	}
 
 	@Override
@@ -85,13 +94,13 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 	{
 		final View root = getView();
 
+		SwipeRefreshLayout refresher = (SwipeRefreshLayout) root.findViewById(R.id.schedule_refresher);
+		refresher.setOnRefreshListener(this);
+		refresher.setColorSchemeColors(R.color.colorPrimary, R.color.colorAccent, R.color.lighter_gray);
+		refresher.setRefreshing(false);
+
 		try
 		{
-			SwipeRefreshLayout refresher = (SwipeRefreshLayout) root.findViewById(R.id.schedule_refresher);
-			refresher.setOnRefreshListener(this);
-			refresher.setColorSchemeColors(R.color.colorPrimary, R.color.colorAccent, R.color.lighter_gray);
-			refresher.setRefreshing(false);
-
 			List<Date> days = receiver.sampleDays();
 
 			TwoWayView mDayView = (TwoWayView) root.findViewById(R.id.daylist);
@@ -121,7 +130,7 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 					e.printStackTrace();
 				}
 
-				selectedPosition = savedState.getInt("selectedPosition", 2);
+				selectedPosition = savedState.getInt("selectedPosition", 0);
 				data = receiver.filterRange(currentFilter);
 
 				if (savedState.getInt("listViewPosition", -1) > 0)

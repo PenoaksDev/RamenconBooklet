@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_vertical|start"
+    android:background="@color/material_grey_100">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Special Guests"
+        android:id="@+id/group_title"
+        android:layout_gravity="center_horizontal"
+        android:enabled="false"
+        android:editable="false"
+        android:textColor="#000000"
+        android:padding="8dp"
+        android:layout_marginLeft="20dp"/>
+</LinearLayout>

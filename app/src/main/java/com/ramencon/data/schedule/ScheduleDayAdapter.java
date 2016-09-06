@@ -40,7 +40,7 @@ public class ScheduleDayAdapter extends BaseAdapter
 	@Override
 	public int getCount()
 	{
-		return days.size() + 2;
+		return days.size() + 1;
 	}
 
 	@Override
@@ -58,7 +58,7 @@ public class ScheduleDayAdapter extends BaseAdapter
 	@Override
 	public View getView(final int position, View convertView, ViewGroup parent)
 	{
-		View view = inflater.inflate(R.layout.scheduleview_day, null);
+		View view = inflater.inflate(R.layout.scheduleday_listitem, null);
 
 		TextView dayName = (TextView) view.findViewById(R.id.day_name);
 		TextView dayNumber = (TextView) view.findViewById(R.id.day_number);
@@ -88,7 +88,8 @@ public class ScheduleDayAdapter extends BaseAdapter
 					try
 					{
 						DefaultScheduleFilter filter = ScheduleFragment.instance().currentFilter;
-						// filter.showHearted(true);
+						filter.reset();
+						filter.setHearted(DefaultScheduleFilter.TriStateList.SHOW);
 
 						adapter.selectedPosition = position;
 
@@ -101,44 +102,7 @@ public class ScheduleDayAdapter extends BaseAdapter
 						v.setBackgroundColor(0xFFff4081);
 
 						if (mDateDisplay != null)
-							mDateDisplay.setText("Favorited Events");
-					}
-					catch (ParseException e)
-					{
-						e.printStackTrace();
-					}
-				}
-			});
-		}
-		else if (position == 1)
-		{
-			dayName.setText("Alerts");
-			dayImage.setImageResource(R.drawable.ic_alarm);
-			dayImage.setVisibility(View.VISIBLE);
-			dayNumber.setVisibility(View.GONE);
-
-			view.setOnClickListener(new View.OnClickListener()
-			{
-				@Override
-				public void onClick(View v)
-				{
-					try
-					{
-						DefaultScheduleFilter filter = ScheduleFragment.instance().currentFilter;
-						// filter.showAlerts(true);
-
-						adapter.selectedPosition = position;
-
-						adapter.parent.loadList(ScheduleFragment.instance().receiver.filterRange(filter));
-
-						ViewGroup parent = (ViewGroup) v.getParent();
-						for (int i = 0; i < parent.getChildCount(); i++)
-							parent.getChildAt(i).setBackgroundColor(0x00000000);
-
-						v.setBackgroundColor(0xFFff4081);
-
-						if (mDateDisplay != null)
-							mDateDisplay.setText("Notification Events");
+							mDateDisplay.setText("Favorite Events");
 					}
 					catch (ParseException e)
 					{
@@ -149,7 +113,7 @@ public class ScheduleDayAdapter extends BaseAdapter
 		}
 		else
 		{
-			final Date day = days.get(position - 2);
+			final Date day = days.get(position - 1);
 
 			dayName.setText(Formatting.date("EEE", day));
 			dayNumber.setText(Formatting.date("d", day));
@@ -165,6 +129,7 @@ public class ScheduleDayAdapter extends BaseAdapter
 					try
 					{
 						DefaultScheduleFilter filter = ScheduleFragment.instance().currentFilter;
+						filter.reset();
 						filter.setMin(day.getTime());
 						filter.setMax(day.getTime() + (1440 * 60 * 1000)); // One Day
 

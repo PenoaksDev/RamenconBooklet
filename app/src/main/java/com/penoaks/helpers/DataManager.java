@@ -1,10 +1,16 @@
 package com.penoaks.helpers;
 
+import android.util.Log;
+
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.MutableData;
+import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
+import com.ramencon.ui.LoadingFragment;
 
 public class DataManager
 {
@@ -62,6 +68,7 @@ public class DataManager
 	{
 		String refUri = receiver.getReferenceUri();
 		DatabaseReference reference = refUri == null || refUri.isEmpty() ? FirebaseDatabase.getInstance().getReference() : FirebaseDatabase.getInstance().getReference(refUri);
+
 		reference.addListenerForSingleValueEvent(new ValueEventListener()
 		{
 			@Override

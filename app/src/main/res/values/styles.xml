@@ -11,12 +11,12 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="TwoWayView">
-        <item name="android:orientation">horizontal</item>
+    <style name="AppTheme.NoActionBar.Dark" parent="AppTheme.NoActionBar">
+        <item name="android:textColor">#ffffffff</item>
     </style>
 
-    <style name="menu_style">
-
+    <style name="TwoWayView">
+        <item name="android:orientation">horizontal</item>
     </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>

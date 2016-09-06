@@ -1,12 +1,13 @@
 package com.penoaks.helpers;
 
-import android.app.Fragment;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -118,14 +119,24 @@ public class FragmentStack
 
 	public void setFragment(Fragment fragment, boolean withBack)
 	{
+		setFragment(fragment, withBack, false);
+	}
+
+	/**
+	 * Existing fragment will get reused
+	 *
+	 * @param fragment The new fragment
+	 * @param withBack Allow back?
+	 * @param force    Replace existing fragment
+	 */
+	public void setFragment(Fragment fragment, boolean withBack, boolean force)
+	{
 		FragmentSaveState state;
 		if (states.containsKey(fragment.getClass().getSimpleName()))
 		{
 			state = states.get(fragment.getClass().getSimpleName());
-			if (state.fragment == null)
+			if (state.fragment == null || force)
 				state.fragment = fragment;
-			else if (state.fragment != fragment)
-				throw new RuntimeException("Double fragment instance detected!");
 		}
 		else
 		{
@@ -231,6 +242,10 @@ public class FragmentStack
 							instance = frag;
 					}
 				}
+				catch (InvocationTargetException e)
+				{
+					throw new RuntimeException("The fragment [" + clz.getName() + "] has thrown an exception.", e.getCause() == null ? e : e.getCause());
+				}
 				catch (Exception e)
 				{
 					Log.e("APP", "Failed the invoke instance() method of fragment class [" + clz.getSimpleName() + "]");
@@ -243,11 +258,18 @@ public class FragmentStack
 					Constructor constructor = clz.getConstructor();
 					instance = (Fragment) constructor.newInstance();
 				}
+				catch (InvocationTargetException e)
+				{
+					throw new RuntimeException("The fragment [" + clz.getName() + "] has thrown an exception.", e.getCause() == null ? e : e.getCause());
+				}
 				catch (Exception e)
 				{
 					Log.e("APP", "Failed to invoke a zero argument constructor in fragment class [" + clz.getSimpleName() + "]");
 					e.printStackTrace();
 				}
+
+			if (instance == null)
+				throw new RuntimeException("Failed to instigate the fragment [" + clz.getName() + "]");
 
 			this.fragment = instance;
 			return instance;
