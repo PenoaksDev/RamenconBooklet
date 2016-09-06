@@ -13,12 +13,8 @@ import com.google.firebase.database.DatabaseError;
 import com.penoaks.helpers.DataLoadingFragment;
 import com.penoaks.helpers.PersistentFragment;
 import com.ramencon.R;
-import com.ramencon.data.ListGroup;
 import com.ramencon.data.guests.GuestAdapter;
 import com.ramencon.data.guests.GuestDataReceiver;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class GuestFragment extends DataLoadingFragment implements PersistentFragment, SwipeRefreshLayout.OnRefreshListener
 {
@@ -45,7 +41,7 @@ public class GuestFragment extends DataLoadingFragment implements PersistentFrag
 	{
 		super.onCreate(savedInstanceState);
 
-		getActivity().setTitle("Guests");
+		getActivity().setTitle("Guests and Vendors");
 	}
 
 	@Override
@@ -64,13 +60,18 @@ public class GuestFragment extends DataLoadingFragment implements PersistentFrag
 		refresher.setColorSchemeColors(R.color.colorPrimary, R.color.colorAccent, R.color.lighter_gray);
 		refresher.setRefreshing(false);
 
-		List<ListGroup> list = new ArrayList<>();
+		ExpandableListView lv = ((ExpandableListView) root.findViewById(R.id.guests_listview));
+		lv.setAdapter(new GuestAdapter(getContext(), receiver.guests));
 
-		list.add(new ListGroup("Special Guests", receiver.guests));
-		list.add(new ListGroup("DJ Guests", receiver.guests));
-		list.add(new ListGroup("Cosplay Guests", receiver.guests));
+		if (savedState != null && !savedState.isEmpty())
+		{
+			lv.onRestoreInstanceState(savedState.getParcelable("listView"));
 
-		((ExpandableListView) root.findViewById(R.id.guests_listview)).setAdapter(new GuestAdapter(getContext(), list));
+			if (savedState.getInt("listViewPosition", -1) > 0)
+				lv.setVerticalScrollbarPosition(savedState.getInt("listViewPosition"));
+
+			savedState = null;
+		}
 	}
 
 	@Override
@@ -87,6 +88,13 @@ public class GuestFragment extends DataLoadingFragment implements PersistentFrag
 	{
 		if (getView() == null)
 			return;
+
+		ExpandableListView lv = (ExpandableListView) getView().findViewById(R.id.guests_listview);
+
+		bundle.putParcelable("listView", lv.onSaveInstanceState());
+
+		if (lv != null)
+			bundle.putInt("listViewPosition", lv.getFirstVisiblePosition());
 	}
 
 	@Override

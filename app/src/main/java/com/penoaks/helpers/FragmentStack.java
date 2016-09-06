@@ -40,11 +40,7 @@ public class FragmentStack
 	{
 		Bundle savedStates = new Bundle();
 		for (Map.Entry<String, FragmentSaveState> es : states.entrySet())
-		{
-			Bundle save = es.getValue().saveState();
-			Log.i("APP", "Storing Long-term " + es.getKey() + " -> " + save);
-			savedStates.putBundle(es.getKey(), save);
-		}
+			savedStates.putBundle(es.getKey(), es.getValue().saveState());
 		state.putBundle("savedStates", savedStates);
 	}
 
@@ -57,8 +53,6 @@ public class FragmentStack
 			{
 				if (!states.containsKey(key))
 				{
-					Log.i("APP", "Restoring Long-term " + key + " -> " + savedStates.getBundle(key));
-
 					Bundle bundle = savedStates.getBundle(key);
 
 					FragmentSaveState save = new FragmentSaveState((Class<? extends Fragment>) bundle.getSerializable("fragmentClass"));
@@ -202,11 +196,16 @@ public class FragmentStack
 			// TODO Make other ways to save a fragment state
 
 			state.putSerializable("fragmentClass", clz);
+
+			Log.i("APP", "Storing " + fragment.getClass().getSimpleName() + " -> " + state);
+
 			return state;
 		}
 
 		public void loadState()
 		{
+			Log.i("APP", "Loading " + fragment.getClass().getSimpleName() + " -> " + state);
+
 			if (fragment != null && fragment instanceof PersistentFragment)
 				((PersistentFragment) fragment).loadState(state);
 			// TODO Make other ways to load a fragment state

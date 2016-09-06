@@ -15,11 +15,18 @@ public abstract class DataLoadingFragment extends Fragment
 	private boolean viewCreated = false;
 	private DataReceiver receiver = null;
 	private ProgressDialog mDialog;
+	private boolean autoLoadData = true;
+
+	public void setAutoLoadData(boolean autoLoadData)
+	{
+		this.autoLoadData = autoLoadData;
+	}
 
 	public void setReceiver(DataReceiver receiver)
 	{
 		this.receiver = receiver;
-		handleDataReceiver();
+		if (autoLoadData)
+			handleDataReceiver();
 	}
 
 	@Override
@@ -31,7 +38,8 @@ public abstract class DataLoadingFragment extends Fragment
 		mDialog.show();
 
 		viewCreated = true;
-		handleDataReceiver();
+		if (autoLoadData)
+			handleDataReceiver();
 
 		return onPopulateView(inflater, container, savedInstanceState);
 	}

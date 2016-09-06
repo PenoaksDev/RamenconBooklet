@@ -2,7 +2,6 @@ package com.ramencon.data.schedule;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.database.DataSetObserver;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,13 +9,12 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.BaseExpandableListAdapter;
-import android.widget.ExpandableListAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.ramencon.R;
-import com.ramencon.models.ModelEvent;
-import com.ramencon.models.ModelLocation;
+import com.ramencon.data.models.ModelEvent;
+import com.ramencon.data.models.ModelLocation;
 import com.ramencon.ui.ScheduleViewFragment;
 
 import java.text.ParseException;

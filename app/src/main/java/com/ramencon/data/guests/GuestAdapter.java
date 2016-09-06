@@ -3,7 +3,6 @@ package com.ramencon.data.guests;
 import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,12 +12,10 @@ import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 import com.ramencon.R;
 import com.ramencon.data.ListGroup;
-import com.ramencon.data.ui.GuestViewFragment;
-import com.ramencon.models.ModelGuest;
+import com.ramencon.data.models.ModelGuest;
+import com.ramencon.ui.GuestViewFragment;
 import com.ramencon.ui.HomeActivity;
 import com.squareup.picasso.Picasso;
 
@@ -29,15 +26,12 @@ public class GuestAdapter extends BaseExpandableListAdapter
 	private LayoutInflater inflater = null;
 	private Context context;
 
-	private StorageReference storageReference;
 	private List<ListGroup> list;
 
 	public GuestAdapter(Context context, List<ListGroup> list)
 	{
 		this.inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		this.context = context;
-
-		storageReference = FirebaseStorage.getInstance().getReferenceFromUrl("gs://ramencon-booklet.appspot.com");
 
 		assert list != null;
 		this.list = list;
@@ -54,7 +48,8 @@ public class GuestAdapter extends BaseExpandableListAdapter
 	@Override
 	public int getChildrenCount(int groupPosition)
 	{
-		return list.get(groupPosition).children.size();
+		List<ModelGuest> guests = list.get(groupPosition).children;
+		return guests == null ? 0 : guests.size();
 	}
 
 	@Override
@@ -87,11 +82,6 @@ public class GuestAdapter extends BaseExpandableListAdapter
 		return false;
 	}
 
-	public ModelGuest getModelGuest(int groupPosition, int childPosition)
-	{
-		return list.get(groupPosition).children.get(childPosition);
-	}
-
 	@Override
 	public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent)
 	{
@@ -107,12 +97,13 @@ public class GuestAdapter extends BaseExpandableListAdapter
 	{
 		View listItemView = convertView == null ? inflater.inflate(R.layout.guest_listitem, null) : convertView;
 
-		final ModelGuest guest = getModelGuest(groupPosition, childPosition);
+		ListGroup listGroup = list.get(groupPosition);
+		final ModelGuest guest = listGroup.children.get(childPosition);
 
 		final ImageView iv_thumbnail = (ImageView) listItemView.findViewById(R.id.guest_thumbnail);
 		final TextView tv_title = (TextView) listItemView.findViewById(R.id.guest_title);
 
-		storageReference.child("images/guests/" + guest.image).getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>()
+		HomeActivity.storageReference.child("images/guests/" + listGroup.id + "/" + guest.image).getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>()
 		{
 			@Override
 			public void onComplete(@NonNull Task<Uri> task)
@@ -142,5 +133,10 @@ public class GuestAdapter extends BaseExpandableListAdapter
 	public boolean isChildSelectable(int groupPosition, int childPosition)
 	{
 		return true;
+	}
+
+	public ListGroup getListGroup(int groupPosition)
+	{
+		return list.get(groupPosition);
 	}
 }

@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.ramencon.R;
-import com.ramencon.models.ModelEvent;
+import com.ramencon.data.models.ModelEvent;
 import com.ramencon.data.schedule.ScheduleAdapter;
 
 import java.text.ParseException;

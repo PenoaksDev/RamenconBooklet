@@ -13,13 +13,9 @@
             android:icon="@drawable/ic_menu_schedule"
             android:title="Schedule"/>
         <item
-            android:id="@+id/nav_exhibitors"
+            android:id="@+id/nav_guests_vendors"
             android:icon="@drawable/ic_menu_exhibitors_guests"
-            android:title="Exhibitors"/>
-        <item
-            android:id="@+id/nav_guests"
-            android:icon="@drawable/ic_menu_exhibitors_guests"
-            android:title="Guests"/>
+            android:title="Guests and Vendors"/>
         <item
             android:id="@+id/nav_maps"
             android:icon="@drawable/ic_menu_map"

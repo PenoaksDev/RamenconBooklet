@@ -4,13 +4,15 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.penoaks.helpers.DataReceiver;
-import com.ramencon.models.ModelGuest;
+import com.ramencon.data.ListGroup;
+import com.ramencon.data.models.ModelGuest;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class GuestDataReceiver implements DataReceiver
 {
-	public List<ModelGuest> guests;
+	public List<ListGroup> guests = new ArrayList<>();
 
 	@Override
 	public String getReferenceUri()
@@ -31,6 +33,9 @@ public class GuestDataReceiver implements DataReceiver
 		{
 		};
 
-		guests = data.getValue(tGuests);
+		guests = new ArrayList<>();
+
+		for (DataSnapshot child : data.getChildren())
+			guests.add(new ListGroup(child.child("id").getValue(String.class), child.child("title").getValue(String.class), child.child("data") == null || !child.child("data").hasChildren() ? new ArrayList<ModelGuest>() : child.child("data").getValue(tGuests)));
 	}
 }

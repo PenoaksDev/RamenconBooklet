@@ -7,9 +7,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.penoaks.helpers.DataReceiver;
 import com.ramencon.data.schedule.filters.ScheduleFilter;
-import com.ramencon.models.ModelEvent;
-import com.ramencon.models.ModelLocation;
-import com.ramencon.ui.ScheduleFragment;
+import com.ramencon.data.models.ModelEvent;
+import com.ramencon.data.models.ModelLocation;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

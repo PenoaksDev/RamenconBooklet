@@ -1,6 +1,6 @@
 package com.ramencon.data.schedule.filters;
 
-import com.ramencon.models.ModelEvent;
+import com.ramencon.data.models.ModelEvent;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 

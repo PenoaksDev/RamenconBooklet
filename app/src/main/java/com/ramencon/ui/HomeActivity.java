@@ -18,12 +18,16 @@ import android.widget.TextView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.penoaks.helpers.DataManager;
 import com.penoaks.helpers.FragmentStack;
 import com.ramencon.R;
 
 public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, DataManager.OnDataListener
 {
+	public final static StorageReference storageReference = FirebaseStorage.getInstance().getReferenceFromUrl("gs://ramencon-booklet.appspot.com");
+
 	public static HomeActivity instance;
 	public FragmentStack stacker;
 
@@ -35,12 +39,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 		stacker.registerFragment(R.id.nav_welcome, WelcomeFragment.class);
 		stacker.registerFragment(R.id.nav_schedule, ScheduleFragment.class);
-		stacker.registerFragment(R.id.nav_exhibitors, ExhibitorFragment.class);
-		stacker.registerFragment(R.id.nav_guests, GuestFragment.class);
-		// stacker.registerFragment(R.id.nav_maps, .class);
-
+		stacker.registerFragment(R.id.nav_guests_vendors, GuestFragment.class);
+		stacker.registerFragment(R.id.nav_maps, MapsFragment.class);
 		// stacker.registerFragment(R.id.nav_friends, FriendsFragment.class);
-
 		stacker.registerFragment(R.id.nav_settings, SettingsFragment.class);
 		// stacker.registerFragment(R.id.nav_share, .class);
 

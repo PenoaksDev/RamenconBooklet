@@ -18,7 +18,7 @@ import com.ramencon.data.schedule.ScheduleAdapter;
 import com.ramencon.data.schedule.ScheduleDataReceiver;
 import com.ramencon.data.schedule.ScheduleDayAdapter;
 import com.ramencon.data.schedule.filters.DefaultScheduleFilter;
-import com.ramencon.models.ModelEvent;
+import com.ramencon.data.models.ModelEvent;
 
 import org.lucasr.twowayview.TwoWayView;
 
