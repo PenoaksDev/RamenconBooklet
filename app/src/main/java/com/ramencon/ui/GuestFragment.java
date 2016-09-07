@@ -52,14 +52,11 @@ public class GuestFragment extends DataLoadingFragment implements PersistentFrag
 	}
 
 	@Override
-	protected void onDataEvent(DataReceiver.DataEvent event, DataSnapshot dataSnapshot)
+	public void onDataReceived(DataSnapshot dataSnapshot, boolean isUpdate)
 	{
+		if (isUpdate)
+			return;
 
-	}
-
-	@Override
-	public void onDataReceived(DataSnapshot dataSnapshot)
-	{
 		final View root = getView();
 
 		SwipeRefreshLayout refresher = (SwipeRefreshLayout) root.findViewById(R.id.guests_refresher);
@@ -74,8 +71,8 @@ public class GuestFragment extends DataLoadingFragment implements PersistentFrag
 		{
 			lv.onRestoreInstanceState(savedState.getParcelable("listView"));
 
-			if (savedState.getInt("listViewPosition", -1) > 0)
-				lv.setVerticalScrollbarPosition(savedState.getInt("listViewPosition"));
+			if (savedState.getInt("listViewPositionVisible", -1) > 0)
+				lv.setSelectionFromTop(savedState.getInt("listViewPositionVisible", 0), savedState.getInt("listViewPositionOffset", 0));
 
 			savedState = null;
 		}
@@ -98,10 +95,12 @@ public class GuestFragment extends DataLoadingFragment implements PersistentFrag
 
 		ExpandableListView lv = (ExpandableListView) getView().findViewById(R.id.guests_listview);
 
-		bundle.putParcelable("listView", lv.onSaveInstanceState());
-
 		if (lv != null)
-			bundle.putInt("listViewPosition", lv.getFirstVisiblePosition());
+		{
+			bundle.putParcelable("listView", lv.onSaveInstanceState());
+			bundle.putInt("listViewPositionVisible", lv.getFirstVisiblePosition());
+			bundle.putInt("listViewPositionOffset", lv.getChildAt(0) == null ? 0 : lv.getChildAt(0).getTop() - lv.getPaddingTop());
+		}
 	}
 
 	@Override

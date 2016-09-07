@@ -64,8 +64,6 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 		super.onCreate(savedInstanceState);
 
 		getActivity().setTitle("Maps and Locations");
-
-		setAutoLoadData(false);
 	}
 
 	@Override
@@ -75,14 +73,11 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 	}
 
 	@Override
-	protected void onDataEvent(DataReceiver.DataEvent event, DataSnapshot dataSnapshot)
+	public void onDataReceived(DataSnapshot dataSnapshot, boolean isUpdate)
 	{
+		if (isUpdate)
+			return;
 
-	}
-
-	@Override
-	public void onDataReceived(DataSnapshot dataSnapshot)
-	{
 		View root = getView();
 
 		if (savedState != null)

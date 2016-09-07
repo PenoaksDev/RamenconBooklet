@@ -69,7 +69,10 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 		bundle.putString("filter", DefaultScheduleFilter.getAdapter().toJson(currentFilter));
 
 		if (lv != null)
-			bundle.putInt("listViewPosition", lv.getFirstVisiblePosition());
+		{
+			bundle.putInt("listViewPositionVisible", lv.getFirstVisiblePosition());
+			bundle.putInt("listViewPositionOffset", lv.getChildAt(0) == null ? 0 : lv.getChildAt(0).getTop() - lv.getPaddingTop());
+		}
 
 		if (scheduleDayAdapter != null)
 			bundle.putInt("selectedPosition", scheduleDayAdapter.getSelectedPosition());
@@ -91,8 +94,11 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 	}
 
 	@Override
-	public void onDataReceived(DataSnapshot dataSnapshot)
+	public void onDataReceived(DataSnapshot dataSnapshot, boolean isUpdate)
 	{
+		if (isUpdate)
+			return;
+
 		final View root = getView();
 
 		SwipeRefreshLayout refresher = (SwipeRefreshLayout) root.findViewById(R.id.schedule_refresher);
@@ -111,7 +117,8 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 
 			int selectedPosition = 2;
 			List<ModelEvent> data = null;
-			int scrollTo = -1;
+			int positionVisible = 0;
+			int positionOffset = 0;
 
 			if (savedState == null || savedState.isEmpty())
 			{
@@ -134,8 +141,8 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 				selectedPosition = savedState.getInt("selectedPosition", 0);
 				data = receiver.filterRange(currentFilter);
 
-				if (savedState.getInt("listViewPosition", -1) > 0)
-					scrollTo = savedState.getInt("listViewPosition");
+				positionVisible = savedState.getInt("listViewPositionVisible", 0);
+				positionOffset = savedState.getInt("listViewPositionOffset", 0);
 
 				savedState = null;
 			}
@@ -146,8 +153,8 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 			scheduleAdapter = new ScheduleAdapter(getActivity(), receiver.simpleDateFormat(), receiver.simpleTimeFormat(), receiver.locations, data);
 			lv.setAdapter(scheduleAdapter);
 
-			if (scrollTo > 0)
-				lv.setVerticalScrollbarPosition(scrollTo);
+			if (positionVisible > 0)
+				lv.setSelectionFromTop(positionVisible, positionOffset);
 		}
 		catch (ParseException e)
 		{
@@ -159,12 +166,6 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 	public View onPopulateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 	{
 		return inflater.inflate(R.layout.fragment_schedule, container, false);
-	}
-
-	@Override
-	protected void onDataEvent(DataReceiver.DataEvent event, DataSnapshot dataSnapshot)
-	{
-
 	}
 
 	@Override

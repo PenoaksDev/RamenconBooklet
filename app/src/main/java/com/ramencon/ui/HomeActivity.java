@@ -2,6 +2,7 @@ package com.ramencon.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
@@ -15,6 +16,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
@@ -44,15 +46,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 		// stacker.registerFragment(R.id.nav_friends, FriendsFragment.class);
 		stacker.registerFragment(R.id.nav_settings, SettingsFragment.class);
 		// stacker.registerFragment(R.id.nav_share, .class);
-
-		try
-		{
-			FirebaseDatabase.getInstance().setPersistenceEnabled(true);
-		}
-		catch (Exception ignore)
-		{
-
-		}
 	}
 
 	@Override
@@ -62,6 +55,26 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 		setContentView(R.layout.activity_home);
 
 		Log.i("APP", "HomeActivity.onCreate() (" + hashCode() + ") " + savedInstanceState);
+
+
+		try
+		{
+			if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean("pref_cache", false))
+			{
+				Log.i("APP", "Data Caching is Enabled.");
+				if (!FirebaseApp.getApps(this).isEmpty())
+					FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+			}
+			else
+			{
+				Log.i("APP", "Data Caching is Disabled.");
+				// FirebaseDatabase.getInstance().setPersistenceEnabled(false);
+			}
+		}
+		catch (Exception ignore)
+		{
+			ignore.printStackTrace();
+		}
 
 		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 		assert toolbar != null;

@@ -15,7 +15,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-public abstract class DataLoadingFragment extends Fragment implements ChildEventListener, ValueEventListener
+public abstract class DataLoadingFragment extends Fragment implements ValueEventListener
 {
 	private boolean viewCreated = false;
 	private DataReceiver receiver = null;
@@ -63,17 +63,13 @@ public abstract class DataLoadingFragment extends Fragment implements ChildEvent
 
 			waiting = true;
 
-			if ( mDatabaseReference != null )
-			{
-				mDatabaseReference.removeEventListener((ChildEventListener) this);
-				mDatabaseReference.removeEventListener((ValueEventListener) this);
-			}
+			if (mDatabaseReference != null)
+				mDatabaseReference.removeEventListener(this);
 
 			String refUri = receiver.getReferenceUri();
 			mDatabaseReference = refUri == null || refUri.isEmpty() ? FirebaseDatabase.getInstance().getReference() : FirebaseDatabase.getInstance().getReference(refUri);
 
 			mDatabaseReference.addValueEventListener(this);
-			mDatabaseReference.addChildEventListener(this);
 		}
 	}
 
@@ -82,38 +78,19 @@ public abstract class DataLoadingFragment extends Fragment implements ChildEvent
 	{
 		super.onDestroyView();
 
-		mDatabaseReference.removeEventListener((ChildEventListener) this);
-		mDatabaseReference.removeEventListener((ValueEventListener) this);
-	}
-
-	@Override
-	public void onChildAdded(DataSnapshot dataSnapshot, String s)
-	{
-		onDataEvent0( DataReceiver.DataEvent.CHILD_ADDED, dataSnapshot );
-	}
-
-	@Override
-	public void onChildChanged(DataSnapshot dataSnapshot, String s)
-	{
-		onDataEvent0( DataReceiver.DataEvent.CHILD_CHANGED, dataSnapshot );
-	}
-
-	@Override
-	public void onChildRemoved(DataSnapshot dataSnapshot)
-	{
-		onDataEvent0( DataReceiver.DataEvent.CHILD_REMOVED, dataSnapshot );
-	}
-
-	@Override
-	public void onChildMoved(DataSnapshot dataSnapshot, String s)
-	{
-		onDataEvent0( DataReceiver.DataEvent.CHILD_MOVED, dataSnapshot );
+		mDatabaseReference.removeEventListener(this);
 	}
 
 	@Override
 	public void onDataChange(DataSnapshot dataSnapshot)
 	{
-		onDataEvent0( DataReceiver.DataEvent.CHANGED, dataSnapshot );
+		mDialog.cancel();
+
+		Log.i("APP", "Data Event: " + waiting);
+
+		receiver.onDataReceived(dataSnapshot, !waiting);
+		onDataReceived(dataSnapshot, !waiting);
+		waiting = false;
 	}
 
 	@Override
@@ -122,25 +99,6 @@ public abstract class DataLoadingFragment extends Fragment implements ChildEvent
 		mDialog.cancel();
 		receiver.onDataError(databaseError);
 		onDataError(databaseError);
-	}
-
-	public void onDataEvent0(DataReceiver.DataEvent event, DataSnapshot dataSnapshot)
-	{
-		mDialog.cancel();
-
-		Log.i("APP", "Data Event: " + waiting + " " + event.name());
-
-		if ( waiting )
-		{
-			waiting = false;
-			receiver.onDataReceived(dataSnapshot);
-			onDataReceived(dataSnapshot);
-		}
-		else
-		{
-			receiver.onDataEvent(event, dataSnapshot);
-			onDataEvent(event, dataSnapshot);
-		}
 	}
 
 	/**
@@ -155,19 +113,12 @@ public abstract class DataLoadingFragment extends Fragment implements ChildEvent
 	protected abstract View onPopulateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState);
 
 	/**
-	 * Called when something changes in the remote real-time database
+	 * Called when data is received
 	 *
-	 * @param event
-	 * @param dataSnapshot
+	 * @param dataSnapshot The Data Snapshot
+	 * @param isUpdate Was this appended update
 	 */
-	protected abstract void onDataEvent(DataReceiver.DataEvent event, DataSnapshot dataSnapshot);
-
-	/**
-	 * Called when data is being waited on. First load.
-	 *
-	 * @param dataSnapshot
-	 */
-	protected abstract void onDataReceived(DataSnapshot dataSnapshot);
+	protected abstract void onDataReceived(DataSnapshot dataSnapshot, boolean isUpdate);
 
 	/**
 	 * Called when a DatabaseError is encountered

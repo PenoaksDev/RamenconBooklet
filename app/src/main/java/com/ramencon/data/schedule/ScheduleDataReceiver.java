@@ -45,8 +45,11 @@ public class ScheduleDataReceiver implements DataReceiver
 	}
 
 	@Override
-	public void onDataReceived(DataSnapshot data)
+	public void onDataReceived(DataSnapshot data, boolean isUpdate)
 	{
+		if ( isUpdate )
+			return;
+
 		String dateFormat = data.child("dateFormat").getValue(String.class);
 		String timeFormat = data.child("timeFormat").getValue(String.class);
 
@@ -79,12 +82,6 @@ public class ScheduleDataReceiver implements DataReceiver
 
 			}
 		}
-	}
-
-	@Override
-	public void onDataEvent(DataEvent event, DataSnapshot dataSnapshot)
-	{
-
 	}
 
 	public SimpleDateFormat simpleDateFormat()
