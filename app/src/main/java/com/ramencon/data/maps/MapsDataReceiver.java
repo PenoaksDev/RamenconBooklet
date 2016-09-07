@@ -19,17 +19,23 @@ public class MapsDataReceiver implements DataReceiver
 	}
 
 	@Override
-	public void onCancelled(DatabaseError databaseError)
-	{
-
-	}
-
-	@Override
 	public void onDataReceived(DataSnapshot dataSnapshot)
 	{
 		maps.clear();
 
 		for (DataSnapshot d : dataSnapshot.getChildren())
 			maps.add(d.getValue(ModelMap.class));
+	}
+
+	@Override
+	public void onDataEvent(DataEvent event, DataSnapshot dataSnapshot)
+	{
+
+	}
+
+	@Override
+	public void onDataError(DatabaseError databaseError)
+	{
+
 	}
 }

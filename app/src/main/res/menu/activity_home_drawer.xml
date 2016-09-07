@@ -21,10 +21,6 @@
             android:icon="@drawable/ic_menu_map"
             android:title="Maps and Locations"/>
         <item
-            android:id="@+id/nav_gallery"
-            android:icon="@drawable/ic_menu_gallery"
-            android:title="Photo Gallery"/>
-        <item
             android:id="@+id/nav_friends"
             android:icon="@drawable/ic_menu_friends"
             android:title="Check-in with Friends"/>

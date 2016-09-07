@@ -3,6 +3,7 @@ package com.ramencon.data.guests;
 import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +21,8 @@ import com.ramencon.ui.HomeActivity;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
+
+import pl.droidsonroids.gif.GifTextView;
 
 public class GuestAdapter extends BaseExpandableListAdapter
 {
@@ -97,23 +100,29 @@ public class GuestAdapter extends BaseExpandableListAdapter
 	{
 		View listItemView = convertView == null ? inflater.inflate(R.layout.guest_listitem, null) : convertView;
 
-		ListGroup listGroup = list.get(groupPosition);
+		final ListGroup listGroup = list.get(groupPosition);
 		final ModelGuest guest = listGroup.children.get(childPosition);
 
 		final ImageView iv_thumbnail = (ImageView) listItemView.findViewById(R.id.guest_thumbnail);
 		final TextView tv_title = (TextView) listItemView.findViewById(R.id.guest_title);
 
-		HomeActivity.storageReference.child("images/guests/" + listGroup.id + "/" + guest.image).getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>()
-		{
-			@Override
-			public void onComplete(@NonNull Task<Uri> task)
+		if (listGroup.resolvedImages.containsKey(guest.id))
+			Picasso.with(context).load(listGroup.resolvedImages.get(guest.id)).into(iv_thumbnail);
+		else
+			HomeActivity.storageReference.child("images/guests/" + listGroup.id + "/" + guest.image).getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>()
 			{
-				if (task.isSuccessful())
-					Picasso.with(context).load(task.getResult()).into(iv_thumbnail);
-				else
-					iv_thumbnail.setImageResource(R.drawable.error);
-			}
-		});
+				@Override
+				public void onComplete(@NonNull Task<Uri> task)
+				{
+					if (task.isSuccessful())
+					{
+						listGroup.resolvedImages.put(guest.id, task.getResult());
+						Picasso.with(context).load(task.getResult()).into(iv_thumbnail);
+					}
+					else
+						iv_thumbnail.setImageResource(R.drawable.error);
+				}
+			});
 
 		tv_title.setText(guest.title);
 

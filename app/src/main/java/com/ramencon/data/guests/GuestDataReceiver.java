@@ -21,12 +21,6 @@ public class GuestDataReceiver implements DataReceiver
 	}
 
 	@Override
-	public void onCancelled(DatabaseError databaseError)
-	{
-
-	}
-
-	@Override
 	public void onDataReceived(DataSnapshot data)
 	{
 		GenericTypeIndicator<List<ModelGuest>> tGuests = new GenericTypeIndicator<List<ModelGuest>>()
@@ -37,5 +31,17 @@ public class GuestDataReceiver implements DataReceiver
 
 		for (DataSnapshot child : data.getChildren())
 			guests.add(new ListGroup(child.child("id").getValue(String.class), child.child("title").getValue(String.class), child.child("data") == null || !child.child("data").hasChildren() ? new ArrayList<ModelGuest>() : child.child("data").getValue(tGuests)));
+	}
+
+	@Override
+	public void onDataEvent(DataEvent event, DataSnapshot dataSnapshot)
+	{
+
+	}
+
+	@Override
+	public void onDataError(DatabaseError databaseError)
+	{
+
 	}
 }

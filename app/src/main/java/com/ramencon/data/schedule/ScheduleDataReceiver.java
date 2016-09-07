@@ -37,7 +37,7 @@ public class ScheduleDataReceiver implements DataReceiver
 	}
 
 	@Override
-	public void onCancelled(DatabaseError databaseError)
+	public void onDataError(DatabaseError databaseError)
 	{
 		Log.i("APP", "Exception Details: (" + databaseError.getCode() + ") " + databaseError.getDetails());
 
@@ -79,6 +79,12 @@ public class ScheduleDataReceiver implements DataReceiver
 
 			}
 		}
+	}
+
+	@Override
+	public void onDataEvent(DataEvent event, DataSnapshot dataSnapshot)
+	{
+
 	}
 
 	public SimpleDateFormat simpleDateFormat()

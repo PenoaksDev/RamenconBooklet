@@ -12,6 +12,7 @@ import android.widget.TextView;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.penoaks.helpers.DataLoadingFragment;
+import com.penoaks.helpers.DataReceiver;
 import com.penoaks.helpers.PersistentFragment;
 import com.ramencon.R;
 import com.ramencon.data.schedule.ScheduleAdapter;
@@ -90,7 +91,7 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 	}
 
 	@Override
-	public void onDataLoaded(DataSnapshot dataSnapshot)
+	public void onDataReceived(DataSnapshot dataSnapshot)
 	{
 		final View root = getView();
 
@@ -161,7 +162,13 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 	}
 
 	@Override
-	public void onCancelled(DatabaseError databaseError)
+	protected void onDataEvent(DataReceiver.DataEvent event, DataSnapshot dataSnapshot)
+	{
+
+	}
+
+	@Override
+	public void onDataError(DatabaseError databaseError)
 	{
 		throw databaseError.toException();
 	}

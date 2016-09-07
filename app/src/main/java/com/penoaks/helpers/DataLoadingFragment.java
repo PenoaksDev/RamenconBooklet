@@ -3,26 +3,33 @@ package com.penoaks.helpers;
 import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
-public abstract class DataLoadingFragment extends Fragment
+public abstract class DataLoadingFragment extends Fragment implements ChildEventListener, ValueEventListener
 {
 	private boolean viewCreated = false;
 	private DataReceiver receiver = null;
 	private ProgressDialog mDialog;
 	private boolean autoLoadData = true;
+	private boolean waiting = true;
+	private DatabaseReference mDatabaseReference;
 
-	public void setAutoLoadData(boolean autoLoadData)
+	public final void setAutoLoadData(boolean autoLoadData)
 	{
 		this.autoLoadData = autoLoadData;
 	}
 
-	public void setReceiver(DataReceiver receiver)
+	public final void setReceiver(DataReceiver receiver)
 	{
 		this.receiver = receiver;
 		if (autoLoadData)
@@ -32,11 +39,6 @@ public abstract class DataLoadingFragment extends Fragment
 	@Override
 	public final View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 	{
-		mDialog = new ProgressDialog(getActivity());
-		mDialog.setMessage("Loading Data...");
-		mDialog.setCancelable(false);
-		mDialog.show();
-
 		viewCreated = true;
 		if (autoLoadData)
 			handleDataReceiver();
@@ -44,7 +46,7 @@ public abstract class DataLoadingFragment extends Fragment
 		return onPopulateView(inflater, container, savedInstanceState);
 	}
 
-	public void refreshData()
+	public final void refreshData()
 	{
 		handleDataReceiver();
 	}
@@ -52,26 +54,125 @@ public abstract class DataLoadingFragment extends Fragment
 	private final void handleDataReceiver()
 	{
 		// Test that the prerequisites were met
-		// DataManager was provided, DataReceiver is set, and view was created
 		if (receiver != null && viewCreated)
-			DataManager.instance().handleDataReceiver(receiver, this);
+		{
+			mDialog = new ProgressDialog(getActivity());
+			mDialog.setMessage("Loading Data...");
+			mDialog.setCancelable(false);
+			mDialog.show();
+
+			waiting = true;
+
+			if ( mDatabaseReference != null )
+			{
+				mDatabaseReference.removeEventListener((ChildEventListener) this);
+				mDatabaseReference.removeEventListener((ValueEventListener) this);
+			}
+
+			String refUri = receiver.getReferenceUri();
+			mDatabaseReference = refUri == null || refUri.isEmpty() ? FirebaseDatabase.getInstance().getReference() : FirebaseDatabase.getInstance().getReference(refUri);
+
+			mDatabaseReference.addValueEventListener(this);
+			mDatabaseReference.addChildEventListener(this);
+		}
 	}
 
-	public abstract View onPopulateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState);
+	@Override
+	public void onDestroyView()
+	{
+		super.onDestroyView();
 
-	public final void onDataLoaded0(DataSnapshot dataSnapshot)
+		mDatabaseReference.removeEventListener((ChildEventListener) this);
+		mDatabaseReference.removeEventListener((ValueEventListener) this);
+	}
+
+	@Override
+	public void onChildAdded(DataSnapshot dataSnapshot, String s)
+	{
+		onDataEvent0( DataReceiver.DataEvent.CHILD_ADDED, dataSnapshot );
+	}
+
+	@Override
+	public void onChildChanged(DataSnapshot dataSnapshot, String s)
+	{
+		onDataEvent0( DataReceiver.DataEvent.CHILD_CHANGED, dataSnapshot );
+	}
+
+	@Override
+	public void onChildRemoved(DataSnapshot dataSnapshot)
+	{
+		onDataEvent0( DataReceiver.DataEvent.CHILD_REMOVED, dataSnapshot );
+	}
+
+	@Override
+	public void onChildMoved(DataSnapshot dataSnapshot, String s)
+	{
+		onDataEvent0( DataReceiver.DataEvent.CHILD_MOVED, dataSnapshot );
+	}
+
+	@Override
+	public void onDataChange(DataSnapshot dataSnapshot)
+	{
+		onDataEvent0( DataReceiver.DataEvent.CHANGED, dataSnapshot );
+	}
+
+	@Override
+	public void onCancelled(DatabaseError databaseError)
 	{
 		mDialog.cancel();
-		onDataLoaded(dataSnapshot);
+		receiver.onDataError(databaseError);
+		onDataError(databaseError);
 	}
 
-	public abstract void onDataLoaded(DataSnapshot dataSnapshot);
-
-	public final void onCancelled0(DatabaseError databaseError)
+	public void onDataEvent0(DataReceiver.DataEvent event, DataSnapshot dataSnapshot)
 	{
 		mDialog.cancel();
-		onCancelled(databaseError);
+
+		Log.i("APP", "Data Event: " + waiting + " " + event.name());
+
+		if ( waiting )
+		{
+			waiting = false;
+			receiver.onDataReceived(dataSnapshot);
+			onDataReceived(dataSnapshot);
+		}
+		else
+		{
+			receiver.onDataEvent(event, dataSnapshot);
+			onDataEvent(event, dataSnapshot);
+		}
 	}
 
-	public abstract void onCancelled(DatabaseError databaseError);
+	/**
+	 * Called from within #onCreateView, used to inflate and populate the basic fragment outline.
+	 * Loading the actual data should be done in the #onDataReceived method.
+	 *
+	 * @param inflater
+	 * @param container
+	 * @param savedInstanceState
+	 * @return
+	 */
+	protected abstract View onPopulateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState);
+
+	/**
+	 * Called when something changes in the remote real-time database
+	 *
+	 * @param event
+	 * @param dataSnapshot
+	 */
+	protected abstract void onDataEvent(DataReceiver.DataEvent event, DataSnapshot dataSnapshot);
+
+	/**
+	 * Called when data is being waited on. First load.
+	 *
+	 * @param dataSnapshot
+	 */
+	protected abstract void onDataReceived(DataSnapshot dataSnapshot);
+
+	/**
+	 * Called when a DatabaseError is encountered
+	 *
+	 * @param databaseError
+	 */
+	protected abstract void onDataError(DatabaseError databaseError);
 }

@@ -108,7 +108,8 @@ public class FragmentStack
 	public void setFragment(Class<? extends Fragment> classFrag, boolean withBack)
 	{
 		FragmentSaveState state = loadFragment(classFrag);
-		state.show(withBack);
+		if (!state.isCurrent())
+			state.show(withBack);
 	}
 
 	public void setFragment(Fragment fragment, boolean withBack)

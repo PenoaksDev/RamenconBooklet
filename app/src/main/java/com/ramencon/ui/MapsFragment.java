@@ -8,7 +8,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,6 +21,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.penoaks.helpers.DataLoadingFragment;
+import com.penoaks.helpers.DataReceiver;
 import com.penoaks.helpers.PersistentFragment;
 import com.ramencon.R;
 import com.ramencon.data.maps.MapsDataReceiver;
@@ -31,7 +31,9 @@ import com.squareup.picasso.Picasso;
 
 import org.lucasr.twowayview.TwoWayView;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MapsFragment extends DataLoadingFragment implements PersistentFragment
 {
@@ -62,6 +64,8 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 		super.onCreate(savedInstanceState);
 
 		getActivity().setTitle("Maps and Locations");
+
+		setAutoLoadData(false);
 	}
 
 	@Override
@@ -71,15 +75,25 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 	}
 
 	@Override
-	public void onDataLoaded(DataSnapshot dataSnapshot)
+	protected void onDataEvent(DataReceiver.DataEvent event, DataSnapshot dataSnapshot)
+	{
+
+	}
+
+	@Override
+	public void onDataReceived(DataSnapshot dataSnapshot)
 	{
 		View root = getView();
+
+		if (savedState != null)
+			selectedPosition = savedState.getInt("selectedPosition", 0);
 
 		mTwoWayView = (TwoWayView) root.findViewById(R.id.maps_listview);
 		mTwoWayView.setAdapter(new PagedListAdapater());
 
 		mViewPager = (ViewPager) root.findViewById(R.id.maps_pager);
 		mViewPager.setAdapter(new ViewPagerAdapter(getFragmentManager()));
+		mViewPager.setCurrentItem(selectedPosition);
 		mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener()
 		{
 			@Override
@@ -93,9 +107,8 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 			{
 				for (int i = 0; i < mTwoWayView.getChildCount(); i++)
 					mTwoWayView.getChildAt(i).setBackgroundColor(0x00000000);
-
-				mTwoWayView.getChildAt(position).setBackgroundColor(0xFFff4081);
-
+				if (mTwoWayView.getChildAt(position) != null)
+					mTwoWayView.getChildAt(position).setBackgroundColor(0xFFff4081);
 				if (mViewPager.getChildAt(position) != null)
 					((TouchImageView) mViewPager.getChildAt(position).findViewById(R.id.maps_image)).resetZoom();
 			}
@@ -106,12 +119,6 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 
 			}
 		});
-
-		if (savedState != null)
-		{
-			mViewPager.onRestoreInstanceState( savedState.getParcelable("mViewPager") );
-			mTwoWayView.onRestoreInstanceState( savedState.getParcelable("mTwoWayView") );
-		}
 	}
 
 	@Override
@@ -120,8 +127,7 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 		if (getView() == null)
 			return;
 
-		bundle.putParcelable("mViewPager", mViewPager.onSaveInstanceState());
-		bundle.putParcelable("mTwoWayView", mTwoWayView.onSaveInstanceState());
+		bundle.putInt("selectedPosition", mViewPager.getCurrentItem());
 	}
 
 	@Override
@@ -131,7 +137,7 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 	}
 
 	@Override
-	public void onCancelled(DatabaseError databaseError)
+	public void onDataError(DatabaseError databaseError)
 	{
 		throw databaseError.toException();
 	}
@@ -161,17 +167,12 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 		{
 			return receiver.maps.size();
 		}
-
-		@Override
-		public CharSequence getPageTitle(int position)
-		{
-			return "TAB " + (position + 1);
-		}
 	}
 
 	public static class MapChildFragment extends Fragment
 	{
 		public static List<ModelMap> maps;
+		private Map<String, Uri> resolvedImages = new HashMap<>();
 
 		@Override
 		public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
@@ -182,17 +183,25 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 
 			final TouchImageView image = (TouchImageView) view.findViewById(R.id.maps_image);
 
-			HomeActivity.storageReference.child("images/maps/" + maps.get(getArguments().getInt("index")).image).getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>()
-			{
-				@Override
-				public void onComplete(@NonNull Task<Uri> task)
+			final ModelMap map = maps.get(getArguments().getInt("index"));
+
+			if (resolvedImages.containsKey(map.id))
+				Picasso.with(getContext()).load(resolvedImages.get(map.id)).into(image);
+			else
+				HomeActivity.storageReference.child("images/maps/" + map.image).getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>()
 				{
-					if (task.isSuccessful())
-						Picasso.with(getContext()).load(task.getResult()).into(image);
-					else
-						image.setImageResource(R.drawable.error);
-				}
-			});
+					@Override
+					public void onComplete(@NonNull Task<Uri> task)
+					{
+						if (task.isSuccessful())
+						{
+							resolvedImages.put(map.id, task.getResult());
+							Picasso.with(getContext()).load(task.getResult()).into(image);
+						}
+						else
+							image.setImageResource(R.drawable.error);
+					}
+				});
 
 			return view;
 		}
