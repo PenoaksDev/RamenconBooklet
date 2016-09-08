@@ -2,7 +2,6 @@ package com.ramencon.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
@@ -16,12 +15,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
-import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.penoaks.data.Persistence;
 import com.penoaks.helpers.DataManager;
 import com.penoaks.helpers.FragmentStack;
 import com.ramencon.R;
@@ -31,6 +29,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 	public final static StorageReference storageReference = FirebaseStorage.getInstance().getReferenceFromUrl("gs://ramencon-booklet.appspot.com");
 
 	public static HomeActivity instance;
+	public static Persistence persistence;
 	public FragmentStack stacker;
 
 	public HomeActivity()
@@ -56,26 +55,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 		Log.i("APP", "HomeActivity.onCreate() (" + hashCode() + ") " + savedInstanceState);
 
-
-		try
-		{
-			if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean("pref_cache", false))
-			{
-				Log.i("APP", "Data Caching is Enabled.");
-				if (!FirebaseApp.getApps(this).isEmpty())
-					FirebaseDatabase.getInstance().setPersistenceEnabled(true);
-			}
-			else
-			{
-				Log.i("APP", "Data Caching is Disabled.");
-				// FirebaseDatabase.getInstance().setPersistenceEnabled(false);
-			}
-		}
-		catch (Exception ignore)
-		{
-			ignore.printStackTrace();
-		}
-
 		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 		assert toolbar != null;
 		setSupportActionBar(toolbar);
@@ -83,7 +62,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 		final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 		assert drawer != null;
 		final ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-		// drawer.setDrawerListener(toggle);
+		drawer.setDrawerListener(toggle);
 		toggle.syncState();
 
 		final FragmentManager mgr = getSupportFragmentManager();
@@ -124,8 +103,12 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 		assert FirebaseAuth.getInstance().getCurrentUser() != null;
 
-		((TextView) navigationView.getHeaderView(0).findViewById(R.id.header_text)).setText("Welcome, " + FirebaseAuth.getInstance().getCurrentUser().getDisplayName());
+		persistence = new Persistence(getCacheDir());
 
+		persistence.keepPersistent("booklet-data");
+		persistence.keepPersistent("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid());
+
+		((TextView) navigationView.getHeaderView(0).findViewById(R.id.header_text)).setText("Welcome, " + FirebaseAuth.getInstance().getCurrentUser().getDisplayName());
 
 		if (savedInstanceState == null)
 		{
@@ -134,6 +117,15 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 		}
 		else
 			stacker.loadInstanceState(savedInstanceState);
+	}
+
+	@Override
+	protected void onDestroy()
+	{
+		super.onDestroy();
+
+		persistence.destroy();
+		persistence = null;
 	}
 
 	public void onConnected()

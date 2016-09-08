@@ -319,9 +319,4 @@ public class SigninActivity extends Activity implements GoogleApiClient.OnConnec
 
 		mAuth.removeAuthStateListener(this);
 	}
-
-	public static DatabaseReference getUserReference()
-	{
-		return FirebaseDatabase.getInstance().getReference("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid());
-	}
 }

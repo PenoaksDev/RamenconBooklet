@@ -4,6 +4,7 @@ import android.app.Application;
 
 import com.facebook.FacebookSdk;
 import com.facebook.appevents.AppEventsLogger;
+import com.penoaks.data.Persistence;
 
 public class RamenApp extends Application
 {
