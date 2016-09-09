@@ -8,6 +8,7 @@
  */
 package com.penoaks.sepher;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -158,7 +159,9 @@ public interface ConfigurationSection
 	 *
 	 * @param value The new values
 	 */
-	void overwrite(ConfigurationSection value);
+	void set(ConfigurationSection values);
+
+	void set(Map<String, Object> values);
 
 	/**
 	 * Creates an empty {@link ConfigurationSection} at the specified path.
@@ -169,6 +172,8 @@ public interface ConfigurationSection
 	 * @return Newly created section
 	 */
 	ConfigurationSection createSection(String path);
+
+	ConfigurationSection createSection(String path, Collection<?> list);
 
 	/**
 	 * Creates a {@link ConfigurationSection} at the specified path, with specified values.

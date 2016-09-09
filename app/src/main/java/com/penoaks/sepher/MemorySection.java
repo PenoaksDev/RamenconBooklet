@@ -9,14 +9,20 @@
 package com.penoaks.sepher;
 
 import com.penoaks.helpers.Lists;
+import com.penoaks.helpers.Maps;
+import com.penoaks.log.PLog;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 // TODO Fix the number type casting issues
 
@@ -179,11 +185,27 @@ public class MemorySection implements ConfigurationSection
 		if (section == this)
 		{
 			ConfigurationSection result = new MemorySection(this, key);
-			map.put(key, result);
-			changes.add(key);
+			synchronized (map)
+			{
+				map.put(key, result);
+				changes.add(key);
+			}
 			return result;
 		}
 		return section.createSection(key);
+	}
+
+	@Override
+	public ConfigurationSection createSection(String path, final Collection<?> list)
+	{
+		return createSection(path, new HashMap<Object, Object>()
+		{
+			{
+				Object[] a = list.toArray();
+				for (int i = 0; i < a.length; i++)
+					put(Integer.toString(i), a[i]);
+			}
+		});
 	}
 
 	@Override
@@ -194,6 +216,8 @@ public class MemorySection implements ConfigurationSection
 		for (Map.Entry<?, ?> entry : map.entrySet())
 			if (entry.getValue() instanceof Map)
 				section.createSection(entry.getKey().toString(), (Map<?, ?>) entry.getValue());
+			else if (entry.getValue() instanceof Collection)
+				section.createSection(entry.getKey().toString(), (Collection<?>) entry.getValue());
 			else
 				section.set(entry.getKey().toString(), entry.getValue());
 
@@ -396,6 +420,7 @@ public class MemorySection implements ConfigurationSection
 	public ConfigurationSection getConfigurationSection(String path, boolean create)
 	{
 		Object val = get(path, null);
+		PLog.i("Section " + val.getClass().getSimpleName() + " // " + val);
 		if (val != null)
 			return val instanceof ConfigurationSection ? (ConfigurationSection) val : null;
 
@@ -559,7 +584,7 @@ public class MemorySection implements ConfigurationSection
 	@Override
 	public Set<String> getKeys(boolean deep)
 	{
-		Set<String> result = new LinkedHashSet<String>();
+		Set<String> result = new TreeSet<>();
 
 		Configuration root = getRoot();
 		if (root != null && root.options().copyDefaults())
@@ -570,7 +595,12 @@ public class MemorySection implements ConfigurationSection
 				result.addAll(defaults.getKeys(deep));
 		}
 
-		mapChildrenKeys(result, this, deep);
+		// mapChildrenKeys(result, this, deep);
+
+		if (deep)
+			result.addAll(getValues(true).keySet());
+		else
+			result.addAll(map.keySet());
 
 		return result;
 	}
@@ -777,10 +807,63 @@ public class MemorySection implements ConfigurationSection
 				result.putAll(defaults.getValues(deep));
 		}
 
-		mapChildrenValues(result, this, deep);
+		// mapChildrenValues(result, this, deep);
+
+		for (String key : new ArrayList<>(map.keySet()))
+		{
+			Object obj = map.get(key);
+
+			if (obj instanceof ConfigurationSection)
+			{
+				ConfigurationSection section = (ConfigurationSection) obj;
+				Map<String, Object> values = section.getValues(false);
+
+				if (Lists.incremented(values.keySet()))
+					result.put(key, values.values());
+				else
+					result.put(key, values);
+			}
+			else
+				result.put(key, obj);
+		}
+
+		if (deep)
+			result.putAll(Maps.flattenMap(result));
 
 		return result;
 	}
+
+	/*protected void mapChildrenValues(Map<String, Object> output, ConfigurationSection section, boolean deep)
+	{
+		if (section instanceof MemorySection)
+		{
+			MemorySection sec = (MemorySection) section;
+
+			for (Map.Entry<String, Object> entry : sec.map.entrySet())
+			{
+				if (entry.getValue() instanceof ConfigurationSection)
+				{
+					Map<String, Object> result = ((ConfigurationSection) entry.getValue()).getValues(false);
+					if (Lists.incremented(result.keySet()))
+						output.put(createPath(section, entry.getKey(), this), result.values());
+					else
+						output.put(createPath(section, entry.getKey(), this), result);
+				}
+				else
+					output.put(createPath(section, entry.getKey(), this), entry.getValue());
+
+				if (entry.getValue() instanceof ConfigurationSection && deep)
+					mapChildrenValues(output, (ConfigurationSection) entry.getValue(), deep);
+			}
+		}
+		else
+		{
+			Map<String, Object> values = section.getValues(deep);
+
+			for (Map.Entry<String, Object> entry : values.entrySet())
+				output.put(createPath(section, entry.getKey(), this), entry.getValue());
+		}
+	}*/
 
 	@Override
 	public boolean has(String path)
@@ -888,7 +971,7 @@ public class MemorySection implements ConfigurationSection
 		return val instanceof String;
 	}
 
-	protected void mapChildrenKeys(Set<String> output, ConfigurationSection section, boolean deep)
+	/* protected void mapChildrenKeys(Set<String> output, ConfigurationSection section, boolean deep)
 	{
 		if (section instanceof MemorySection)
 		{
@@ -912,39 +995,7 @@ public class MemorySection implements ConfigurationSection
 			for (String key : keys)
 				output.add(createPath(section, key, this));
 		}
-	}
-
-	protected void mapChildrenValues(Map<String, Object> output, ConfigurationSection section, boolean deep)
-	{
-		if (section instanceof MemorySection)
-		{
-			MemorySection sec = (MemorySection) section;
-
-			for (Map.Entry<String, Object> entry : sec.map.entrySet())
-			{
-				if (entry.getValue() instanceof ConfigurationSection)
-				{
-					Map<String, Object> result = ((ConfigurationSection) entry.getValue()).getValues(false);
-					if (Lists.incremented(result.keySet()))
-						output.put(createPath(section, entry.getKey(), this), result.values());
-					else
-						output.put(createPath(section, entry.getKey(), this), result);
-				}
-				else
-					output.put(createPath(section, entry.getKey(), this), entry.getValue());
-
-				if (entry.getValue() instanceof ConfigurationSection && deep)
-					mapChildrenValues(output, (ConfigurationSection) entry.getValue(), deep);
-			}
-		}
-		else
-		{
-			Map<String, Object> values = section.getValues(deep);
-
-			for (Map.Entry<String, Object> entry : values.entrySet())
-				output.put(createPath(section, entry.getKey(), this), entry.getValue());
-		}
-	}
+	}*/
 
 	@Override
 	public void set(String path, Object value)
@@ -976,8 +1027,12 @@ public class MemorySection implements ConfigurationSection
 		{
 			if (value == null)
 				map.remove(key);
+			else if (value instanceof Map)
+				createSection(key, (Map<?, ?>) value);
+			else if (value instanceof List)
+				createSection(key, (List<?>) value);
 			else if (map.containsKey(key) && map.get(key) instanceof ConfigurationSection && value instanceof ConfigurationSection)
-				((ConfigurationSection) map.get(key)).overwrite((ConfigurationSection) value);
+				((ConfigurationSection) map.get(key)).set((ConfigurationSection) value);
 			else
 				map.put(key, value);
 
@@ -996,10 +1051,16 @@ public class MemorySection implements ConfigurationSection
 	}
 
 	@Override
-	public void overwrite(ConfigurationSection section)
+	public void set(ConfigurationSection section)
 	{
-		for (Map.Entry<String, Object> entry : (section instanceof MemorySection ? ((MemorySection) section).map : section.getValues(false)).entrySet())
-			set(entry.getKey(), entry.getValue());
+		set(section.getValues(false));
+	}
+
+	@Override
+	public void set(Map<String, Object> values)
+	{
+		for (String key : new ArrayList<String>(values.keySet()))
+			set(key, values.get(key));
 	}
 
 	private double toDouble(Object def)
@@ -1061,9 +1122,12 @@ public class MemorySection implements ConfigurationSection
 		boolean changes = false;
 
 		if (deep)
-			for (Object obj : map.values())
-				if (obj instanceof ConfigurationSection && ((ConfigurationSection) obj).hasChanges(true))
-					changes = true;
+			synchronized (map)
+			{
+				for (Object obj : map.values())
+					if (obj instanceof ConfigurationSection && ((ConfigurationSection) obj).hasChanges(true))
+						changes = true;
+			}
 
 		return changes;
 	}
@@ -1079,9 +1143,12 @@ public class MemorySection implements ConfigurationSection
 	{
 		changes.clear();
 		if (deep)
-			for (Object obj : map.values())
-				if (obj instanceof ConfigurationSection)
-					((ConfigurationSection) obj).resolveChanges(true);
+			synchronized (map)
+			{
+				for (Object obj : map.values())
+					if (obj instanceof ConfigurationSection)
+						((ConfigurationSection) obj).resolveChanges(true);
+			}
 	}
 
 	@Override

@@ -33,6 +33,7 @@ import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.UserInfo;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.penoaks.log.PLog;
 import com.ramencon.R;
 
 import java.util.Arrays;
@@ -157,6 +158,8 @@ public class SigninActivity extends Activity implements GoogleApiClient.OnConnec
 			}
 		});
 
+		PLog.i("Signin Activity " + organic);
+
 		if (mAuth.getCurrentUser() == null)
 			signedOutMode();
 		else if (mAuth.getCurrentUser() != null && organic)
@@ -196,8 +199,8 @@ public class SigninActivity extends Activity implements GoogleApiClient.OnConnec
 		FirebaseUser user = mAuth.getCurrentUser();
 		List<String> providers = user.getProviders();
 
-		loginGoogle.setText( providers.contains("google.com") ? "  Google (Already Linked)" : "  Google" );
-		loginGoogle.setEnabled( !providers.contains("google.com") );
+		loginGoogle.setText(providers.contains("google.com") ? "  Google (Already Linked)" : "  Google");
+		loginGoogle.setEnabled(!providers.contains("google.com"));
 		// loginFacebook.setText( providers.contains("facebook") ? "  Facebook (Already Linked)" : "  Facebook" );
 		// loginFacebook.setEnabled( !providers.contains("facebook") );
 		// loginTwitter.setText( providers.contains("twitter") ? "  Twitter (Already Linked)" : "  Twitter" );

@@ -23,6 +23,8 @@ import com.google.firebase.database.DatabaseError;
 import com.penoaks.helpers.DataLoadingFragment;
 import com.penoaks.helpers.DataReceiver;
 import com.penoaks.helpers.PersistentFragment;
+import com.penoaks.log.PLog;
+import com.penoaks.sepher.ConfigurationSection;
 import com.ramencon.R;
 import com.ramencon.data.maps.MapsDataReceiver;
 import com.ramencon.data.models.ModelMap;
@@ -69,6 +71,10 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 	@Override
 	public View onPopulateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 	{
+		ConfigurationSection section = HomeActivity.persistence.get("booklet-data/maps");
+
+		PLog.i("JSON Test " + section.getCurrentPath() + " // " + section.getKeys(true));
+
 		return inflater.inflate(R.layout.fragment_maps, container, false);
 	}
 

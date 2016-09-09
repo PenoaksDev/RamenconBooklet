@@ -39,7 +39,7 @@ public class Persistence
 	public Persistence(File cache)
 	{
 		persistenceFile = new File(cache, "PersistenceData.json");
-
+		parent.options().pathSeparator('/');
 		handler.execute();
 	}
 
@@ -94,6 +94,11 @@ public class Persistence
 		return state;
 	}
 
+	public ConfigurationSection get(String path)
+	{
+		return parent.getConfigurationSection(path, true);
+	}
+
 	private enum PersistenceState
 	{
 		IDLE, PENDING
@@ -101,17 +106,21 @@ public class Persistence
 
 	private void saveToFile(JsonConfiguration data)
 	{
-		PLog.i("Saving JSON: \n" + data.saveToString());
+		// PLog.i("Saving JSON: %s", data.saveToString());
 
-		parent.overwrite(data);
+		synchronized (parent)
+		{
+			parent.set(data);
+			PLog.i("Key Compare: " + data.getKeys() + " -- " + parent.getKeys());
 
-		try
-		{
-			parent.save(persistenceFile);
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
+			try
+			{
+				parent.save(persistenceFile);
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -147,7 +156,7 @@ public class Persistence
 		@Override
 		public void onDataChange(DataSnapshot dataSnapshot)
 		{
-			String uri = getUri(dataSnapshot.getRef(), true);
+			String uri = getUri(dataSnapshot, true);
 
 			Object section = data.get(uri);
 			ConfigurationSection cs = section == null || !(section instanceof ConfigurationSection) ? data.createSection(uri) : (ConfigurationSection) section;
@@ -171,49 +180,49 @@ public class Persistence
 		@Override
 		public void onChildAdded(DataSnapshot dataSnapshot, String s)
 		{
-			PLog.i("Child Added");
+			/*PLog.i("Child Added");
 
 			String uri = getUri(dataSnapshot.getRef(), true);
 
 			Object section = data.get(uri);
 			ConfigurationSection cs = section == null || !(section instanceof ConfigurationSection) ? data.createSection(uri) : (ConfigurationSection) section;
-			convertDataSnapshotToSection(dataSnapshot, cs);
+			convertDataSnapshotToSection(dataSnapshot, cs);*/
 		}
 
 		@Override
 		public void onChildChanged(DataSnapshot dataSnapshot, String s)
 		{
-			PLog.i("Child Changed");
+			/*PLog.i("Child Changed");
 
 			String uri = getUri(dataSnapshot.getRef(), true);
 
 			Object section = data.get(uri);
 			ConfigurationSection cs = section == null || !(section instanceof ConfigurationSection) ? data.createSection(uri) : (ConfigurationSection) section;
-			convertDataSnapshotToSection(dataSnapshot, cs);
+			convertDataSnapshotToSection(dataSnapshot, cs);*/
 		}
 
 		@Override
 		public void onChildRemoved(DataSnapshot dataSnapshot)
 		{
-			PLog.i("Child Removed");
+			/*PLog.i("Child Removed");
 
 			String uri = getUri(dataSnapshot.getRef(), true);
 
 			Object section = data.get(uri);
 			ConfigurationSection cs = section == null || !(section instanceof ConfigurationSection) ? data.createSection(uri) : (ConfigurationSection) section;
-			convertDataSnapshotToSection(dataSnapshot, cs);
+			convertDataSnapshotToSection(dataSnapshot, cs);*/
 		}
 
 		@Override
 		public void onChildMoved(DataSnapshot dataSnapshot, String s)
 		{
-			PLog.i("Child Moved");
+			/*PLog.i("Child Moved");
 
 			String uri = getUri(dataSnapshot.getRef(), true);
 
 			Object section = data.get(uri);
 			ConfigurationSection cs = section == null || !(section instanceof ConfigurationSection) ? data.createSection(uri) : (ConfigurationSection) section;
-			convertDataSnapshotToSection(dataSnapshot, cs);
+			convertDataSnapshotToSection(dataSnapshot, cs);*/
 		}
 
 		@Override
@@ -222,29 +231,27 @@ public class Persistence
 			throw databaseError.toException();
 		}
 
-		public String getUri(DatabaseReference ref)
+		public String getUri(DataSnapshot dataSnapshot)
 		{
-			return getUri(ref, false);
+			return getUri(dataSnapshot, false);
 		}
 
-		public String getUri(DatabaseReference ref, boolean parentsOnly)
+		public String getUri(DataSnapshot dataSnapshot, boolean parentsOnly)
 		{
-			return getUri(ref, parentsOnly, "/");
+			return getUri(dataSnapshot, parentsOnly, "/");
 		}
 
-		public String getUri(DatabaseReference ref, boolean parentsOnly, String glue)
+		public String getUri(DataSnapshot dataSnapshot, boolean parentsOnly, String glue)
 		{
 			List<String> parts = new ArrayList<>();
+			DatabaseReference ref = dataSnapshot.getRef();
 
 			if (!parentsOnly)
 				parts.add(ref.getKey());
 
-			if (ref.getParent() != null)
-				do
-				{
-					ref = ref.getParent();
+			while ((ref = ref.getParent()) != null)
+				if (ref.getKey() != null)
 					parts.add(ref.getKey());
-				} while (ref.getParent() != null && ref.getParent().getKey() != null);
 
 			Collections.reverse(parts);
 			return TextUtils.join(glue, parts);
