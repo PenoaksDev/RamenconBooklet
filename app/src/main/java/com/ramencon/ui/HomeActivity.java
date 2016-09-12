@@ -168,6 +168,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 		assert drawer != null;
 		if (drawer.isDrawerOpen(GravityCompat.START))
 			drawer.closeDrawer(GravityCompat.START);
+		else if (stacker.hasBackstack())
+			stacker.popBackstack();
 		else
 			super.onBackPressed();
 	}

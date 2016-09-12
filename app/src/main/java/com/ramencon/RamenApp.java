@@ -16,7 +16,7 @@ public class RamenApp extends Application
 	{
 		super.onCreate();
 
-		FacebookSdk.sdkInitialize(getApplicationContext());
-		AppEventsLogger.activateApp(this);
+		// FacebookSdk.sdkInitialize(getApplicationContext());
+		// AppEventsLogger.activateApp(this);
 	}
 }
