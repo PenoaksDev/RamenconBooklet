@@ -1,9 +1,7 @@
 package com.ramencon.ui;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -13,19 +11,16 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.penoaks.data.Persistence;
-import com.penoaks.helpers.DataManager;
-import com.penoaks.helpers.FragmentStack;
-import com.penoaks.log.PLog;
+import com.penoaks.fragments.FragmentStack;
 import com.ramencon.R;
 
-public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, DataManager.OnDataListener
+public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener
 {
 	public final static StorageReference storageReference = FirebaseStorage.getInstance().getReferenceFromUrl("gs://ramencon-booklet.appspot.com");
 
@@ -64,26 +59,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 		final ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
 		drawer.setDrawerListener(toggle);
 		toggle.syncState();
-
-		/* final FragmentManager mgr = getSupportFragmentManager();
-		mgr.addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener()
-		{
-			@Override
-			public void onBackStackChanged()
-			{
-				ActionBar mActionBar = getSupportActionBar();
-				if (mActionBar != null)
-				{
-					if (mgr.getBackStackEntryCount() > 0)
-						mActionBar.setDisplayHomeAsUpEnabled(true);
-					else
-					{
-						mActionBar.setDisplayHomeAsUpEnabled(false);
-						toggle.syncState();
-					}
-				}
-			}
-		});*/
 
 		stacker.addOnBackStackChangedListener(new FragmentStack.OnBackStackChangedListener()
 		{
@@ -125,33 +100,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 		// ((TextView) navigationView.getHeaderView(0).findViewById(R.id.header_text)).setText("Welcome, " + FirebaseAuth.getInstance().getCurrentUser().getDisplayName());
 
 		if (savedInstanceState == null)
-		{
-			stacker.setFragment(LoadingFragment.class);
-			DataManager.instance().setListener(this).checkConnection();
-		}
+			stacker.setFragment(WelcomeFragment.class);
 		else
 			stacker.loadInstanceState(savedInstanceState);
-	}
-
-	public void onConnected()
-	{
-		((NavigationView) findViewById(R.id.nav_view)).getMenu().getItem(0).setChecked(true);
-		stacker.setFragment(WelcomeFragment.class);
-	}
-
-	public void onError(DatabaseError error)
-	{
-		startActivityForResult(new Intent(this, ErroredActivity.class).putExtra("errorMessage", error.getMessage()), 99);
-	}
-
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data)
-	{
-		if (requestCode == 99 && resultCode == RESULT_OK)
-		{
-			stacker.setFragment(LoadingFragment.class);
-			DataManager.instance().setListener(this).checkConnection();
-		}
 	}
 
 	@Override
@@ -160,6 +111,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 		super.onSaveInstanceState(outState);
 		stacker.saveInstanceState(outState);
 	}
+
+	long backClickTime = 0;
+	Toast mBackToast;
 
 	@Override
 	public void onBackPressed()
@@ -170,8 +124,16 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 			drawer.closeDrawer(GravityCompat.START);
 		else if (stacker.hasBackstack())
 			stacker.popBackstack();
+		else if (backClickTime > 0 && backClickTime - System.currentTimeMillis() < 3000)
+			finish();
 		else
-			super.onBackPressed();
+		{
+			if (mBackToast == null)
+				mBackToast = Toast.makeText(this, "Press back again to quit", Toast.LENGTH_SHORT);
+			mBackToast.show();
+			backClickTime = System.currentTimeMillis();
+		}
+
 	}
 
 	@Override
@@ -187,5 +149,22 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 		drawer.closeDrawer(GravityCompat.START);
 
 		return true;
+	}
+
+	@Override
+	protected void onStart()
+	{
+		super.onStart();
+
+		if (Persistence.getInstance() == null)
+			LoadingActivity.initPersistence(getCacheDir());
+	}
+
+	@Override
+	protected void onStop()
+	{
+		super.onStop();
+
+		Persistence.getInstance().destroy();
 	}
 }

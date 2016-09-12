@@ -3,7 +3,6 @@ package com.ramencon.data.guests;
 import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,17 +12,15 @@ import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.koushikdutta.ion.Ion;
 import com.penoaks.log.PLog;
 import com.ramencon.R;
 import com.ramencon.data.ListGroup;
 import com.ramencon.data.models.ModelGuest;
 import com.ramencon.ui.GuestViewFragment;
 import com.ramencon.ui.HomeActivity;
-import com.squareup.picasso.Picasso;
 
 import java.util.List;
-
-import pl.droidsonroids.gif.GifTextView;
 
 public class GuestAdapter extends BaseExpandableListAdapter
 {
@@ -108,9 +105,10 @@ public class GuestAdapter extends BaseExpandableListAdapter
 		final TextView tv_title = (TextView) listItemView.findViewById(R.id.guest_title);
 
 		if (guest.image == null)
-			iv_thumbnail.setImageResource(R.drawable.error);
+			iv_thumbnail.setImageResource(R.drawable.noimagefound);
 		else if (listGroup.resolvedImages.containsKey(guest.id))
-			Picasso.with(context).load(listGroup.resolvedImages.get(guest.id)).placeholder(R.drawable.image_loading).into(iv_thumbnail);
+			Ion.with(context).load(listGroup.resolvedImages.get(guest.id)).intoImageView(iv_thumbnail);
+			// Picasso.with(context).load(listGroup.resolvedImages.get(guest.id)).placeholder(R.drawable.image_loading).into(iv_thumbnail);
 		else
 			HomeActivity.storageReference.child("images/guests/" + listGroup.id + "/" + guest.image).getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>()
 			{
@@ -119,8 +117,9 @@ public class GuestAdapter extends BaseExpandableListAdapter
 				{
 					if (task.isSuccessful())
 					{
-						listGroup.resolvedImages.put(guest.id, task.getResult());
-						Picasso.with(context).load(task.getResult()).placeholder(R.drawable.image_loading).into(iv_thumbnail);
+						listGroup.resolvedImages.put(guest.id, task.getResult().toString());
+						Ion.with(context).load(task.getResult().toString()).intoImageView(iv_thumbnail);
+						// Picasso.with(context).load(task.getResult()).placeholder(R.drawable.image_loading).into(iv_thumbnail);
 					}
 					else
 					{

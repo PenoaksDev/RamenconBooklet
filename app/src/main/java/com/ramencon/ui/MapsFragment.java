@@ -18,15 +18,15 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.penoaks.helpers.DataLoadingFragment;
-import com.penoaks.helpers.PersistentFragment;
+import com.koushikdutta.ion.Ion;
+import com.penoaks.data.DataLoadingFragment;
+import com.penoaks.fragments.PersistentFragment;
 import com.penoaks.log.PLog;
 import com.penoaks.sepher.ConfigurationSection;
 import com.ramencon.R;
 import com.ramencon.data.maps.MapsDataReceiver;
 import com.ramencon.data.models.ModelMap;
 import com.ramencon.ui.widget.TouchImageView;
-import com.squareup.picasso.Picasso;
 
 import org.lucasr.twowayview.TwoWayView;
 
@@ -160,7 +160,7 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 	public static class MapChildFragment extends Fragment
 	{
 		public static List<ModelMap> maps;
-		private Map<String, Uri> resolvedImages = new HashMap<>();
+		private Map<String, String> resolvedImages = new HashMap<>();
 
 		@Override
 		public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
@@ -173,8 +173,11 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 
 			final ModelMap map = maps.get(getArguments().getInt("index"));
 
+			if (map.image == null)
+				image.setImageResource(R.drawable.noimagefound);
 			if (resolvedImages.containsKey(map.id))
-				Picasso.with(getContext()).load(resolvedImages.get(map.id)).placeholder(R.drawable.image_loading).into(image);
+				Ion.with(this).load(resolvedImages.get(map.id)).intoImageView(image);
+				// Picasso.with(getContext()).load(resolvedImages.get(map.id)).placeholder(R.drawable.image_loading).into(image);
 			else
 				HomeActivity.storageReference.child("images/maps/" + map.image).getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>()
 				{
@@ -183,8 +186,9 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 					{
 						if (task.isSuccessful())
 						{
-							resolvedImages.put(map.id, task.getResult());
-							Picasso.with(getContext()).load(task.getResult()).placeholder(R.drawable.image_loading).into(image);
+							resolvedImages.put(map.id, task.getResult().toString());
+							Ion.with(getContext()).load(task.getResult().toString()).intoImageView(image);
+							// Picasso.with(getContext()).load(task.getResult()).placeholder(R.drawable.image_loading).into(image);
 						}
 						else
 						{

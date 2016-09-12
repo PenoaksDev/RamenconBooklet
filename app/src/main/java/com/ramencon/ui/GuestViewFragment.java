@@ -1,5 +1,6 @@
 package com.ramencon.ui;
 
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -12,11 +13,12 @@ import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.ion.Ion;
 import com.ramencon.R;
 import com.ramencon.data.ListGroup;
 import com.ramencon.data.guests.GuestAdapter;
 import com.ramencon.data.models.ModelGuest;
-import com.squareup.picasso.Picasso;
 
 public class GuestViewFragment extends Fragment
 {
@@ -57,17 +59,20 @@ public class GuestViewFragment extends Fragment
 		tv_title.setText(guest.title);
 		tv_desc.setText(guest.description);
 
-		HomeActivity.storageReference.child("images/guests/" + listGroup.id + "/" + guest.image).getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>()
-		{
-			@Override
-			public void onComplete(@NonNull Task<Uri> task)
+		if (guest.image == null)
+			image.setImageResource(R.drawable.noimagefound);
+		else
+			HomeActivity.storageReference.child("images/guests/" + listGroup.id + "/" + guest.image).getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>()
 			{
-				if (task.isSuccessful())
-					Picasso.with(getContext()).load(task.getResult()).into(image);
-				else
-					image.setImageResource(R.drawable.error);
-			}
-		});
+				@Override
+				public void onComplete(@NonNull Task<Uri> task)
+				{
+					if (task.isSuccessful())
+						Ion.with(GuestViewFragment.this).load(task.getResult().toString()).intoImageView(image);
+					else
+						image.setImageResource(R.drawable.error);
+				}
+			});
 
 		return root;
 	}

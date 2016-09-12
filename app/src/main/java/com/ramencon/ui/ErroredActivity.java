@@ -13,9 +13,7 @@ import com.ramencon.R;
 
 public class ErroredActivity extends AppCompatActivity
 {
-	public static final int AUTH_ERROR = 99;
-	public static final int PERSISTENCE_ERROR = 98;
-	private boolean generalException = false;
+	public static final String ERROR_MESSAGE = "ERROR_MESSAGE";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -24,25 +22,10 @@ public class ErroredActivity extends AppCompatActivity
 		setContentView(R.layout.activity_errored);
 
 		Intent intent = getIntent();
-
-		if (intent.hasExtra("errorMessage"))
+		if (intent.hasExtra(ERROR_MESSAGE))
 		{
-			TextView msg = (TextView) findViewById(R.id.errored_msg);
-
-			msg.setText(intent.getStringExtra("errorMessage"));
-
-			generalException = true;
-		}
-
-		if (intent.hasExtra("exception"))
-		{
-			TextView msg = (TextView) findViewById(R.id.errored_msg);
-
-			Exception e = (Exception) intent.getSerializableExtra("exception");
-
-			msg.setText(e.getMessage());
-
-			generalException = true;
+			TextView tv_msg = (TextView) findViewById(R.id.errored_msg);
+			tv_msg.setText(intent.getStringExtra(ERROR_MESSAGE));
 		}
 
 		final Button tryAgain = (Button) findViewById(R.id.tryagain);

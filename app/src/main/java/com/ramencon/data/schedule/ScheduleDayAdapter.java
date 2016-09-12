@@ -5,13 +5,18 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.penoaks.helpers.Formatting;
 import com.ramencon.R;
+import com.ramencon.data.models.ModelEvent;
 import com.ramencon.data.schedule.filters.DefaultScheduleFilter;
+import com.ramencon.ui.HomeActivity;
 import com.ramencon.ui.ScheduleFragment;
+
+import org.lucasr.twowayview.TwoWayView;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -20,20 +25,24 @@ import java.util.List;
 
 public class ScheduleDayAdapter extends BaseAdapter
 {
-	public static final String fullDateFormat = "MMMM dx yyyy";
+	public static final String DATEFORMAT = "MMMM dx yyyy";
 
 	private LayoutInflater inflater = null;
-	private ScheduleFragment parent;
 	private List<Date> days = new ArrayList<>();
 	private TextView mDateDisplay;
+	private ScheduleDataReceiver mScheduleDataReceiver;
+	private ExpandableListView mListView;
+	private TwoWayView mDayView;
 	private int selectedPosition;
 
-	public ScheduleDayAdapter(ScheduleFragment parent, List<Date> days, TextView mDateDisplay, int selectedPosition)
+	public ScheduleDayAdapter(ScheduleFragment parent, List<Date> days, TextView mDateDisplay, ScheduleDataReceiver mScheduleDataReceiver, ExpandableListView mListView, TwoWayView mDayView, int selectedPosition)
 	{
 		this.inflater = (LayoutInflater) parent.getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		this.parent = parent;
 		this.days = days;
 		this.mDateDisplay = mDateDisplay;
+		this.mScheduleDataReceiver = mScheduleDataReceiver;
+		this.mListView = mListView;
+		this.mDayView = mDayView;
 		this.selectedPosition = selectedPosition;
 	}
 
@@ -55,6 +64,25 @@ public class ScheduleDayAdapter extends BaseAdapter
 		return position;
 	}
 
+	public void setSelectedPosition(int position, List<ModelEvent> data, String title) throws ParseException
+	{
+		if (mDayView.getChildAt(position) == null)
+			throw new IndexOutOfBoundsException();
+
+		ScheduleDayAdapter.this.selectedPosition = position;
+
+		mListView.setAdapter(new ScheduleAdapter(HomeActivity.instance, mScheduleDataReceiver.simpleDateFormat(), mScheduleDataReceiver.simpleTimeFormat(), mScheduleDataReceiver.locations, data));
+
+		for (int i = 0; i < mDayView.getChildCount(); i++)
+			if (i != position)
+				mDayView.getChildAt(i).setBackgroundColor(0x00000000);
+
+		mDayView.getChildAt(position).setBackgroundColor(0xFFff4081);
+
+		if (mDateDisplay != null && title != null)
+			mDateDisplay.setText(title);
+	}
+
 	@Override
 	public View getView(final int position, View convertView, ViewGroup parent)
 	{
@@ -67,8 +95,6 @@ public class ScheduleDayAdapter extends BaseAdapter
 		assert dayName != null;
 		assert dayNumber != null;
 		assert dayImage != null;
-
-		final ScheduleDayAdapter adapter = this;
 
 		if (position == selectedPosition)
 			view.setBackgroundColor(0xFFff4081);
@@ -94,18 +120,7 @@ public class ScheduleDayAdapter extends BaseAdapter
 						filter.reset();
 						filter.setHearted(DefaultScheduleFilter.TriStateList.SHOW);
 
-						adapter.selectedPosition = position;
-
-						adapter.parent.loadList(ScheduleFragment.instance().receiver.filterRange(filter));
-
-						ViewGroup parent = (ViewGroup) v.getParent();
-						for (int i = 0; i < parent.getChildCount(); i++)
-							parent.getChildAt(i).setBackgroundColor(0x00000000);
-
-						v.setBackgroundColor(0xFFff4081);
-
-						if (mDateDisplay != null)
-							mDateDisplay.setText("Favorite Events");
+						setSelectedPosition(position, mScheduleDataReceiver.filterRangeList(filter), "Favorite Events");
 					}
 					catch (ParseException e)
 					{
@@ -122,7 +137,7 @@ public class ScheduleDayAdapter extends BaseAdapter
 			dayNumber.setText(Formatting.date("d", day));
 
 			if (position == selectedPosition && mDateDisplay != null)
-				mDateDisplay.setText(Formatting.date(fullDateFormat, day));
+				mDateDisplay.setText(Formatting.date(DATEFORMAT, day));
 
 			view.setOnClickListener(new View.OnClickListener()
 			{
@@ -136,18 +151,7 @@ public class ScheduleDayAdapter extends BaseAdapter
 						filter.setMin(day.getTime());
 						filter.setMax(day.getTime() + (1440 * 60 * 1000)); // One Day
 
-						adapter.selectedPosition = position;
-
-						adapter.parent.loadList(ScheduleFragment.instance().receiver.filterRange(filter));
-
-						ViewGroup parent = (ViewGroup) v.getParent();
-						for (int i = 0; i < parent.getChildCount(); i++)
-							parent.getChildAt(i).setBackgroundColor(0x00000000);
-
-						v.setBackgroundColor(0xFFff4081);
-
-						if (mDateDisplay != null)
-							mDateDisplay.setText(Formatting.date(fullDateFormat, day));
+						setSelectedPosition(position, mScheduleDataReceiver.filterRangeList(filter), Formatting.date(DATEFORMAT, day));
 					}
 					catch (ParseException e)
 					{

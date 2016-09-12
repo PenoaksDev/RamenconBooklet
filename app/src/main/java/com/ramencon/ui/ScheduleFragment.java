@@ -4,13 +4,19 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ExpandableListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.penoaks.helpers.DataLoadingFragment;
-import com.penoaks.helpers.PersistentFragment;
+import com.penoaks.data.DataLoadingFragment;
+import com.penoaks.fragments.PersistentFragment;
+import com.penoaks.helpers.Formatting;
+import com.penoaks.log.PLog;
 import com.penoaks.sepher.ConfigurationSection;
 import com.ramencon.R;
 import com.ramencon.data.models.ModelEvent;
@@ -23,11 +29,17 @@ import org.lucasr.twowayview.TwoWayView;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
 
 public class ScheduleFragment extends DataLoadingFragment implements PersistentFragment, SwipeRefreshLayout.OnRefreshListener
 {
+	public static final long ONEDAY = 1440 * 60 * 1000;
+
 	private static ScheduleFragment instance = null;
 
 	public static ScheduleFragment instance()
@@ -38,6 +50,7 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 	public DefaultScheduleFilter currentFilter = new DefaultScheduleFilter();
 	private ScheduleDayAdapter scheduleDayAdapter;
 	private ScheduleAdapter scheduleAdapter;
+	private ExpandableListView mListView;
 
 	public ScheduleDataReceiver receiver = new ScheduleDataReceiver();
 	private Bundle savedState = null;
@@ -54,6 +67,7 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 		super.onCreate(savedInstanceState);
 
 		getActivity().setTitle("Convention Schedule");
+		setHasOptionsMenu(true);
 	}
 
 	@Override
@@ -92,6 +106,79 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 	}
 
 	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater)
+	{
+		menu.add("Show Next Events").setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener()
+		{
+			@Override
+			public boolean onMenuItemClick(MenuItem item)
+			{
+				try
+				{
+					List<Date> days = receiver.sampleDays();
+					long nowTime = new Date().getTime();
+
+					assert days.size() > 0;
+
+					if (days.get(0).getTime() > nowTime)
+					{
+						Toast.makeText(getContext(), "Sorry, Ramencon has not started yet... err, hurray... Ramencon is starting soon!", Toast.LENGTH_LONG).show();
+						return true;
+					}
+
+					if (days.get(days.size() - 1).getTime() + ONEDAY < nowTime)
+					{
+						Toast.makeText(getContext(), "Sorry, Ramencon is over. :( I hope you had a great time at the convention!", Toast.LENGTH_LONG).show();
+						return true;
+					}
+
+					int dayPosition = 0;
+
+					SimpleDateFormat sdf = new SimpleDateFormat("MM d yyyy");
+					String now = sdf.format(new Date());
+					for (int i = 0; i < days.size(); i++)
+						if (sdf.format(days.get(i)).equals(now))
+							dayPosition = i;
+
+					currentFilter.reset();
+					currentFilter.setMin(days.get(dayPosition).getTime());
+					currentFilter.setMax(days.get(dayPosition).getTime() + ONEDAY);
+
+					TreeSet<ModelEvent> data = receiver.filterRange(currentFilter);
+
+					int positionVisible = -1;
+
+					long nowDate = new Date().getTime();
+					ModelEvent[] events = data.toArray(new ModelEvent[0]);
+					for (int i = 0; i < events.length; i++)
+					{
+						Long l = events[i].getEndTime();
+						if (l > nowDate)
+						{
+							positionVisible = i;
+							break;
+						}
+					}
+
+					scheduleDayAdapter.setSelectedPosition(dayPosition + 1, new ArrayList<>(data), Formatting.date(ScheduleDayAdapter.DATEFORMAT, days.get(dayPosition)));
+
+					if (positionVisible > 0)
+						mListView.setSelectionFromTop(positionVisible, 0);
+
+					return true;
+				}
+				catch (ParseException e)
+				{
+					e.printStackTrace();
+					Toast.makeText(getContext(), "Sorry, there was a problem!", Toast.LENGTH_LONG).show();
+				}
+
+				return true;
+			}
+		});
+	}
+
+	@Override
 	public void onDataReceived(ConfigurationSection section, boolean isUpdate)
 	{
 		if (isUpdate)
@@ -115,20 +202,62 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 
 			assert mDayView != null;
 			assert mDateDisplay != null;
+			assert days.size() > 0;
 
-			ExpandableListView lv = (ExpandableListView) root.findViewById(R.id.schedule_listview);
+			mListView = (ExpandableListView) root.findViewById(R.id.schedule_listview);
 
 			int selectedPosition = 1;
-			List<ModelEvent> data;
+			TreeSet<ModelEvent> data;
 			int positionVisible = 0;
 			int positionOffset = 0;
 
+			currentFilter.reset();
+
 			if (savedState == null || savedState.isEmpty())
 			{
-				currentFilter.setMin(days.get(0).getTime());
-				currentFilter.setMax(days.get(0).getTime() + (1440 * 60 * 1000)); // One Day
+				int dayPosition = -1;
+
+				SimpleDateFormat sdf = new SimpleDateFormat("MM d yyyy");
+				String now = sdf.format(new Date());
+				for (int i = 0; i < days.size(); i++)
+					if (sdf.format(days.get(i)).equals(now))
+						dayPosition = i;
+
+				if (dayPosition >= 0)
+				{
+					currentFilter.setMin(days.get(dayPosition).getTime());
+					currentFilter.setMax(days.get(dayPosition).getTime() + ONEDAY);
+					selectedPosition = dayPosition + 1;
+				}
+				else if (receiver.hasHeartedEvents())
+				{
+					currentFilter.setHearted(DefaultScheduleFilter.TriStateList.SHOW);
+					selectedPosition = 0;
+				}
+				else
+				{
+					currentFilter.setMin(days.get(0).getTime());
+					currentFilter.setMax(days.get(0).getTime() + ONEDAY);
+					selectedPosition = 1;
+				}
 
 				data = receiver.filterRange(currentFilter);
+
+				if (dayPosition >= 0)
+				{
+					// Find the most recent event and set the scroll position
+					long nowDate = new Date().getTime();
+					ModelEvent[] events = data.toArray(new ModelEvent[0]);
+					for (int i = 0; i < events.length; i++)
+					{
+						Long l = events[i].getEndTime();
+						if (l > nowDate)
+						{
+							positionVisible = i;
+							break;
+						}
+					}
+				}
 			}
 			else
 			{
@@ -150,14 +279,14 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 				savedState = null;
 			}
 
-			scheduleDayAdapter = new ScheduleDayAdapter(this, days, mDateDisplay, selectedPosition);
+			scheduleDayAdapter = new ScheduleDayAdapter(this, days, mDateDisplay, receiver, mListView, mDayView, selectedPosition);
 			mDayView.setAdapter(scheduleDayAdapter);
 
-			scheduleAdapter = new ScheduleAdapter(getActivity(), receiver.simpleDateFormat(), receiver.simpleTimeFormat(), receiver.locations, data);
-			lv.setAdapter(scheduleAdapter);
+			scheduleAdapter = new ScheduleAdapter(getActivity(), receiver.simpleDateFormat(), receiver.simpleTimeFormat(), receiver.locations, new ArrayList<>(data));
+			mListView.setAdapter(scheduleAdapter);
 
 			if (positionVisible > 0)
-				lv.setSelectionFromTop(positionVisible, positionOffset);
+				mListView.setSelectionFromTop(positionVisible, positionOffset);
 		}
 		catch (ParseException e)
 		{
@@ -169,11 +298,5 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
 	{
 		return inflater.inflate(R.layout.fragment_schedule, container, false);
-	}
-
-	public void loadList(List<ModelEvent> list)
-	{
-		ExpandableListView lv = (ExpandableListView) getView().findViewById(R.id.schedule_listview);
-		lv.setAdapter(new ScheduleAdapter(HomeActivity.instance, receiver.simpleDateFormat(), receiver.simpleTimeFormat(), receiver.locations, list));
 	}
 }

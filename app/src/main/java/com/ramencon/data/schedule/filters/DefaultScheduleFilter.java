@@ -5,6 +5,8 @@ import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 
 import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
 
 public class DefaultScheduleFilter implements ScheduleFilter
 {
@@ -29,8 +31,10 @@ public class DefaultScheduleFilter implements ScheduleFilter
 	}
 
 	@Override
-	public boolean filter(List<ModelEvent> events, long epoch, ModelEvent event)
+	public boolean filter(TreeSet<ModelEvent> events, ModelEvent event)
 	{
+		long epoch = event.getStartTime();
+
 		if (min >= 0 && epoch < min)
 			return false;
 

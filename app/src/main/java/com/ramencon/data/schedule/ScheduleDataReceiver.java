@@ -1,35 +1,31 @@
 package com.ramencon.data.schedule;
 
-import android.util.Log;
-
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.GenericTypeIndicator;
-import com.penoaks.helpers.DataReceiver;
+import com.penoaks.data.DataReceiver;
+import com.penoaks.log.PLog;
 import com.penoaks.sepher.ConfigurationSection;
-import com.ramencon.data.schedule.filters.ScheduleFilter;
 import com.ramencon.data.models.ModelEvent;
+import com.ramencon.data.models.ModelEventComparetor;
 import com.ramencon.data.models.ModelLocation;
+import com.ramencon.data.schedule.filters.ScheduleFilter;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 public class ScheduleDataReceiver implements DataReceiver
 {
-	public SimpleDateFormat simpleDateFormat = null;
-	public SimpleDateFormat simpleTimeFormat = null;
+	private static SimpleDateFormat simpleCombinedFormat = null;
+	private static SimpleDateFormat simpleDateFormat = null;
+	private static SimpleDateFormat simpleTimeFormat = null;
 	public List<ModelLocation> locations;
-	public Map<Long, ModelEvent> schedule;
-
-	public ScheduleDataReceiver()
-	{
-
-	}
+	public TreeSet<ModelEvent> schedule;
 
 	@Override
 	public String getReferenceUri()
@@ -46,44 +42,37 @@ public class ScheduleDataReceiver implements DataReceiver
 		String dateFormat = data.getString("dateFormat");
 		String timeFormat = data.getString("timeFormat");
 
+		simpleCombinedFormat = new SimpleDateFormat(dateFormat + " " + timeFormat);
 		simpleDateFormat = new SimpleDateFormat(dateFormat);
 		simpleTimeFormat = new SimpleDateFormat(timeFormat);
 
 		locations = new ArrayList<>();
 		for (ConfigurationSection section : data.getConfigurationSection("locations").getConfigurationSections())
-			locations.add((ModelLocation) section.asObject(ModelLocation.class));
+			locations.add(section.asObject(ModelLocation.class));
 
-		List<ModelEvent> scheduleData = new ArrayList<>();
+		schedule = new TreeSet<>(new ModelEventComparetor());
 		for (ConfigurationSection section : data.getConfigurationSection("schedule").getConfigurationSections())
-			scheduleData.add((ModelEvent) section.asObject(ModelEvent.class));
-
-		final SimpleDateFormat format = new SimpleDateFormat(dateFormat + " " + timeFormat);
-		schedule = new TreeMap<>();
-		for (ModelEvent event : scheduleData)
-			try
-			{
-				Date epoch = format.parse(event.date + " " + event.time);
-				schedule.put(epoch.getTime(), event);
-			}
-			catch (ParseException ignore)
-			{
-
-			}
+			schedule.add(section.asObject(ModelEvent.class));
 	}
 
-	public SimpleDateFormat simpleDateFormat()
+	public static SimpleDateFormat simpleCombinedFormat()
+	{
+		return simpleCombinedFormat;
+	}
+
+	public static SimpleDateFormat simpleDateFormat()
 	{
 		return simpleDateFormat;
 	}
 
-	public SimpleDateFormat simpleTimeFormat()
+	public static SimpleDateFormat simpleTimeFormat()
 	{
 		return simpleTimeFormat;
 	}
 
-	public ArrayList<ModelEvent> eventList() throws ParseException
+	public Set<ModelEvent> eventList()
 	{
-		return new ArrayList<>(schedule.values());
+		return Collections.unmodifiableSet(schedule);
 	}
 
 	/**
@@ -100,39 +89,58 @@ public class ScheduleDataReceiver implements DataReceiver
 
 		long to = from + (duration * 60 * 1000);
 
-		for (Map.Entry<Long, ModelEvent> entry : schedule.entrySet())
-			if (entry.getKey() >= from && entry.getKey() <= to)
-				results.add(entry.getValue());
+		for (ModelEvent event : schedule)
+		{
+			long start = event.getStartTime();
+			long end = event.getEndTime();
+			if (start >= from && start <= to || end >= from && end <= to)
+				results.add(event);
+		}
 
 		return results;
 	}
 
-	public List<ModelEvent> filterRange(ScheduleFilter filter) throws ParseException
+	public List<ModelEvent> filterRangeList(ScheduleFilter filter) throws ParseException
 	{
-		List<ModelEvent> dates = new ArrayList<>();
+		return new ArrayList<>(filterRange(filter));
+	}
 
-		for (Map.Entry<Long, ModelEvent> event : schedule.entrySet())
-			if (filter.filter(dates, event.getKey(), event.getValue()))
-				dates.add(event.getValue());
+	public TreeSet<ModelEvent> filterRange(ScheduleFilter filter) throws ParseException
+	{
+		TreeSet<ModelEvent> events = new TreeSet<>(new ModelEventComparetor());
 
-		return dates;
+		// SimpleDateFormat sdf = new SimpleDateFormat("M/d hh:mm");
+
+		for (ModelEvent event : schedule)
+			if (filter.filter(events, event))
+				events.add(event);
+		// PLog.i("Got ModelEvent: " + event.getKey() + " (" + sdf.format(new Date(event.getKey())) + " to " + sdf.format(new Date(event.getKey() + (60000 * Integer.parseInt(event.getValue().duration)))) + ") --> " + event.getValue().title);
+
+		return events;
 	}
 
 	public List<Date> sampleDays() throws ParseException
 	{
-		List<Date> days = new ArrayList<>();
+		return new ArrayList<Date>()
+		{{
+			for (ModelEvent event : schedule)
+			{
+				Date day1 = simpleDateFormat().parse(event.date);
+				boolean add = true;
+				for (Date day2 : this)
+					if (day2.equals(day1))
+						add = false;
+				if (add)
+					add(day1);
+			}
+		}};
+	}
 
-		for (ModelEvent event : schedule.values())
-		{
-			Date day1 = simpleDateFormat().parse(event.date);
-			boolean add = true;
-			for (Date day2 : days)
-				if (day2.equals(day1))
-					add = false;
-			if (add)
-				days.add(day1);
-		}
-
-		return days;
+	public boolean hasHeartedEvents()
+	{
+		for (ModelEvent event : schedule)
+			if (event.isHearted())
+				return true;
+		return false;
 	}
 }

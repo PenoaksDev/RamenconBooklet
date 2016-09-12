@@ -104,7 +104,7 @@ public class MemorySection implements ConfigurationSection
 		{
 			for (OnConfigurationListener listener : listeners)
 				listener.onSectionAdd(section);
-			if (parent != null)
+			if (parent != null && parent != MemorySection.this && parent.getForwardingListener() != this)
 				parent.getForwardingListener().onSectionAdd(section);
 		}
 
@@ -113,7 +113,7 @@ public class MemorySection implements ConfigurationSection
 		{
 			for (OnConfigurationListener listener : listeners)
 				listener.onSectionRemove(parent, orphanedChild);
-			if (parent != null)
+			if (parent != null && parent != MemorySection.this && parent.getForwardingListener() != this)
 				parent.getForwardingListener().onSectionRemove(parent, orphanedChild);
 		}
 

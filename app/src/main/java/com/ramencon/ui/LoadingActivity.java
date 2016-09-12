@@ -9,17 +9,20 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.penoaks.data.Persistence;
 import com.ramencon.R;
 
+import java.io.File;
+
 public class LoadingActivity extends AppCompatActivity implements FirebaseAuth.AuthStateListener
 {
+	public static final int AUTH_ERROR = 99;
+	public static final int PERSISTENCE_ERROR = 98;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_loading);
 
-		Persistence persistence = new Persistence(getCacheDir());
-		persistence.keepPersistent("booklet-data");
-		persistence.keepPersistent("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid());
+		initPersistence(getCacheDir());
 
 		FirebaseAuth auth = FirebaseAuth.getInstance();
 		if (auth.getCurrentUser() == null)
@@ -31,12 +34,19 @@ public class LoadingActivity extends AppCompatActivity implements FirebaseAuth.A
 			initHome();
 	}
 
+	public static void initPersistence(File cacheDir)
+	{
+		Persistence persistence = new Persistence(cacheDir);
+		persistence.keepPersistent("booklet-data");
+		persistence.keepPersistent("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid());
+	}
+
 	private void initHome()
 	{
 		if (Persistence.getInstance().check())
 			startActivity(new Intent(this, HomeActivity.class));
 		else
-			startActivityForResult(new Intent(this, ErroredActivity.class), ErroredActivity.PERSISTENCE_ERROR);
+			startActivityForResult(new Intent(this, ErroredActivity.class).putExtra(ErroredActivity.ERROR_MESSAGE, "We had a problem syncing with the remote database. Are you connected to the internet?"), PERSISTENCE_ERROR);
 	}
 
 	@Override
@@ -49,7 +59,7 @@ public class LoadingActivity extends AppCompatActivity implements FirebaseAuth.A
 	public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth)
 	{
 		if (firebaseAuth.getCurrentUser() == null)
-			startActivityForResult(new Intent(this, ErroredActivity.class), ErroredActivity.AUTH_ERROR);
+			startActivityForResult(new Intent(this, ErroredActivity.class).putExtra(ErroredActivity.ERROR_MESSAGE, "We had an authentication problem. Are you connected to the internet?"), AUTH_ERROR);
 		else
 			initHome();
 	}
@@ -57,10 +67,10 @@ public class LoadingActivity extends AppCompatActivity implements FirebaseAuth.A
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data)
 	{
-		if (requestCode == ErroredActivity.AUTH_ERROR)
-		{
+		if (requestCode == AUTH_ERROR)
 			FirebaseAuth.getInstance().signInAnonymously();
-		}
+		else if (requestCode == PERSISTENCE_ERROR)
+			initHome();
 		else
 			super.onActivityResult(requestCode, resultCode, data);
 	}

@@ -8,11 +8,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ExpandableListView;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.penoaks.helpers.DataLoadingFragment;
-import com.penoaks.helpers.DataReceiver;
-import com.penoaks.helpers.PersistentFragment;
+import com.penoaks.data.DataLoadingFragment;
+import com.penoaks.fragments.PersistentFragment;
 import com.penoaks.sepher.ConfigurationSection;
 import com.ramencon.R;
 import com.ramencon.data.guests.GuestAdapter;

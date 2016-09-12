@@ -12,7 +12,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.penoaks.sepher.ConfigurationSection;
 import com.penoaks.sepher.types.json.JsonConfiguration;
-import com.ramencon.RamenApp;
 
 import java.io.File;
 import java.io.IOException;
@@ -80,6 +79,7 @@ public class Persistence
 		for (PersistenceContainer container : containers)
 			container.destroy();
 		containers.clear();
+		instance = null;
 	}
 
 	public void keepPersistent(String uri)
@@ -163,11 +163,24 @@ public class Persistence
 		}
 	}
 
+	public void convertDataSnapshotToSection(DataSnapshot dataSnapshot, ConfigurationSection section)
+	{
+		if (dataSnapshot.hasChildren())
+		{
+			ConfigurationSection childSection = section.createSection(dataSnapshot.getKey());
+			for (DataSnapshot snapshot : dataSnapshot.getChildren())
+				convertDataSnapshotToSection(snapshot, childSection);
+		}
+		else
+			section.set(dataSnapshot.getKey(), dataSnapshot.getValue());
+	}
+
 	private class PersistenceContainer implements ValueEventListener, ChildEventListener
 	{
 		private JsonConfiguration data;
 		private DatabaseReference reference;
 		private boolean markedForUpdate = false;
+		private boolean dataLoaded = false;
 		private String uri;
 
 		PersistenceContainer(String uri, ConfigurationSection section)
@@ -178,7 +191,10 @@ public class Persistence
 			data.options().pathSeparator('/');
 
 			if (section != null)
+			{
+				dataLoaded = true;
 				data.set(section);
+			}
 
 			reference = database.getReference(uri);
 			reference.addValueEventListener(this);
@@ -206,19 +222,8 @@ public class Persistence
 			ConfigurationSection cs = section == null || !(section instanceof ConfigurationSection) ? data.createSection(uri) : (ConfigurationSection) section;
 			convertDataSnapshotToSection(dataSnapshot, cs);
 
+			dataLoaded = true;
 			saveToFile(data);
-		}
-
-		public void convertDataSnapshotToSection(DataSnapshot dataSnapshot, ConfigurationSection section)
-		{
-			if (dataSnapshot.hasChildren())
-			{
-				ConfigurationSection childSection = section.createSection(dataSnapshot.getKey());
-				for (DataSnapshot snapshot : dataSnapshot.getChildren())
-					convertDataSnapshotToSection(snapshot, childSection);
-			}
-			else
-				section.set(dataSnapshot.getKey(), dataSnapshot.getValue());
 		}
 
 		@Override

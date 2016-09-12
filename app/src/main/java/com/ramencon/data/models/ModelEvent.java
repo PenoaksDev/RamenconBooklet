@@ -2,8 +2,13 @@ package com.ramencon.data.models;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.penoaks.data.Persistence;
+import com.penoaks.log.PLog;
 import com.penoaks.sepher.ConfigurationSection;
+import com.ramencon.data.schedule.ScheduleDataReceiver;
 import com.ramencon.ui.HomeActivity;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 
 public class ModelEvent
 {
@@ -28,5 +33,27 @@ public class ModelEvent
 	public void setHearted(boolean hearted)
 	{
 		getConfigurationSection().set("hearted", hearted);
+	}
+
+	public long getStartTime()
+	{
+		try
+		{
+			return ScheduleDataReceiver.simpleCombinedFormat().parse(date + " " + time).getTime();
+		}
+		catch (Exception e)
+		{
+			throw new RuntimeException(e);
+		}
+	}
+
+	public long getEndTime()
+	{
+		return getStartTime() + (getDuration() * 60);
+	}
+
+	public int getDuration()
+	{
+		return Integer.parseInt(duration);
 	}
 }
