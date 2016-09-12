@@ -22,6 +22,7 @@ import com.google.firebase.storage.StorageReference;
 import com.penoaks.data.Persistence;
 import com.penoaks.helpers.DataManager;
 import com.penoaks.helpers.FragmentStack;
+import com.penoaks.log.PLog;
 import com.ramencon.R;
 
 public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, DataManager.OnDataListener
@@ -29,7 +30,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 	public final static StorageReference storageReference = FirebaseStorage.getInstance().getReferenceFromUrl("gs://ramencon-booklet.appspot.com");
 
 	public static HomeActivity instance;
-	public static Persistence persistence;
 	public FragmentStack stacker;
 
 	public HomeActivity()
@@ -65,7 +65,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 		drawer.setDrawerListener(toggle);
 		toggle.syncState();
 
-		final FragmentManager mgr = getSupportFragmentManager();
+		/* final FragmentManager mgr = getSupportFragmentManager();
 		mgr.addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener()
 		{
 			@Override
@@ -83,6 +83,25 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 					}
 				}
 			}
+		});*/
+
+		stacker.addOnBackStackChangedListener(new FragmentStack.OnBackStackChangedListener()
+		{
+			@Override
+			public void onBackStackChanged()
+			{
+				ActionBar mActionBar = getSupportActionBar();
+				if (mActionBar != null)
+				{
+					if (stacker.hasBackstack())
+						mActionBar.setDisplayHomeAsUpEnabled(true);
+					else
+					{
+						mActionBar.setDisplayHomeAsUpEnabled(false);
+						toggle.syncState();
+					}
+				}
+			}
 		});
 
 		toolbar.setNavigationOnClickListener(new View.OnClickListener()
@@ -90,8 +109,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 			@Override
 			public void onClick(View v)
 			{
-				if (mgr.getBackStackEntryCount() > 0)
-					mgr.popBackStackImmediate();
+				if (stacker.hasBackstack())
+					stacker.popBackstack();
 				else
 					drawer.openDrawer(GravityCompat.START);
 			}
@@ -103,12 +122,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 		assert FirebaseAuth.getInstance().getCurrentUser() != null;
 
-		persistence = new Persistence(getCacheDir());
-
-		persistence.keepPersistent("booklet-data");
-		persistence.keepPersistent("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid());
-
-		((TextView) navigationView.getHeaderView(0).findViewById(R.id.header_text)).setText("Welcome, " + FirebaseAuth.getInstance().getCurrentUser().getDisplayName());
+		// ((TextView) navigationView.getHeaderView(0).findViewById(R.id.header_text)).setText("Welcome, " + FirebaseAuth.getInstance().getCurrentUser().getDisplayName());
 
 		if (savedInstanceState == null)
 		{
@@ -117,15 +131,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 		}
 		else
 			stacker.loadInstanceState(savedInstanceState);
-	}
-
-	@Override
-	protected void onDestroy()
-	{
-		super.onDestroy();
-
-		persistence.destroy();
-		persistence = null;
 	}
 
 	public void onConnected()
@@ -170,14 +175,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 	@Override
 	public boolean onNavigationItemSelected(MenuItem item)
 	{
-		if (item.getItemId() == R.id.nav_signout)
-		{
+		/* if (item.getItemId() == R.id.nav_signout)
 			startActivity(new Intent(this, SigninActivity.class));
-		}
-		else
-		{
-			stacker.setFragmentById(item.getItemId());
-		}
+		else */
+		stacker.setFragmentById(item.getItemId());
 
 		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 		assert drawer != null;

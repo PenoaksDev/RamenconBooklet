@@ -1,7 +1,6 @@
 package com.penoaks.helpers;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
+import com.penoaks.sepher.ConfigurationSection;
 
 public interface DataReceiver
 {
@@ -13,17 +12,10 @@ public interface DataReceiver
 	String getReferenceUri();
 
 	/**
-	 * Called when a DatabaseError is encountered
-	 *
-	 * @param databaseError
-	 */
-	void onDataError(DatabaseError databaseError);
-
-	/**
 	 * Called when data is received
 	 *
-	 * @param dataSnapshot The Data Snapshot
+	 * @param data The Data Snapshot
 	 * @param isUpdate Was this appended update
 	 */
-	void onDataReceived(DataSnapshot dataSnapshot, boolean isUpdate);
+	void onDataReceived(ConfigurationSection data, boolean isUpdate);
 }

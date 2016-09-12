@@ -18,10 +18,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.penoaks.helpers.DataLoadingFragment;
-import com.penoaks.helpers.DataReceiver;
 import com.penoaks.helpers.PersistentFragment;
 import com.penoaks.log.PLog;
 import com.penoaks.sepher.ConfigurationSection;
@@ -69,17 +66,13 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 	}
 
 	@Override
-	public View onPopulateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
 	{
-		ConfigurationSection section = HomeActivity.persistence.get("booklet-data/maps");
-
-		PLog.i("JSON Test " + section.getCurrentPath() + " // " + section.getKeys(true));
-
 		return inflater.inflate(R.layout.fragment_maps, container, false);
 	}
 
 	@Override
-	public void onDataReceived(DataSnapshot dataSnapshot, boolean isUpdate)
+	public void onDataReceived(ConfigurationSection data, boolean isUpdate)
 	{
 		if (isUpdate)
 			return;
@@ -137,12 +130,6 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 		this.savedState = bundle;
 	}
 
-	@Override
-	public void onDataError(DatabaseError databaseError)
-	{
-		throw databaseError.toException();
-	}
-
 	public class ViewPagerAdapter extends FragmentStatePagerAdapter
 	{
 		public ViewPagerAdapter(FragmentManager fm)
@@ -187,7 +174,7 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 			final ModelMap map = maps.get(getArguments().getInt("index"));
 
 			if (resolvedImages.containsKey(map.id))
-				Picasso.with(getContext()).load(resolvedImages.get(map.id)).into(image);
+				Picasso.with(getContext()).load(resolvedImages.get(map.id)).placeholder(R.drawable.image_loading).into(image);
 			else
 				HomeActivity.storageReference.child("images/maps/" + map.image).getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>()
 				{
@@ -197,10 +184,13 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 						if (task.isSuccessful())
 						{
 							resolvedImages.put(map.id, task.getResult());
-							Picasso.with(getContext()).load(task.getResult()).into(image);
+							Picasso.with(getContext()).load(task.getResult()).placeholder(R.drawable.image_loading).into(image);
 						}
 						else
+						{
+							PLog.e("Failed to loading image from Google Firebase [images/maps/" + map.image + "]");
 							image.setImageResource(R.drawable.error);
+						}
 					}
 				});
 
@@ -210,7 +200,6 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 
 	public class PagedListAdapater extends BaseAdapter
 	{
-
 		@Override
 		public int getCount()
 		{

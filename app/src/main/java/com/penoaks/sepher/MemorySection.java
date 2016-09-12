@@ -12,17 +12,19 @@ import com.penoaks.helpers.Lists;
 import com.penoaks.helpers.Maps;
 import com.penoaks.log.PLog;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 // TODO Fix the number type casting issues
 
@@ -86,13 +88,44 @@ public class MemorySection implements ConfigurationSection
 		return builder.toString();
 	}
 
-	protected final Map<String, Object> map = new LinkedHashMap<>();
-	protected final Set<String> changes = new HashSet<>();
-
 	private final ConfigurationSection parent;
 	private final Configuration root;
 	private final String fullPath;
 	private final String path;
+
+	protected final Map<String, Object> map = new ConcurrentHashMap<>();
+	protected final Set<String> changes = new HashSet<>();
+
+	protected final List<OnConfigurationListener> listeners = new ArrayList<>();
+	protected final OnConfigurationListener forwardingListener = new OnConfigurationListener()
+	{
+		@Override
+		public void onSectionAdd(ConfigurationSection section)
+		{
+			for (OnConfigurationListener listener : listeners)
+				listener.onSectionAdd(section);
+			if (parent != null)
+				parent.getForwardingListener().onSectionAdd(section);
+		}
+
+		@Override
+		public void onSectionRemove(ConfigurationSection parent, ConfigurationSection orphanedChild)
+		{
+			for (OnConfigurationListener listener : listeners)
+				listener.onSectionRemove(parent, orphanedChild);
+			if (parent != null)
+				parent.getForwardingListener().onSectionRemove(parent, orphanedChild);
+		}
+
+		@Override
+		public void onSectionChange(ConfigurationSection parent, String affectedKey)
+		{
+			for (OnConfigurationListener listener : listeners)
+				listener.onSectionChange(parent, affectedKey);
+			if (parent != null && parent != MemorySection.this && parent.getForwardingListener() != this)
+				parent.getForwardingListener().onSectionChange(parent, affectedKey);
+		}
+	};
 
 	/**
 	 * Creates an empty MemorySection for use as a root {@link Configuration} section.
@@ -189,6 +222,7 @@ public class MemorySection implements ConfigurationSection
 			{
 				map.put(key, result);
 				changes.add(key);
+				forwardingListener.onSectionAdd(result);
 			}
 			return result;
 		}
@@ -222,6 +256,142 @@ public class MemorySection implements ConfigurationSection
 				section.set(entry.getKey().toString(), entry.getValue());
 
 		return section;
+	}
+
+	@Override
+	public <T> List<T> getObjectList(String path, final Class<T> cls)
+	{
+		Object obj = get(path, null);
+
+		if (obj == null || !(obj instanceof ConfigurationSection) && !(obj instanceof Map))
+			return null;
+
+		final ConfigurationSection values;
+		if (obj instanceof Map)
+		{
+			values = new MemorySection(this, path);
+			values.set((Map<String, Object>) obj);
+		}
+		else
+			values = (ConfigurationSection) obj;
+
+		return (List<T>) values.asObjectList(cls);
+	}
+
+	@Override
+	public <T> T getObject(String path, final Class<T> cls)
+	{
+		Object obj = get(path, null);
+
+		if (obj == null || !(obj instanceof ConfigurationSection) && !(obj instanceof Map))
+			return null;
+
+		final ConfigurationSection values;
+		if (obj instanceof Map)
+		{
+			values = new MemorySection(this, path);
+			values.set((Map<String, Object>) obj);
+		}
+		else
+			values = (ConfigurationSection) obj;
+
+		return values.asObject(cls);
+	}
+
+	@Override
+	public <T> List<T> asObjectList(final Class<T> cls)
+	{
+		return new ArrayList<T>()
+		{{
+			if (Lists.incremented(map.keySet()))
+			{
+				for (Map.Entry<Integer, Object> section : Maps.asNumericallySortedMap(map).entrySet())
+					if (section.getValue() instanceof ConfigurationSection)
+						add(((ConfigurationSection) section.getValue()).asObject(cls));
+			}
+			else
+				for (Map.Entry<String, Object> section : map.entrySet())
+					if (section.getValue() instanceof ConfigurationSection)
+						add(((ConfigurationSection) section.getValue()).asObject(cls));
+		}};
+	}
+
+	@Override
+	public <T> T asObject(final Class<T> cls)
+	{
+		try
+		{
+			Constructor<?> constructor = cls.getConstructor(ConfigurationSection.class);
+			return (T) constructor.newInstance(this);
+		}
+		catch (Exception ignore)
+		{
+		}
+
+		try
+		{
+			Constructor<?> constructor = cls.getConstructor(Map.class);
+			return (T) constructor.newInstance(map);
+		}
+		catch (Exception ignore)
+		{
+		}
+
+		try
+		{
+			Constructor<?> constructor = cls.getConstructor();
+			Object obj = constructor.newInstance();
+
+			final Map<String, Field> fields = new HashMap<String, Field>()
+			{{
+				for (Field field : cls.getFields())
+					put(field.getName(), field);
+			}};
+
+			for (Map.Entry<String, Object> entry : map.entrySet())
+			{
+				if (!fields.containsKey(entry.getKey()))
+					PLog.w("The key " + entry.getKey() + " does not exist in class " + cls);
+				else
+				{
+					Object value = entry.getValue();
+					Field field = fields.remove(entry.getKey());
+					field.setAccessible(true);
+
+					if (value.getClass().isAssignableFrom(field.getType()))
+					{
+						field.set(obj, value);
+					}
+					else if (value instanceof ConfigurationSection)
+					{
+						Object newValue = Lists.incremented(((ConfigurationSection) value).getKeys()) ? ((ConfigurationSection) value).asObjectList(field.getType()) : ((ConfigurationSection) value).asObject(field.getType());
+						if (newValue == null)
+							PLog.e("Failed to cast ConfigurationSection " + entry.getKey() + " to object " + field.getType() + ". [" + value.getClass() + " // " + field.getType() + "]");
+						else
+							field.set(obj, newValue);
+					}
+					else
+						PLog.e("Failed to find casting " + entry.getKey() + " for object " + field.getType() + ". [" + value.getClass() + " // " + field.getType() + "]");
+				}
+			}
+
+			for (Field field : fields.values())
+				if (field.get(obj) == null && !field.isSynthetic())
+					PLog.w("The field " + field.getName() + " is unassigned for object " + cls);
+
+			return (T) obj;
+		}
+		catch (Exception ignore)
+		{
+		}
+
+		return null;
+	}
+
+	@Override
+	public Map<String, Object> getChildren()
+	{
+		return Collections.unmodifiableMap(map);
 	}
 
 	@Override
@@ -420,7 +590,6 @@ public class MemorySection implements ConfigurationSection
 	public ConfigurationSection getConfigurationSection(String path, boolean create)
 	{
 		Object val = get(path, null);
-		PLog.i("Section " + val.getClass().getSimpleName() + " // " + val);
 		if (val != null)
 			return val instanceof ConfigurationSection ? (ConfigurationSection) val : null;
 
@@ -1026,7 +1195,11 @@ public class MemorySection implements ConfigurationSection
 		if (section == this)
 		{
 			if (value == null)
-				map.remove(key);
+			{
+				Object removed = map.remove(key);
+				if (removed instanceof ConfigurationSection)
+					forwardingListener.onSectionRemove(this, (ConfigurationSection) removed);
+			}
 			else if (value instanceof Map)
 				createSection(key, (Map<?, ?>) value);
 			else if (value instanceof List)
@@ -1036,6 +1209,7 @@ public class MemorySection implements ConfigurationSection
 			else
 				map.put(key, value);
 
+			forwardingListener.onSectionChange(this, key);
 			changes.add(key);
 		}
 		else
@@ -1108,6 +1282,22 @@ public class MemorySection implements ConfigurationSection
 	}
 
 	@Override
+	public List<String> getChanges()
+	{
+		return getChanges(true);
+	}
+
+	@Override
+	public List<String> getChanges(boolean deep)
+	{
+		return new ArrayList<String>()
+		{{
+			addAll(changes);
+			// TODO DEEP
+		}};
+	}
+
+	@Override
 	public boolean hasChanges()
 	{
 		return hasChanges(true);
@@ -1149,6 +1339,41 @@ public class MemorySection implements ConfigurationSection
 					if (obj instanceof ConfigurationSection)
 						((ConfigurationSection) obj).resolveChanges(true);
 			}
+	}
+
+	@Override
+	public void addListener(OnConfigurationListener listener)
+	{
+		synchronized (listeners)
+		{
+			listeners.add(listener);
+		}
+	}
+
+	@Override
+	public void removeListener(OnConfigurationListener listener)
+	{
+		synchronized (listeners)
+		{
+			listeners.remove(listener);
+		}
+	}
+
+	@Override
+	public OnConfigurationListener getForwardingListener()
+	{
+		return forwardingListener;
+	}
+
+	@Override
+	public List<ConfigurationSection> getConfigurationSections()
+	{
+		return new ArrayList<ConfigurationSection>()
+		{{
+			for (Object obj : map.values())
+				if (obj instanceof ConfigurationSection)
+					add((ConfigurationSection) obj);
+		}};
 	}
 
 	@Override

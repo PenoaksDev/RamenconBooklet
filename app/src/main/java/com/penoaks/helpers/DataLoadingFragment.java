@@ -2,27 +2,26 @@ package com.penoaks.helpers;
 
 import android.app.ProgressDialog;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.google.firebase.database.ChildEventListener;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.penoaks.data.Persistence;
+import com.penoaks.sepher.ConfigurationSection;
+import com.penoaks.sepher.OnConfigurationListener;
+import com.ramencon.ui.HomeActivity;
+import com.ramencon.ui.LoadingActivity;
+import com.ramencon.ui.LoadingFragment;
 
-public abstract class DataLoadingFragment extends Fragment implements ValueEventListener
+public abstract class DataLoadingFragment extends Fragment implements OnConfigurationListener
 {
-	private boolean viewCreated = false;
+	private boolean started = false;
 	private DataReceiver receiver = null;
 	private ProgressDialog mDialog;
 	private boolean autoLoadData = true;
-	private boolean waiting = true;
-	private DatabaseReference mDatabaseReference;
+	private ConfigurationSection data;
 
 	public final void setAutoLoadData(boolean autoLoadData)
 	{
@@ -37,13 +36,27 @@ public abstract class DataLoadingFragment extends Fragment implements ValueEvent
 	}
 
 	@Override
-	public final View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+	public void onCreate(@Nullable Bundle savedInstanceState)
 	{
-		viewCreated = true;
+		super.onCreate(savedInstanceState);
+	}
+
+	@Override
+	public void onStart()
+	{
+		super.onStart();
+
+		started = true;
 		if (autoLoadData)
 			handleDataReceiver();
+	}
 
-		return onPopulateView(inflater, container, savedInstanceState);
+	@Override
+	public void onStop()
+	{
+		super.onStop();
+
+		started = false;
 	}
 
 	public final void refreshData()
@@ -54,22 +67,24 @@ public abstract class DataLoadingFragment extends Fragment implements ValueEvent
 	private final void handleDataReceiver()
 	{
 		// Test that the prerequisites were met
-		if (receiver != null && viewCreated)
+		if (receiver != null && started)
 		{
 			mDialog = new ProgressDialog(getActivity());
 			mDialog.setMessage("Loading Data...");
 			mDialog.setCancelable(false);
 			mDialog.show();
 
-			waiting = true;
+			if (data != null)
+				data.removeListener(this);
 
-			if (mDatabaseReference != null)
-				mDatabaseReference.removeEventListener(this);
+			data = Persistence.getInstance().get(receiver.getReferenceUri());
 
-			String refUri = receiver.getReferenceUri();
-			mDatabaseReference = refUri == null || refUri.isEmpty() ? FirebaseDatabase.getInstance().getReference() : FirebaseDatabase.getInstance().getReference(refUri);
+			data.addListener(this);
 
-			mDatabaseReference.addValueEventListener(this);
+			mDialog.cancel();
+
+			receiver.onDataReceived(data, false);
+			onDataReceived(data, false);
 		}
 	}
 
@@ -78,52 +93,56 @@ public abstract class DataLoadingFragment extends Fragment implements ValueEvent
 	{
 		super.onDestroyView();
 
-		mDatabaseReference.removeEventListener(this);
-	}
-
-	@Override
-	public void onDataChange(DataSnapshot dataSnapshot)
-	{
-		mDialog.cancel();
-
-		Log.i("APP", "Data Event: " + waiting);
-
-		receiver.onDataReceived(dataSnapshot, !waiting);
-		onDataReceived(dataSnapshot, !waiting);
-		waiting = false;
-	}
-
-	@Override
-	public void onCancelled(DatabaseError databaseError)
-	{
-		mDialog.cancel();
-		receiver.onDataError(databaseError);
-		onDataError(databaseError);
+		if (data != null)
+			data.removeListener(this);
 	}
 
 	/**
-	 * Called from within #onCreateView, used to inflate and populate the basic fragment outline.
-	 * Loading the actual data should be done in the #onDataReceived method.
+	 * Called after a new section is added to tree
 	 *
-	 * @param inflater
-	 * @param container
-	 * @param savedInstanceState
-	 * @return
+	 * @param section The new child section
 	 */
-	protected abstract View onPopulateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState);
+	public final void onSectionAdd(ConfigurationSection section)
+	{
+
+	}
+
+	/**
+	 * Called after a section is removed from the tree
+	 *
+	 * @param parent        The parent of the removed child
+	 * @param orphanedChild The orphaned child before it's left for the GC
+	 */
+	public final void onSectionRemove(ConfigurationSection parent, ConfigurationSection orphanedChild)
+	{
+
+	}
+
+	/**
+	 * Called after a section has been altered, i.e., values added, removed, or changed.
+	 *
+	 * @param parent      The parent section
+	 * @param affectedKey The altered key
+	 */
+	public final void onSectionChange(ConfigurationSection parent, String affectedKey)
+	{
+
+	}
+
+	/*public void onCancelled(DatabaseError databaseError)
+	{
+		// TODO REUSE?
+
+		mDialog.cancel();
+		receiver.onDataError(databaseError);
+		onDataError(databaseError);
+	}*/
 
 	/**
 	 * Called when data is received
 	 *
-	 * @param dataSnapshot The Data Snapshot
+	 * @param data     The Data Snapshot
 	 * @param isUpdate Was this appended update
 	 */
-	protected abstract void onDataReceived(DataSnapshot dataSnapshot, boolean isUpdate);
-
-	/**
-	 * Called when a DatabaseError is encountered
-	 *
-	 * @param databaseError
-	 */
-	protected abstract void onDataError(DatabaseError databaseError);
+	protected abstract void onDataReceived(ConfigurationSection data, boolean isUpdate);
 }

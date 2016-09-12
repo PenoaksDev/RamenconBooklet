@@ -7,11 +7,11 @@
         android:summary="Display event time in 24 hour format"
         android:title="Use Military Time"/>
 
-    <CheckBoxPreference
+    <!-- <CheckBoxPreference
         android:defaultValue="false"
         android:key="pref_cache"
         android:summary="(Requires a restart to apply changes)"
-        android:title="Cache Data for Offline Browsing"/>
+        android:title="Cache Data for Offline Browsing"/> -->
 
     <ListPreference
         android:defaultValue="15"

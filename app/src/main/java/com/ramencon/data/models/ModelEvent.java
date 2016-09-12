@@ -1,5 +1,10 @@
 package com.ramencon.data.models;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.penoaks.data.Persistence;
+import com.penoaks.sepher.ConfigurationSection;
+import com.ramencon.ui.HomeActivity;
+
 public class ModelEvent
 {
 	public String id;
@@ -10,39 +15,18 @@ public class ModelEvent
 	public String location;
 	public String description;
 
-	// private DatabaseReference ref = null;
-	// private DataSnapshot data = null;
-
-	public void resolveDataSnapshot()
+	private ConfigurationSection getConfigurationSection()
 	{
-		//ref = SigninActivity.getUserReference().child("events/" + id);
-		//ref.addValueEventListener(this);
+		return Persistence.getInstance().get("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid() + "/events/" + id);
 	}
 
 	public boolean isHearted()
 	{
-		return false;
-		/*if ( data == null )
-			return false;
-		DataSnapshot child = data.child("hearted");
-		return child == null || child.getValue() == null ? false : child.getValue(Boolean.class);*/
+		return getConfigurationSection().getBoolean("hearted", false);
 	}
 
 	public void setHearted(boolean hearted)
 	{
-		//assert ref != null;
-		//ref.child("hearted").setValue(hearted);
+		getConfigurationSection().set("hearted", hearted);
 	}
-
-	/*@Override
-	public void onDataChange(DataSnapshot dataSnapshot)
-	{
-		data = dataSnapshot;
-	}
-
-	@Override
-	public void onCancelled(DatabaseError databaseError)
-	{
-		throw databaseError.toException();
-	}*/
 }

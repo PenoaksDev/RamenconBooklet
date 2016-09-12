@@ -10,9 +10,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.penoaks.log.PLog;
 import com.penoaks.sepher.ConfigurationSection;
 import com.penoaks.sepher.types.json.JsonConfiguration;
+import com.ramencon.RamenApp;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,12 +35,43 @@ public class Persistence
 
 	public int currentTick = 0;
 	public boolean isRunning = true;
+	private static Persistence instance;
+
+	public static Persistence getInstance()
+	{
+		return instance;
+	}
 
 	public Persistence(File cache)
 	{
+		instance = this;
+
 		persistenceFile = new File(cache, "PersistenceData.json");
 		parent.options().pathSeparator('/');
+
+		if (persistenceFile.exists())
+			try
+			{
+				parent.load(persistenceFile);
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+
 		handler.execute();
+	}
+
+	public PersistenceContainer getContainer(String uri)
+	{
+		uri = uri.startsWith("/") ? uri : "/" + uri;
+		for (PersistenceContainer container : containers)
+		{
+			String containerUri = container.uri.startsWith("/") ? container.uri : "/" + container.uri;
+			if (uri.startsWith(containerUri))
+				return container;
+		}
+		return null;
 	}
 
 	public void destroy()
@@ -64,9 +95,7 @@ public class Persistence
 			}
 		}
 
-		PLog.i("Keeping uri persistent: " + uri);
-
-		containers.add(new PersistenceContainer(uri));
+		containers.add(new PersistenceContainer(uri, parent.has(uri) ? parent.getConfigurationSection(uri) : null));
 	}
 
 	/**
@@ -94,9 +123,20 @@ public class Persistence
 		return state;
 	}
 
+	public ConfigurationSection get()
+	{
+		return get(null);
+	}
+
 	public ConfigurationSection get(String path)
 	{
-		return parent.getConfigurationSection(path, true);
+		return path == null || path.isEmpty() ? parent : parent.getConfigurationSection(path, true);
+	}
+
+	public boolean check()
+	{
+		// Check containers for data
+		return true;
 	}
 
 	private enum PersistenceState
@@ -111,7 +151,6 @@ public class Persistence
 		synchronized (parent)
 		{
 			parent.set(data);
-			PLog.i("Key Compare: " + data.getKeys() + " -- " + parent.getKeys());
 
 			try
 			{
@@ -128,14 +167,18 @@ public class Persistence
 	{
 		private JsonConfiguration data;
 		private DatabaseReference reference;
+		private boolean markedForUpdate = false;
 		private String uri;
 
-		PersistenceContainer(String uri)
+		PersistenceContainer(String uri, ConfigurationSection section)
 		{
 			this.uri = uri;
 
 			data = new JsonConfiguration();
 			data.options().pathSeparator('/');
+
+			if (section != null)
+				data.set(section);
 
 			reference = database.getReference(uri);
 			reference.addValueEventListener(this);
@@ -144,13 +187,14 @@ public class Persistence
 
 		public void update()
 		{
+			markedForUpdate = false;
 			saveToFile(data);
 			data.resolveChanges();
 		}
 
 		public boolean needsUpdate()
 		{
-			return data.hasChanges();
+			return data.hasChanges() || markedForUpdate;
 		}
 
 		@Override
@@ -263,6 +307,11 @@ public class Persistence
 			reference.removeEventListener((ChildEventListener) this);
 			saveToFile(data);
 		}
+
+		public void markForUpdate()
+		{
+			markedForUpdate = true;
+		}
 	}
 
 	class AsyncHandler extends AsyncTask<Void, Void, Void>
@@ -281,7 +330,7 @@ public class Persistence
 
 				if (l > 2000L && i - q >= 15000L)
 				{
-					Log.w(TAG, "Can't keep up! Did the system time change, or the task is overloaded?");
+					Log.w(TAG, "Can't keep up! Did the system time change, or is the system overloaded?");
 					l = 2000L;
 					q = i;
 				}

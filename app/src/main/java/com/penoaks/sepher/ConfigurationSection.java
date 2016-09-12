@@ -612,6 +612,10 @@ public interface ConfigurationSection
 	 */
 	boolean has(String path);
 
+	List<String> getChanges();
+
+	List<String> getChanges(boolean deep);
+
 	boolean hasChanges();
 
 	boolean hasChanges(boolean deep);
@@ -619,4 +623,22 @@ public interface ConfigurationSection
 	void resolveChanges();
 
 	void resolveChanges(boolean deep);
+
+	OnConfigurationListener getForwardingListener();
+
+	void addListener(OnConfigurationListener onConfigurationListener);
+
+	void removeListener(OnConfigurationListener onConfigurationListener);
+
+	List<ConfigurationSection> getConfigurationSections();
+
+	<T> List<T> getObjectList(String path, Class<T> cls);
+
+	<T> T getObject(String path, Class<T> cls);
+
+	Map<String, Object> getChildren();
+
+	<T> List<T> asObjectList(Class<T> cls);
+
+	<T> T asObject(Class<T> cls);
 }

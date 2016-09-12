@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.penoaks.log.PLog;
 import com.ramencon.R;
 import com.ramencon.data.ListGroup;
 import com.ramencon.data.models.ModelGuest;
@@ -106,8 +107,10 @@ public class GuestAdapter extends BaseExpandableListAdapter
 		final ImageView iv_thumbnail = (ImageView) listItemView.findViewById(R.id.guest_thumbnail);
 		final TextView tv_title = (TextView) listItemView.findViewById(R.id.guest_title);
 
-		if (listGroup.resolvedImages.containsKey(guest.id))
-			Picasso.with(context).load(listGroup.resolvedImages.get(guest.id)).into(iv_thumbnail);
+		if (guest.image == null)
+			iv_thumbnail.setImageResource(R.drawable.error);
+		else if (listGroup.resolvedImages.containsKey(guest.id))
+			Picasso.with(context).load(listGroup.resolvedImages.get(guest.id)).placeholder(R.drawable.image_loading).into(iv_thumbnail);
 		else
 			HomeActivity.storageReference.child("images/guests/" + listGroup.id + "/" + guest.image).getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>()
 			{
@@ -117,10 +120,13 @@ public class GuestAdapter extends BaseExpandableListAdapter
 					if (task.isSuccessful())
 					{
 						listGroup.resolvedImages.put(guest.id, task.getResult());
-						Picasso.with(context).load(task.getResult()).into(iv_thumbnail);
+						Picasso.with(context).load(task.getResult()).placeholder(R.drawable.image_loading).into(iv_thumbnail);
 					}
 					else
+					{
+						PLog.e("Failed to loading image from Google Firebase [images/guests/" + listGroup.id + "/" + guest.image + "]");
 						iv_thumbnail.setImageResource(R.drawable.error);
+					}
 				}
 			});
 

@@ -20,10 +20,10 @@
             android:id="@+id/nav_maps"
             android:icon="@drawable/ic_menu_map"
             android:title="Maps and Locations"/>
-        <item
+        <!-- <item
             android:id="@+id/nav_friends"
             android:icon="@drawable/ic_menu_friends"
-            android:title="Check-in with Friends"/>
+            android:title="Check-in with Friends"/> -->
     </group>
 
     <group
@@ -37,10 +37,10 @@
             android:id="@+id/nav_share"
             android:icon="@drawable/ic_menu_share"
             android:title="Share"/>
-        <item
+        <!-- <item
             android:id="@+id/nav_signout"
             android:icon="@drawable/ic_menu_signout"
-            android:title="Sign-out &amp; More"/>
+            android:title="Sign-out &amp; More"/> -->
     </group>
 
 </menu>

@@ -13,6 +13,7 @@ import com.google.firebase.database.DatabaseError;
 import com.penoaks.helpers.DataLoadingFragment;
 import com.penoaks.helpers.DataReceiver;
 import com.penoaks.helpers.PersistentFragment;
+import com.penoaks.sepher.ConfigurationSection;
 import com.ramencon.R;
 import com.ramencon.data.guests.GuestAdapter;
 import com.ramencon.data.guests.GuestDataReceiver;
@@ -46,13 +47,13 @@ public class GuestFragment extends DataLoadingFragment implements PersistentFrag
 	}
 
 	@Override
-	public View onPopulateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
 	{
 		return inflater.inflate(R.layout.fragment_guests, container, false);
 	}
 
 	@Override
-	public void onDataReceived(DataSnapshot dataSnapshot, boolean isUpdate)
+	public void onDataReceived(ConfigurationSection data, boolean isUpdate)
 	{
 		if (isUpdate)
 			return;
@@ -107,11 +108,5 @@ public class GuestFragment extends DataLoadingFragment implements PersistentFrag
 	public void loadState(Bundle bundle)
 	{
 		this.savedState = bundle;
-	}
-
-	@Override
-	public void onDataError(DatabaseError databaseError)
-	{
-		throw databaseError.toException();
 	}
 }

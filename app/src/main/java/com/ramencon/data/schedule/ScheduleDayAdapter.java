@@ -10,8 +10,8 @@ import android.widget.TextView;
 
 import com.penoaks.helpers.Formatting;
 import com.ramencon.R;
-import com.ramencon.ui.ScheduleFragment;
 import com.ramencon.data.schedule.filters.DefaultScheduleFilter;
+import com.ramencon.ui.ScheduleFragment;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -79,6 +79,9 @@ public class ScheduleDayAdapter extends BaseAdapter
 			dayImage.setImageResource(R.drawable.ic_heart);
 			dayImage.setVisibility(View.VISIBLE);
 			dayNumber.setVisibility(View.GONE);
+
+			if (position == selectedPosition && mDateDisplay != null)
+				mDateDisplay.setText("Favorite Events");
 
 			view.setOnClickListener(new View.OnClickListener()
 			{

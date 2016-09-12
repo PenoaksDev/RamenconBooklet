@@ -9,17 +9,15 @@ import android.view.ViewGroup;
 import android.widget.ExpandableListView;
 import android.widget.TextView;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.penoaks.helpers.DataLoadingFragment;
-import com.penoaks.helpers.DataReceiver;
 import com.penoaks.helpers.PersistentFragment;
+import com.penoaks.sepher.ConfigurationSection;
 import com.ramencon.R;
+import com.ramencon.data.models.ModelEvent;
 import com.ramencon.data.schedule.ScheduleAdapter;
 import com.ramencon.data.schedule.ScheduleDataReceiver;
 import com.ramencon.data.schedule.ScheduleDayAdapter;
 import com.ramencon.data.schedule.filters.DefaultScheduleFilter;
-import com.ramencon.data.models.ModelEvent;
 
 import org.lucasr.twowayview.TwoWayView;
 
@@ -94,7 +92,7 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 	}
 
 	@Override
-	public void onDataReceived(DataSnapshot dataSnapshot, boolean isUpdate)
+	public void onDataReceived(ConfigurationSection section, boolean isUpdate)
 	{
 		if (isUpdate)
 			return;
@@ -108,15 +106,20 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 
 		try
 		{
+			assert receiver.schedule.size() > 0;
+
 			List<Date> days = receiver.sampleDays();
 
 			TwoWayView mDayView = (TwoWayView) root.findViewById(R.id.daylist);
 			TextView mDateDisplay = (TextView) root.findViewById(R.id.date_display);
 
+			assert mDayView != null;
+			assert mDateDisplay != null;
+
 			ExpandableListView lv = (ExpandableListView) root.findViewById(R.id.schedule_listview);
 
-			int selectedPosition = 2;
-			List<ModelEvent> data = null;
+			int selectedPosition = 1;
+			List<ModelEvent> data;
 			int positionVisible = 0;
 			int positionOffset = 0;
 
@@ -163,15 +166,9 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 	}
 
 	@Override
-	public View onPopulateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
 	{
 		return inflater.inflate(R.layout.fragment_schedule, container, false);
-	}
-
-	@Override
-	public void onDataError(DatabaseError databaseError)
-	{
-		throw databaseError.toException();
 	}
 
 	public void loadList(List<ModelEvent> list)

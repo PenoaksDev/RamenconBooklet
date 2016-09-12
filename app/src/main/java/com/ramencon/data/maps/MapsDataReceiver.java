@@ -1,10 +1,7 @@
 package com.ramencon.data.maps;
 
-import android.util.Log;
-
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.penoaks.helpers.DataReceiver;
+import com.penoaks.sepher.ConfigurationSection;
 import com.ramencon.data.models.ModelMap;
 
 import java.util.ArrayList;
@@ -21,20 +18,14 @@ public class MapsDataReceiver implements DataReceiver
 	}
 
 	@Override
-	public void onDataReceived(DataSnapshot dataSnapshot, boolean isUpdate)
+	public void onDataReceived(ConfigurationSection data, boolean isUpdate)
 	{
 		if (isUpdate)
 			return;
 
 		maps.clear();
 
-		for (DataSnapshot shot : dataSnapshot.getChildren())
-			maps.add(shot.getValue(ModelMap.class));
-	}
-
-	@Override
-	public void onDataError(DatabaseError databaseError)
-	{
-
+		for (ConfigurationSection section : data.getConfigurationSections())
+			maps.add((ModelMap) section.asObject(ModelMap.class));
 	}
 }

@@ -6,6 +6,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.GenericTypeIndicator;
 import com.penoaks.helpers.DataReceiver;
+import com.penoaks.sepher.ConfigurationSection;
 import com.ramencon.data.schedule.filters.ScheduleFilter;
 import com.ramencon.data.models.ModelEvent;
 import com.ramencon.data.models.ModelLocation;
@@ -37,41 +38,28 @@ public class ScheduleDataReceiver implements DataReceiver
 	}
 
 	@Override
-	public void onDataError(DatabaseError databaseError)
+	public void onDataReceived(ConfigurationSection data, boolean isUpdate)
 	{
-		Log.i("APP", "Exception Details: (" + databaseError.getCode() + ") " + databaseError.getDetails());
-
-		throw databaseError.toException();
-	}
-
-	@Override
-	public void onDataReceived(DataSnapshot data, boolean isUpdate)
-	{
-		if ( isUpdate )
+		if (isUpdate)
 			return;
 
-		String dateFormat = data.child("dateFormat").getValue(String.class);
-		String timeFormat = data.child("timeFormat").getValue(String.class);
+		String dateFormat = data.getString("dateFormat");
+		String timeFormat = data.getString("timeFormat");
 
 		simpleDateFormat = new SimpleDateFormat(dateFormat);
 		simpleTimeFormat = new SimpleDateFormat(timeFormat);
 
-		GenericTypeIndicator<List<ModelLocation>> tLocations = new GenericTypeIndicator<List<ModelLocation>>()
-		{
-		};
-		GenericTypeIndicator<List<ModelEvent>> tEvents = new GenericTypeIndicator<List<ModelEvent>>()
-		{
-		};
+		locations = new ArrayList<>();
+		for (ConfigurationSection section : data.getConfigurationSection("locations").getConfigurationSections())
+			locations.add((ModelLocation) section.asObject(ModelLocation.class));
 
-		locations = data.child("locations").getValue(tLocations);
-		List<ModelEvent> scheduleData = data.child("schedule").getValue(tEvents);
+		List<ModelEvent> scheduleData = new ArrayList<>();
+		for (ConfigurationSection section : data.getConfigurationSection("schedule").getConfigurationSections())
+			scheduleData.add((ModelEvent) section.asObject(ModelEvent.class));
 
 		final SimpleDateFormat format = new SimpleDateFormat(dateFormat + " " + timeFormat);
 		schedule = new TreeMap<>();
 		for (ModelEvent event : scheduleData)
-		{
-			event.resolveDataSnapshot();
-
 			try
 			{
 				Date epoch = format.parse(event.date + " " + event.time);
@@ -81,7 +69,6 @@ public class ScheduleDataReceiver implements DataReceiver
 			{
 
 			}
-		}
 	}
 
 	public SimpleDateFormat simpleDateFormat()

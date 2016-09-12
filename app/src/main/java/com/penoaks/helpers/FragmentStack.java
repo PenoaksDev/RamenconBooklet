@@ -9,13 +9,18 @@ import android.util.Log;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class FragmentStack
 {
 	private Map<Integer, Class<? extends Fragment>> registeredFragments = new HashMap<>();
 	private Map<String, FragmentSaveState> states = new HashMap<>();
+
+	private List<OnBackStackChangedListener> backstackListeners = new ArrayList<>();
+	private List<FragmentSaveState> backstack = new ArrayList<>();
 
 	private FragmentManager mgr;
 	private int containerId;
@@ -73,15 +78,19 @@ public class FragmentStack
 	 */
 	public FragmentSaveState loadFragment(Class<? extends Fragment> classFrag)
 	{
-		FragmentSaveState state = states.containsKey(classFrag.getSimpleName()) ? states.get(classFrag.getSimpleName()) : new FragmentSaveState(classFrag);
-		assert state != null;
-
-		if (!states.containsKey(classFrag.getSimpleName()))
+		FragmentSaveState state = loadFragment(classFrag.getSimpleName());
+		if (state == null)
+		{
+			state = new FragmentSaveState(classFrag);
 			states.put(classFrag.getSimpleName(), state);
-
-		state.init();
-
+			state.init();
+		}
 		return state;
+	}
+
+	public FragmentSaveState loadFragment(String fragKey)
+	{
+		return states.containsKey(fragKey) ? states.get(fragKey) : null;
 	}
 
 	public boolean setFragmentById(int id)
@@ -145,7 +154,34 @@ public class FragmentStack
 		state.show(withBack);
 	}
 
-	class FragmentSaveState
+	public boolean hasBackstack()
+	{
+		return backstack.size() > 0;
+	}
+
+	public void popBackstack()
+	{
+		if (backstack.size() == 0)
+			return;
+
+		FragmentSaveState state = backstack.remove(0);
+		state.show(false);
+
+		for (OnBackStackChangedListener listener : backstackListeners)
+			listener.onBackStackChanged();
+	}
+
+	public void addOnBackStackChangedListener(OnBackStackChangedListener listener)
+	{
+		backstackListeners.add(listener);
+	}
+
+	public void removeOnBackStackChangedListener(OnBackStackChangedListener listener)
+	{
+		backstackListeners.remove(listener);
+	}
+
+	public class FragmentSaveState
 	{
 		Class<? extends Fragment> clz;
 		Bundle state = new Bundle();
@@ -178,15 +214,25 @@ public class FragmentStack
 			// Instruct visible fragments to save state
 			for (FragmentSaveState state : states.values())
 				if (state.fragment != null && state.fragment.isVisible())
+				{
+					if (withBack)
+					{
+						backstack.add(state);
+						for (OnBackStackChangedListener listener : backstackListeners)
+							listener.onBackStackChanged();
+					}
+
 					state.saveState();
+					break;
+				}
 
 			if (state != null && !state.isEmpty())
 				loadState();
 
 			FragmentTransaction trans = mgr.beginTransaction();
 			trans.replace(containerId, fragment, fragment.getClass().getSimpleName());
-			if (withBack)
-				trans.addToBackStack(null);
+			// if (withBack)
+			// trans.addToBackStack(fragment.getClass().getSimpleName());
 			trans.commit();
 		}
 
@@ -207,7 +253,7 @@ public class FragmentStack
 		{
 			Log.i("APP", "Loading " + fragment.getClass().getSimpleName() + " -> " + state);
 
-			if (fragment != null && fragment instanceof PersistentFragment)
+			if (state != null && fragment != null && fragment instanceof PersistentFragment)
 				((PersistentFragment) fragment).loadState(state);
 			// TODO Make other ways to load a fragment state
 		}
@@ -274,5 +320,13 @@ public class FragmentStack
 			this.fragment = instance;
 			return instance;
 		}
+	}
+
+	public interface OnBackStackChangedListener
+	{
+		/**
+		 * Called whenever the contents of the back stack change.
+		 */
+		public void onBackStackChanged();
 	}
 }

@@ -158,8 +158,6 @@ public class SigninActivity extends Activity implements GoogleApiClient.OnConnec
 			}
 		});
 
-		PLog.i("Signin Activity " + organic);
-
 		if (mAuth.getCurrentUser() == null)
 			signedOutMode();
 		else if (mAuth.getCurrentUser() != null && organic)
@@ -297,7 +295,7 @@ public class SigninActivity extends Activity implements GoogleApiClient.OnConnec
 
 		if (firebaseAuth.getCurrentUser() == null)
 			signedOutMode();
-		else if (firebaseAuth.getCurrentUser() != null)
+		else
 		{
 			if (organic)
 				startActivity(new Intent(this, HomeActivity.class));

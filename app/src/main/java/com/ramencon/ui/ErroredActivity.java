@@ -13,6 +13,8 @@ import com.ramencon.R;
 
 public class ErroredActivity extends AppCompatActivity
 {
+	public static final int AUTH_ERROR = 99;
+	public static final int PERSISTENCE_ERROR = 98;
 	private boolean generalException = false;
 
 	@Override
