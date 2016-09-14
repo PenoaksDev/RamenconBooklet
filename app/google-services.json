@@ -15,6 +15,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "496133665089-78ko6te0flikmjuddanhbg6apu6535e8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ramencon",
+            "certificate_hash": "5B8646A22071715548CE659C361234B2C5DAC148"
+          }
+        },
+        {
+          "client_id": "496133665089-9psr731emti5t4emsj7i7t33qrq095fi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ramencon",
+            "certificate_hash": "F8E7DC6DBD7E001DA734766F67C4AAA9077AA942"
+          }
+        },
+        {
           "client_id": "496133665089-evn0i2maaasaugmqcilud7eb7u6dgakm.apps.googleusercontent.com",
           "client_type": 3
         }

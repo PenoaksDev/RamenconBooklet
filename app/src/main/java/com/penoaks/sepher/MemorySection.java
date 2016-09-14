@@ -104,26 +104,26 @@ public class MemorySection implements ConfigurationSection
 		{
 			for (OnConfigurationListener listener : listeners)
 				listener.onSectionAdd(section);
-			if (parent != null && parent != MemorySection.this && parent.getForwardingListener() != this)
+			if (parent != null)
 				parent.getForwardingListener().onSectionAdd(section);
 		}
 
 		@Override
-		public void onSectionRemove(ConfigurationSection parent, ConfigurationSection orphanedChild)
+		public void onSectionRemove(ConfigurationSection section, ConfigurationSection orphanedChild)
 		{
 			for (OnConfigurationListener listener : listeners)
-				listener.onSectionRemove(parent, orphanedChild);
-			if (parent != null && parent != MemorySection.this && parent.getForwardingListener() != this)
-				parent.getForwardingListener().onSectionRemove(parent, orphanedChild);
+				listener.onSectionRemove(section, orphanedChild);
+			if (parent != null)
+				parent.getForwardingListener().onSectionRemove(section, orphanedChild);
 		}
 
 		@Override
-		public void onSectionChange(ConfigurationSection parent, String affectedKey)
+		public void onSectionChange(ConfigurationSection section, String affectedKey)
 		{
 			for (OnConfigurationListener listener : listeners)
-				listener.onSectionChange(parent, affectedKey);
-			if (parent != null && parent != MemorySection.this && parent.getForwardingListener() != this)
-				parent.getForwardingListener().onSectionChange(parent, affectedKey);
+				listener.onSectionChange(section, affectedKey);
+			if (parent != null)
+				parent.getForwardingListener().onSectionChange(section, affectedKey);
 		}
 	};
 

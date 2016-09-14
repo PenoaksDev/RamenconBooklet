@@ -78,10 +78,10 @@ public class WelcomeFragment extends Fragment
 			@Override
 			public void onClick(View v)
 			{
-				if (iMap.resolveActivity(getActivity().getPackageManager()) != null)
-					startActivity(iMap);
-				else
+				/*if (iMap.resolveActivity(getActivity().getPackageManager()) == null)
 					Toast.makeText(getActivity(), "Sorry, it appears you don't have Google Maps installed.", Toast.LENGTH_LONG).show();
+				else*/
+				startActivity(iMap);
 			}
 		});
 

@@ -135,7 +135,7 @@ public class SigninActivity extends Activity implements GoogleApiClient.OnConnec
 			@Override
 			public void onClick(View v)
 			{
-				mAuth.signInAnonymously();
+				// mAuth.signInAnonymously();
 			}
 		});
 

@@ -8,7 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ExpandableListView;
 
-import com.penoaks.data.DataLoadingFragment;
+import com.ramencon.data.DataLoadingFragment;
 import com.penoaks.fragments.PersistentFragment;
 import com.penoaks.sepher.ConfigurationSection;
 import com.ramencon.R;

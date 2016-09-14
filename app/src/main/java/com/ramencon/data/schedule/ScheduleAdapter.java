@@ -167,11 +167,18 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 
 		final ImageView iv_alarm = (ImageView) childView.findViewById(R.id.alarm);
 
+		if (event.getStartTime() < new Date().getTime())
+			iv_alarm.setVisibility(View.INVISIBLE);
+
+		iv_alarm.setSelected(event.hasTimer());
+
 		iv_alarm.setOnClickListener(new View.OnClickListener()
 		{
 			@Override
 			public void onClick(final View v)
 			{
+				event.setTimer(!v.isSelected());
+
 				startAnimation(v, false);
 			}
 		});
@@ -181,7 +188,7 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 		return childView;
 	}
 
-	public void startAnimation(final View v, final boolean overpop)
+	public void startAnimation(final View v, final boolean op)
 	{
 		Animation pop = AnimationUtils.loadAnimation(context, R.anim.icon_fadeout);
 
@@ -200,7 +207,7 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 
 				v.setSelected(!v.isSelected());
 
-				Animation pop = AnimationUtils.loadAnimation(context, v.isSelected() ? (overpop ? R.anim.icon_popout : R.anim.icon_shinkin) : R.anim.icon_shinkin);
+				Animation pop = AnimationUtils.loadAnimation(context, v.isSelected() ? (op ? R.anim.icon_popout : R.anim.icon_shinkin) : R.anim.icon_shinkin);
 
 				pop.setAnimationListener(new Animation.AnimationListener()
 				{

@@ -1,6 +1,6 @@
 package com.ramencon.data.maps;
 
-import com.penoaks.data.DataReceiver;
+import com.ramencon.data.DataReceiver;
 import com.penoaks.sepher.ConfigurationSection;
 import com.ramencon.data.models.ModelMap;
 

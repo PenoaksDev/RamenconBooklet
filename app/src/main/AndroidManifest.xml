@@ -24,6 +24,18 @@
             </intent-filter>
         </service>
 
+        <service android:name=".AppService" android:process=":eventAlarm">
+        </service>
+
+        <receiver
+            android:name=".alarm.AlarmReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.ramencon.START_ALARM">
+                </action>
+            </intent-filter>
+        </receiver>
+
         <activity android:name=".ui.LoadingActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>

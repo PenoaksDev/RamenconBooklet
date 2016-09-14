@@ -11,7 +11,6 @@
     tools:context=".ui.LoadingActivity">
 
     <ImageView
-        android:id="@+id/imageView3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
@@ -43,4 +42,11 @@
             android:text="Loading Content..."
             android:textAppearance="?android:attr/textAppearanceLarge"/>
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/loading_version"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="Version: 1.2.1"/>
 </LinearLayout>

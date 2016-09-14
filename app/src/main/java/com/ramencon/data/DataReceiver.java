@@ -1,4 +1,4 @@
-package com.penoaks.data;
+package com.ramencon.data;
 
 import com.penoaks.sepher.ConfigurationSection;
 

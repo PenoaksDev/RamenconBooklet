@@ -13,13 +13,17 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
-import com.penoaks.data.DataLoadingFragment;
+import com.koushikdutta.ion.ProgressCallback;
+import com.ramencon.data.DataLoadingFragment;
 import com.penoaks.fragments.PersistentFragment;
 import com.penoaks.log.PLog;
 import com.penoaks.sepher.ConfigurationSection;
@@ -157,10 +161,11 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 		}
 	}
 
-	public static class MapChildFragment extends Fragment
+	public static class MapChildFragment extends Fragment implements ProgressCallback, FutureCallback<ImageView>
 	{
 		public static List<ModelMap> maps;
 		private Map<String, String> resolvedImages = new HashMap<>();
+		private ProgressBar progressBar = null;
 
 		@Override
 		public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
@@ -170,13 +175,15 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 			assert getArguments() != null;
 
 			final TouchImageView image = (TouchImageView) view.findViewById(R.id.maps_image);
+			progressBar = (ProgressBar) view.findViewById(R.id.progress_bar_map);
+			progressBar.setVisibility(View.VISIBLE);
 
 			final ModelMap map = maps.get(getArguments().getInt("index"));
 
 			if (map.image == null)
 				image.setImageResource(R.drawable.noimagefound);
-			if (resolvedImages.containsKey(map.id))
-				Ion.with(this).load(resolvedImages.get(map.id)).intoImageView(image);
+			else if (resolvedImages.containsKey(map.id))
+				Ion.with(this).load(resolvedImages.get(map.id)).progressHandler(this).intoImageView(image).setCallback(this);
 				// Picasso.with(getContext()).load(resolvedImages.get(map.id)).placeholder(R.drawable.image_loading).into(image);
 			else
 				HomeActivity.storageReference.child("images/maps/" + map.image).getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>()
@@ -187,18 +194,37 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 						if (task.isSuccessful())
 						{
 							resolvedImages.put(map.id, task.getResult().toString());
-							Ion.with(getContext()).load(task.getResult().toString()).intoImageView(image);
+							Ion.with(getContext()).load(task.getResult().toString()).progressHandler(MapChildFragment.this).intoImageView(image).setCallback(MapChildFragment.this);
 							// Picasso.with(getContext()).load(task.getResult()).placeholder(R.drawable.image_loading).into(image);
 						}
 						else
 						{
 							PLog.e("Failed to loading image from Google Firebase [images/maps/" + map.image + "]");
-							image.setImageResource(R.drawable.error);
+							image.setImageResource(R.drawable.errored_white);
 						}
 					}
 				});
 
 			return view;
+		}
+
+		@Override
+		public void onProgress(long downloaded, long total)
+		{
+			if (progressBar != null)
+			{
+				progressBar.setMax((int) total);
+				progressBar.setProgress((int) downloaded);
+			}
+
+			PLog.i("Downloaded " + downloaded + " of " + total);
+		}
+
+		@Override
+		public void onCompleted(Exception e, ImageView result)
+		{
+			progressBar.setProgress(0);
+			progressBar.setVisibility(View.GONE);
 		}
 	}
 

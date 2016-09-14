@@ -1,52 +1,35 @@
 package com.ramencon.ui;
 
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.penoaks.data.Persistence;
 import com.ramencon.R;
-
-import java.io.File;
+import com.ramencon.data.Persistence;
 
 public class LoadingActivity extends AppCompatActivity implements FirebaseAuth.AuthStateListener
 {
-	public static final int AUTH_ERROR = 99;
-	public static final int PERSISTENCE_ERROR = 98;
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_loading);
 
-		initPersistence(getCacheDir());
+		new InternalStateChecker().execute();
 
-		FirebaseAuth auth = FirebaseAuth.getInstance();
-		if (auth.getCurrentUser() == null)
+		try
 		{
-			auth.addAuthStateListener(this);
-			auth.signInAnonymously();
+			PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+			((TextView) findViewById(R.id.loading_version)).setText(pInfo.versionName);
 		}
-		else
-			initHome();
-	}
+		catch (Exception ignore)
+		{
 
-	public static void initPersistence(File cacheDir)
-	{
-		Persistence persistence = new Persistence(cacheDir);
-		persistence.keepPersistent("booklet-data");
-		persistence.keepPersistent("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid());
-	}
-
-	private void initHome()
-	{
-		if (Persistence.getInstance().check())
-			startActivity(new Intent(this, HomeActivity.class));
-		else
-			startActivityForResult(new Intent(this, ErroredActivity.class).putExtra(ErroredActivity.ERROR_MESSAGE, "We had a problem syncing with the remote database. Are you connected to the internet?"), PERSISTENCE_ERROR);
+		}
 	}
 
 	@Override
@@ -56,22 +39,69 @@ public class LoadingActivity extends AppCompatActivity implements FirebaseAuth.A
 	}
 
 	@Override
-	public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth)
+	public void onAuthStateChanged(FirebaseAuth firebaseAuth)
 	{
 		if (firebaseAuth.getCurrentUser() == null)
-			startActivityForResult(new Intent(this, ErroredActivity.class).putExtra(ErroredActivity.ERROR_MESSAGE, "We had an authentication problem. Are you connected to the internet?"), AUTH_ERROR);
-		else
-			initHome();
+			firebaseAuth.signInAnonymously();
+		// startActivityForResult(new Intent(this, ErroredActivity.class).putExtra(ErroredActivity.ERROR_MESSAGE, "We had an authentication problem. Are you connected to the internet?"), AUTH_ERROR);
+	}
+
+	private boolean stateNotReady()
+	{
+		return !Persistence.getInstance().check() && FirebaseAuth.getInstance().getCurrentUser() == null;
 	}
 
 	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data)
+	protected void onStart()
 	{
-		if (requestCode == AUTH_ERROR)
-			FirebaseAuth.getInstance().signInAnonymously();
-		else if (requestCode == PERSISTENCE_ERROR)
-			initHome();
-		else
-			super.onActivityResult(requestCode, resultCode, data);
+		super.onStart();
+
+		FirebaseAuth.getInstance().addAuthStateListener(this);
+	}
+
+	@Override
+	protected void onStop()
+	{
+		super.onStop();
+
+		FirebaseAuth.getInstance().removeAuthStateListener(this);
+	}
+
+	class InternalStateChecker extends AsyncTask<Void, Void, Void>
+	{
+		private int tryCounter = 0;
+
+		@Override
+		protected void onPostExecute(Void aVoid)
+		{
+			super.onPostExecute(aVoid);
+
+			if (!stateNotReady())
+				startActivity(new Intent(LoadingActivity.this, HomeActivity.class));
+			else
+				throw new RuntimeException("");
+		}
+
+		@Override
+		protected Void doInBackground(Void... params)
+		{
+			while (stateNotReady())
+			{
+				tryCounter++;
+
+				if (tryCounter > 300) // 6.5 Seconds
+					startActivity(new Intent(LoadingActivity.this, ErroredActivity.class).putExtra(ErroredActivity.ERROR_MESSAGE, FirebaseAuth.getInstance().getCurrentUser() == null ? "We had an authentication problem. Are you connected to the internet?" : "We had a problem syncing with the remote database. Are you connected to the internet?"));
+
+				try
+				{
+					Thread.sleep(25);
+				}
+				catch (InterruptedException e)
+				{
+					e.printStackTrace();
+				}
+			}
+			return null;
+		}
 	}
 }

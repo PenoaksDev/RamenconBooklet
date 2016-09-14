@@ -1,9 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.ramencon.ui.widget.TouchImageView
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/maps_image"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_gravity="center_horizontal">
+    android:layout_height="match_parent">
 
-</com.ramencon.ui.widget.TouchImageView>
+    <com.ramencon.ui.widget.TouchImageView
+        android:id="@+id/maps_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <ProgressBar
+        android:id="@+id/progress_bar_map"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="20dp"
+        android:layout_gravity="center_horizontal|bottom"
+        android:layout_weight="0.39"
+        android:max="100"
+        android:progress="0"
+        android:visibility="gone"/>
+
+</FrameLayout>

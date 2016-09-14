@@ -2,7 +2,7 @@ package com.ramencon.data.models;
 
 import java.util.Comparator;
 
-public class ModelEventComparetor implements Comparator<ModelEvent>
+public class ModelEventComparator implements Comparator<ModelEvent>
 {
 	@Override
 	public int compare(ModelEvent lhs, ModelEvent rhs)

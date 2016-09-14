@@ -1,12 +1,10 @@
-package com.penoaks.data;
+package com.ramencon.data;
 
 import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 
-import com.penoaks.data.DataReceiver;
-import com.penoaks.data.Persistence;
 import com.penoaks.sepher.ConfigurationSection;
 import com.penoaks.sepher.OnConfigurationListener;
 

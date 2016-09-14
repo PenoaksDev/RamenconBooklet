@@ -2,12 +2,14 @@ package com.ramencon.ui;
 
 import android.os.Bundle;
 import android.preference.ListPreference;
+import android.preference.Preference;
 import android.support.v4.preference.PreferenceFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.ramencon.R;
+import com.ramencon.AppService;
 
 public class SettingsFragment extends PreferenceFragment
 {
@@ -37,6 +39,19 @@ public class SettingsFragment extends PreferenceFragment
 
 		mReminderDelays.setEntryValues(entitiesValues);
 		mReminderDelays.setEntries(entitiesTitle);
+
+		mReminderDelays.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener()
+		{
+			@Override
+			public boolean onPreferenceChange(Preference preference, Object newValue)
+			{
+				AppService.instance().cancelAllNotifications();
+
+
+
+				return true;
+			}
+		});
 	}
 
 	@Override

@@ -1,10 +1,10 @@
 package com.ramencon.data.schedule;
 
-import com.penoaks.data.DataReceiver;
 import com.penoaks.log.PLog;
+import com.ramencon.data.DataReceiver;
 import com.penoaks.sepher.ConfigurationSection;
 import com.ramencon.data.models.ModelEvent;
-import com.ramencon.data.models.ModelEventComparetor;
+import com.ramencon.data.models.ModelEventComparator;
 import com.ramencon.data.models.ModelLocation;
 import com.ramencon.data.schedule.filters.ScheduleFilter;
 
@@ -14,9 +14,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
 public class ScheduleDataReceiver implements DataReceiver
@@ -39,18 +37,38 @@ public class ScheduleDataReceiver implements DataReceiver
 		if (isUpdate)
 			return;
 
+		PLog.i("Schedule data path " + data.getCurrentPath() + " // " + data.getKeys());
+
 		String dateFormat = data.getString("dateFormat");
 		String timeFormat = data.getString("timeFormat");
 
-		simpleCombinedFormat = new SimpleDateFormat(dateFormat + " " + timeFormat);
-		simpleDateFormat = new SimpleDateFormat(dateFormat);
-		simpleTimeFormat = new SimpleDateFormat(timeFormat);
+		try
+		{
+			simpleDateFormat = new SimpleDateFormat(dateFormat);
+		}
+		catch (Exception e)
+		{
+			PLog.e(e, "We had a problem parsing the dateFormat, value: " + dateFormat);
+			simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		}
+
+		try
+		{
+			simpleTimeFormat = new SimpleDateFormat(timeFormat);
+		}
+		catch (Exception e)
+		{
+			PLog.e(e, "We had a problem parsing the dateFormat, value: " + dateFormat);
+			simpleTimeFormat = new SimpleDateFormat("hh:mm a");
+		}
+
+		simpleCombinedFormat = new SimpleDateFormat(simpleTimeFormat.toPattern() + " " + simpleDateFormat.toPattern());
 
 		locations = new ArrayList<>();
 		for (ConfigurationSection section : data.getConfigurationSection("locations").getConfigurationSections())
 			locations.add(section.asObject(ModelLocation.class));
 
-		schedule = new TreeSet<>(new ModelEventComparetor());
+		schedule = new TreeSet<>(new ModelEventComparator());
 		for (ConfigurationSection section : data.getConfigurationSection("schedule").getConfigurationSections())
 			schedule.add(section.asObject(ModelEvent.class));
 	}
@@ -107,7 +125,7 @@ public class ScheduleDataReceiver implements DataReceiver
 
 	public TreeSet<ModelEvent> filterRange(ScheduleFilter filter) throws ParseException
 	{
-		TreeSet<ModelEvent> events = new TreeSet<>(new ModelEventComparetor());
+		TreeSet<ModelEvent> events = new TreeSet<>(new ModelEventComparator());
 
 		// SimpleDateFormat sdf = new SimpleDateFormat("M/d hh:mm");
 

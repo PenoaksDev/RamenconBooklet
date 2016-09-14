@@ -13,13 +13,13 @@ import android.widget.ExpandableListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.penoaks.data.DataLoadingFragment;
+import com.ramencon.data.DataLoadingFragment;
 import com.penoaks.fragments.PersistentFragment;
 import com.penoaks.helpers.Formatting;
-import com.penoaks.log.PLog;
 import com.penoaks.sepher.ConfigurationSection;
 import com.ramencon.R;
 import com.ramencon.data.models.ModelEvent;
+import com.ramencon.data.models.ModelLocation;
 import com.ramencon.data.schedule.ScheduleAdapter;
 import com.ramencon.data.schedule.ScheduleDataReceiver;
 import com.ramencon.data.schedule.ScheduleDayAdapter;
@@ -33,7 +33,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeSet;
 
 public class ScheduleFragment extends DataLoadingFragment implements PersistentFragment, SwipeRefreshLayout.OnRefreshListener
@@ -120,7 +119,8 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 
 					assert days.size() > 0;
 
-					if (days.get(0).getTime() > nowTime)
+					// Show earliest event one day ahead of time
+					if (days.get(0).getTime() - ONEDAY > nowTime)
 					{
 						Toast.makeText(getContext(), "Sorry, Ramencon has not started yet... err, hurray... Ramencon is starting soon!", Toast.LENGTH_LONG).show();
 						return true;
@@ -128,7 +128,7 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 
 					if (days.get(days.size() - 1).getTime() + ONEDAY < nowTime)
 					{
-						Toast.makeText(getContext(), "Sorry, Ramencon is over. :( I hope you had a great time at the convention!", Toast.LENGTH_LONG).show();
+						Toast.makeText(getContext(), "Sorry, Ramencon is over. :( We hope you had a great year!", Toast.LENGTH_LONG).show();
 						return true;
 					}
 
@@ -298,5 +298,13 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
 	{
 		return inflater.inflate(R.layout.fragment_schedule, container, false);
+	}
+
+	public ModelLocation getLocation(String locId)
+	{
+		for (ModelLocation location : receiver.locations)
+			if (location.id.equals(locId))
+				return location;
+		return null;
 	}
 }

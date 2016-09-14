@@ -7,10 +7,10 @@ android {
     buildToolsVersion "23.0.3"
     defaultConfig {
         applicationId "com.ramencon"
-        minSdkVersion 15
+        minSdkVersion 16
         targetSdkVersion 23
-        versionCode 114
-        versionName "1.1.4"
+        versionCode 121
+        versionName "1.2.1"
     }
     buildTypes {
         release {
