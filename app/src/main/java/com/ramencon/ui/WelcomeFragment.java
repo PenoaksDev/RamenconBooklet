@@ -1,5 +1,6 @@
 package com.ramencon.ui;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -78,10 +79,14 @@ public class WelcomeFragment extends Fragment
 			@Override
 			public void onClick(View v)
 			{
-				/*if (iMap.resolveActivity(getActivity().getPackageManager()) == null)
+				try
+				{
+					startActivity(iMap);
+				}
+				catch (ActivityNotFoundException)
+				{
 					Toast.makeText(getActivity(), "Sorry, it appears you don't have Google Maps installed.", Toast.LENGTH_LONG).show();
-				else*/
-				startActivity(iMap);
+				}
 			}
 		});
 
