@@ -2,13 +2,13 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:theme="@style/AppTheme.NoActionBar.Dark"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#1e1e1e"
     android:gravity="center"
     android:orientation="vertical"
     android:padding="@dimen/activity_vertical_margin"
-    android:theme="@style/AppTheme.NoActionBar.Dark"
     tools:context="com.ramencon.ui.ErroredActivity">
 
     <ImageView

@@ -1,5 +1,7 @@
 package com.ramencon.data.schedule;
 
+import android.widget.Toast;
+
 import com.penoaks.log.PLog;
 import com.ramencon.data.DataReceiver;
 import com.penoaks.sepher.ConfigurationSection;
@@ -7,6 +9,8 @@ import com.ramencon.data.models.ModelEvent;
 import com.ramencon.data.models.ModelEventComparator;
 import com.ramencon.data.models.ModelLocation;
 import com.ramencon.data.schedule.filters.ScheduleFilter;
+import com.ramencon.ui.HomeActivity;
+import com.ramencon.ui.ScheduleFragment;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -37,40 +41,47 @@ public class ScheduleDataReceiver implements DataReceiver
 		if (isUpdate)
 			return;
 
-		PLog.i("Schedule data path " + data.getCurrentPath() + " // " + data.getKeys());
-
-		String dateFormat = data.getString("dateFormat");
-		String timeFormat = data.getString("timeFormat");
-
 		try
 		{
-			simpleDateFormat = new SimpleDateFormat(dateFormat);
+			PLog.i("Schedule data path " + data.getCurrentPath() + " // " + data.getKeys());
+
+			String dateFormat = data.getString("dateFormat", "yyyy-MM-dd");
+			String timeFormat = data.getString("timeFormat", "hh:mm a");
+
+			try
+			{
+				simpleDateFormat = new SimpleDateFormat(dateFormat);
+			}
+			catch (Exception e)
+			{
+				PLog.e(e, "We had a problem parsing the dateFormat, value: " + dateFormat);
+				simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+			}
+
+			try
+			{
+				simpleTimeFormat = new SimpleDateFormat(timeFormat);
+			}
+			catch (Exception e)
+			{
+				PLog.e(e, "We had a problem parsing the dateFormat, value: " + dateFormat);
+				simpleTimeFormat = new SimpleDateFormat("hh:mm a");
+			}
+
+			simpleCombinedFormat = new SimpleDateFormat(simpleDateFormat.toPattern() + " " + simpleTimeFormat.toPattern());
+
+			locations = new ArrayList<>();
+			for (ConfigurationSection section : data.getConfigurationSection("locations").getConfigurationSections())
+				locations.add(section.asObject(ModelLocation.class));
+
+			schedule = new TreeSet<>(new ModelEventComparator());
+			for (ConfigurationSection section : data.getConfigurationSection("schedule").getConfigurationSections())
+				schedule.add(section.asObject(ModelEvent.class));
 		}
 		catch (Exception e)
 		{
-			PLog.e(e, "We had a problem parsing the dateFormat, value: " + dateFormat);
-			simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+			Toast.makeText(HomeActivity.instance, "Internal App Error. " + e.getMessage(), Toast.LENGTH_SHORT).show();
 		}
-
-		try
-		{
-			simpleTimeFormat = new SimpleDateFormat(timeFormat);
-		}
-		catch (Exception e)
-		{
-			PLog.e(e, "We had a problem parsing the dateFormat, value: " + dateFormat);
-			simpleTimeFormat = new SimpleDateFormat("hh:mm a");
-		}
-
-		simpleCombinedFormat = new SimpleDateFormat(simpleTimeFormat.toPattern() + " " + simpleDateFormat.toPattern());
-
-		locations = new ArrayList<>();
-		for (ConfigurationSection section : data.getConfigurationSection("locations").getConfigurationSections())
-			locations.add(section.asObject(ModelLocation.class));
-
-		schedule = new TreeSet<>(new ModelEventComparator());
-		for (ConfigurationSection section : data.getConfigurationSection("schedule").getConfigurationSections())
-			schedule.add(section.asObject(ModelEvent.class));
 	}
 
 	public static SimpleDateFormat simpleCombinedFormat()

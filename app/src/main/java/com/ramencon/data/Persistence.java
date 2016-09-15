@@ -111,6 +111,22 @@ public class Persistence implements ValueEventListener, OnConfigurationListener
 		return path == null || path.isEmpty() ? root : root.getConfigurationSection(path, true);
 	}
 
+	public void renew()
+	{
+		synchronized (references)
+		{
+			for (DatabaseReference ref : references.values())
+				ref.removeEventListener(this);
+			references.clear();
+			for (String uri : uris)
+			{
+				DatabaseReference ref = database.getReference(uri);
+				ref.addValueEventListener(this);
+				references.put(uri, ref);
+			}
+		}
+	}
+
 	public boolean check()
 	{
 		for (String uri : uris)

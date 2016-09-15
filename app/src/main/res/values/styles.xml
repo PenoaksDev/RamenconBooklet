@@ -6,16 +6,21 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="AppTheme.Dark" parent="Theme.AppCompat">
+        <item name="android:textColor">#ffffffff</item>
+        <item name="colorPrimary">#ff1b1b1b</item>
+        <item name="colorPrimaryDark">#ff000000</item>
+        <item name="colorAccent">#ffeeeeee</item>
+    </style>
+
     <style name="AppTheme.NoActionBar" parent="AppTheme">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="AppTheme.NoActionBar.Dark" parent="AppTheme.NoActionBar">
-        <item name="android:textColor">#ffffffff</item>
-        <item name="colorPrimary">#ff1b1b1b</item>
-        <item name="colorPrimaryDark">#ff000000</item>
-        <item name="colorAccent">#ffeeeeee</item>
+    <style name="AppTheme.NoActionBar.Dark" parent="AppTheme.Dark">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
     </style>
 
     <style name="TwoWayView">

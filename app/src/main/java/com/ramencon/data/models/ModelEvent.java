@@ -45,7 +45,7 @@ public class ModelEvent
 		}
 		catch (Exception e)
 		{
-			throw new RuntimeException(e);
+			throw new RuntimeException(e.getMessage() + " Pattern: " + ScheduleDataReceiver.simpleCombinedFormat().toPattern(), e);
 		}
 	}
 

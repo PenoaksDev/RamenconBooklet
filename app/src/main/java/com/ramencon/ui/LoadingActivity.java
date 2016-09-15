@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.penoaks.helpers.Network;
 import com.ramencon.R;
 import com.ramencon.data.Persistence;
 
@@ -18,8 +19,6 @@ public class LoadingActivity extends AppCompatActivity implements FirebaseAuth.A
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_loading);
-
-		new InternalStateChecker().execute();
 
 		try
 		{
@@ -43,7 +42,6 @@ public class LoadingActivity extends AppCompatActivity implements FirebaseAuth.A
 	{
 		if (firebaseAuth.getCurrentUser() == null)
 			firebaseAuth.signInAnonymously();
-		// startActivityForResult(new Intent(this, ErroredActivity.class).putExtra(ErroredActivity.ERROR_MESSAGE, "We had an authentication problem. Are you connected to the internet?"), AUTH_ERROR);
 	}
 
 	private boolean stateNotReady()
@@ -57,6 +55,9 @@ public class LoadingActivity extends AppCompatActivity implements FirebaseAuth.A
 		super.onStart();
 
 		FirebaseAuth.getInstance().addAuthStateListener(this);
+
+		if (taskChecker == null)
+			new InternalStateChecker().execute();
 	}
 
 	@Override
@@ -65,21 +66,51 @@ public class LoadingActivity extends AppCompatActivity implements FirebaseAuth.A
 		super.onStop();
 
 		FirebaseAuth.getInstance().removeAuthStateListener(this);
+
+		if (taskChecker != null)
+			taskChecker.cancel(true);
 	}
+
+	private InternalStateChecker taskChecker = null;
 
 	class InternalStateChecker extends AsyncTask<Void, Void, Void>
 	{
 		private int tryCounter = 0;
+
+		InternalStateChecker()
+		{
+			taskChecker = this;
+		}
+
+		@Override
+		protected void onPreExecute()
+		{
+			super.onPreExecute();
+
+			Persistence.getInstance().renew();
+		}
 
 		@Override
 		protected void onPostExecute(Void aVoid)
 		{
 			super.onPostExecute(aVoid);
 
-			if (!stateNotReady())
-				startActivity(new Intent(LoadingActivity.this, HomeActivity.class));
+			if (stateNotReady())
+			{
+				String msg;
+				if (!Network.internetAvailable())
+					msg = "We had a problem connecting to the internet. Please check your connection.";
+				else if (FirebaseAuth.getInstance().getCurrentUser() == null)
+					msg = "We had an authentication problem. Are you connected to the internet?";
+				else
+					msg = "We had a problem syncing with the remote database. Are you connected to the internet?";
+
+				startActivityForResult(new Intent(LoadingActivity.this, ErroredActivity.class).putExtra(ErroredActivity.ERROR_MESSAGE, msg), -1);
+			}
 			else
-				throw new RuntimeException("");
+				startActivity(new Intent(LoadingActivity.this, HomeActivity.class));
+
+			taskChecker = null;
 		}
 
 		@Override
@@ -89,8 +120,8 @@ public class LoadingActivity extends AppCompatActivity implements FirebaseAuth.A
 			{
 				tryCounter++;
 
-				if (tryCounter > 300) // 6.5 Seconds
-					startActivity(new Intent(LoadingActivity.this, ErroredActivity.class).putExtra(ErroredActivity.ERROR_MESSAGE, FirebaseAuth.getInstance().getCurrentUser() == null ? "We had an authentication problem. Are you connected to the internet?" : "We had a problem syncing with the remote database. Are you connected to the internet?"));
+				if (tryCounter > 300 || isCancelled()) // 6.5 Seconds
+					break;
 
 				try
 				{
