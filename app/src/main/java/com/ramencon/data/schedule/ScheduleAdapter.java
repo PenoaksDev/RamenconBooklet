@@ -12,10 +12,13 @@ import android.widget.BaseExpandableListAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.penoaks.log.PLog;
 import com.ramencon.R;
 import com.ramencon.data.models.ModelEvent;
 import com.ramencon.data.models.ModelLocation;
 import com.ramencon.ui.ScheduleViewFragment;
+
+import org.acra.ACRA;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -94,49 +97,57 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 	{
 		View rowView = convertView == null ? inflater.inflate(R.layout.schedule_listitem, null) : convertView;
 
-		TextView tv_title = (TextView) rowView.findViewById(R.id.title);
-		TextView tv_time = (TextView) rowView.findViewById(R.id.time);
-		TextView tv_location = (TextView) rowView.findViewById(R.id.location);
-
 		ModelEvent event = events.get(position);
-
-		for (ModelLocation loc : locations)
-			if (loc.id.equals(event.location))
-				event.location = loc.title;
-
-		ScheduleViewFragment.adapter = this;
 
 		try
 		{
-			// Date date = dateFormat.parse(event.date);
-			Date from = timeFormat.parse(event.time);
-			Date to = new Date(from.getTime() + (60000 * Integer.parseInt(event.duration)));
+			TextView tv_title = (TextView) rowView.findViewById(R.id.title);
+			TextView tv_time = (TextView) rowView.findViewById(R.id.time);
+			TextView tv_location = (TextView) rowView.findViewById(R.id.location);
 
-			SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
-			boolean use24h = pref.getBoolean("pref_military", false);
+			for (ModelLocation loc : locations)
+				if (loc.id.equals(event.location))
+					event.location = loc.title;
 
-			tv_title.setText(event.title);
+			ScheduleViewFragment.adapter = this;
 
-			String format_from = use24h ? DISPLAY_FORMAT_TIME24.format(from) : DISPLAY_FORMAT_TIME12.format(from);
-			String format_to = use24h ? DISPLAY_FORMAT_TIME24.format(to) : DISPLAY_FORMAT_TIME12.format(to);
-			tv_time.setText(format_from + " — " + format_to);
-			tv_location.setText(event.location);
-		}
-		catch (ParseException e)
-		{
-			e.printStackTrace();
-		}
-
-		/*
-		rowView.setOnClickListener(new View.OnClickListener()
-		{
-			@Override
-			public void onClick(View v)
+			try
 			{
-				HomeActivity.instance.setFragment(ScheduleViewFragment.newInstance(position), true);
+				// Date date = dateFormat.parse(event.date);
+				Date from = timeFormat.parse(event.time);
+				Date to = new Date(from.getTime() + (60000 * (event.duration == null ? 0 : Integer.parseInt(event.duration))));
+
+				SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
+				boolean use24h = pref.getBoolean("pref_military", false);
+
+				tv_title.setText(event.title);
+
+				String format_from = use24h ? DISPLAY_FORMAT_TIME24.format(from) : DISPLAY_FORMAT_TIME12.format(from);
+				String format_to = use24h ? DISPLAY_FORMAT_TIME24.format(to) : DISPLAY_FORMAT_TIME12.format(to);
+				tv_time.setText(format_from + " — " + format_to);
+				tv_location.setText(event.location);
 			}
-		});
-		*/
+			catch (ParseException e)
+			{
+				e.printStackTrace();
+			}
+
+			/*
+			rowView.setOnClickListener(new View.OnClickListener()
+			{
+				@Override
+				public void onClick(View v)
+				{
+					HomeActivity.instance.setFragment(ScheduleViewFragment.newInstance(position), true);
+				}
+			});
+			*/
+		}
+		catch (Exception e)
+		{
+			ACRA.getErrorReporter().handleException(new RuntimeException("Failure in event: " + event.title + " (" + event.id + ").", e));
+			PLog.e(e, "Failure in event: " + event.title + " (" + event.id + ").");
+		}
 
 		return rowView;
 	}

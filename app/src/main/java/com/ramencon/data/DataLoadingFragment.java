@@ -54,6 +54,7 @@ public abstract class DataLoadingFragment extends Fragment implements OnConfigur
 
 	public final void refreshData()
 	{
+		Persistence.getInstance().renew();
 		handleDataReceiver();
 	}
 

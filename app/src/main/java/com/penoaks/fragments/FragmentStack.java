@@ -181,6 +181,13 @@ public class FragmentStack
 		backstackListeners.remove(listener);
 	}
 
+	public void refreshFragment()
+	{
+		for (FragmentSaveState state : states.values())
+			if (state.isCurrent() && state.fragment instanceof PersistentFragment)
+				((PersistentFragment) state.fragment).refreshState();
+	}
+
 	public class FragmentSaveState
 	{
 		Class<? extends Fragment> clz;

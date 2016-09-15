@@ -83,7 +83,7 @@ public class WelcomeFragment extends Fragment
 				{
 					startActivity(iMap);
 				}
-				catch (ActivityNotFoundException)
+				catch (ActivityNotFoundException e)
 				{
 					Toast.makeText(getActivity(), "Sorry, it appears you don't have Google Maps installed.", Toast.LENGTH_LONG).show();
 				}

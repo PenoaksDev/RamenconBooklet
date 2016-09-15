@@ -10,6 +10,7 @@ package com.penoaks.sepher;
 
 import com.penoaks.helpers.Lists;
 import com.penoaks.helpers.Maps;
+import com.penoaks.helpers.Objects;
 import com.penoaks.log.PLog;
 
 import java.lang.reflect.Constructor;
@@ -370,8 +371,18 @@ public class MemorySection implements ConfigurationSection
 						else
 							field.set(obj, newValue);
 					}
-					else
-						PLog.e("Failed to find casting " + entry.getKey() + " for object " + field.getType() + ". [" + value.getClass() + " // " + field.getType() + "]");
+					else if (String.class.isAssignableFrom(field.getType()))
+						field.set(obj, Objects.castToString(value));
+					else if (Double.class.isAssignableFrom(field.getType()))
+						field.set(obj, Objects.castToDouble(value));
+					else if (Integer.class.isAssignableFrom(field.getType()))
+						field.set(obj, Objects.castToInt(value));
+					else if (Long.class.isAssignableFrom(field.getType()))
+						field.set(obj, Objects.castToLong(value));
+					else if (Boolean.class.isAssignableFrom(field.getType()))
+						field.set(obj, Objects.castToBool(value));
+					else if (field.get(obj) == null)
+						PLog.e("Failed to find a casting for field \"" + entry.getKey() + "\" with type \"" + field.getType() + "\" in object \"" + value.getClass() + "\".");
 				}
 			}
 

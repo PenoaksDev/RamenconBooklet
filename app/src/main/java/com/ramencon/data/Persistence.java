@@ -130,7 +130,7 @@ public class Persistence implements ValueEventListener, OnConfigurationListener
 	public boolean check()
 	{
 		for (String uri : uris)
-			if (root.get(uri, null) == null)
+			if (root.get(uri, null) == null && root.getConfigurationSection(uri, true).getKeys().size() > 0)
 				return false;
 		return true;
 	}

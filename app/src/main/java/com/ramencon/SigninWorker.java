@@ -30,7 +30,7 @@ public class SigninWorker implements FirebaseAuth.AuthStateListener, OnCompleteL
 
 	private static SigninWorker instance = null;
 
-	public static SigninWorker getInstance(Activity parent)
+	public static SigninWorker getInstance(SigninParent parent)
 	{
 		if (instance == null)
 			instance = new SigninWorker(parent);
@@ -47,19 +47,19 @@ public class SigninWorker implements FirebaseAuth.AuthStateListener, OnCompleteL
 	private GoogleApiClient mGoogleApi;
 	private ProgressDialog mDialog;
 	private FirebaseAuth mAuth;
-	private Activity parent;
+	private SigninParent parent;
 
 	enum SigninIntent
 	{
 		FIRST_BOOT, ANONYMOUSLY_SIGNIN, SIGNED_IN, SIGNED_OUT, GOOGLE_SIGNIN
 	}
 
-	private SigninWorker(Activity parent)
+	private SigninWorker(SigninParent parent)
 	{
 		this.parent = parent;
 
 		mGoogleOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestIdToken("496133665089-evn0i2maaasaugmqcilud7eb7u6dgakm.apps.googleusercontent.com").requestEmail().requestProfile().build();
-		mGoogleApi = new GoogleApiClient.Builder(parent).addApi(Auth.GOOGLE_SIGN_IN_API, mGoogleOptions).build();
+		mGoogleApi = new GoogleApiClient.Builder(parent.getActivity()).addApi(Auth.GOOGLE_SIGN_IN_API, mGoogleOptions).build();
 		mAuth = FirebaseAuth.getInstance();
 
 		mAuth.addAuthStateListener(this);
@@ -73,12 +73,12 @@ public class SigninWorker implements FirebaseAuth.AuthStateListener, OnCompleteL
 		if (mAuth.getCurrentUser() == null)
 		{
 			PLog.i("signInWithCredential");
-			mAuth.signInWithCredential(pendingGoogleCredentual).addOnCompleteListener(parent, this);
+			mAuth.signInWithCredential(pendingGoogleCredentual).addOnCompleteListener(parent.getActivity(), this);
 		}
 		else
 		{
 			PLog.i("linkWithCredential");
-			mAuth.getCurrentUser().linkWithCredential(pendingGoogleCredentual).addOnCompleteListener(parent, this);
+			mAuth.getCurrentUser().linkWithCredential(pendingGoogleCredentual).addOnCompleteListener(parent.getActivity(), this);
 		}
 	}
 
@@ -100,7 +100,7 @@ public class SigninWorker implements FirebaseAuth.AuthStateListener, OnCompleteL
 			else
 			{
 				Log.i("APP", "Google Result: " + result.getStatus());
-				Toast.makeText(parent, "Sorry, google sign-in failed. :( " + result.getStatus(), Toast.LENGTH_SHORT).show();
+				Toast.makeText(parent.getActivity(), "Sorry, google sign-in failed. :( " + result.getStatus(), Toast.LENGTH_SHORT).show();
 			}
 		}
 		else
@@ -125,7 +125,7 @@ public class SigninWorker implements FirebaseAuth.AuthStateListener, OnCompleteL
 			Log.w("APP", "User: " + user);
 
 			String welcome = user.getDisplayName() == null ? "" : "Welcome! " + user.getDisplayName();
-			Toast.makeText(parent, "Authentication success. " + welcome, Toast.LENGTH_SHORT).show();
+			Toast.makeText(parent.getActivity(), "Authentication success. " + welcome, Toast.LENGTH_SHORT).show();
 		}
 		else
 		{
@@ -151,7 +151,7 @@ public class SigninWorker implements FirebaseAuth.AuthStateListener, OnCompleteL
 			if (msg != null)
 			{
 				PLog.i(msg);
-				Toast.makeText(parent, msg, Toast.LENGTH_SHORT).show();
+				Toast.makeText(parent.getActivity(), msg, Toast.LENGTH_SHORT).show();
 			}
 		}
 
@@ -161,8 +161,6 @@ public class SigninWorker implements FirebaseAuth.AuthStateListener, OnCompleteL
 	@Override
 	public void onAuthStateChanged(FirebaseAuth firebaseAuth)
 	{
-		PLog.i("Auth Intent State: " + lastIntent);
-
 		if (firebaseAuth.getCurrentUser() == null)
 		{
 			PLog.i("User is null");
@@ -178,15 +176,14 @@ public class SigninWorker implements FirebaseAuth.AuthStateListener, OnCompleteL
 
 			Persistence.keepPersistent("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid(), true);
 			lastIntent = SigninIntent.SIGNED_IN;
-			parent.recreate();
 		}
 
-		PLog.i("Auth Intent State: " + lastIntent);
+		parent.authStateChanged(firebaseAuth.getCurrentUser());
 	}
 
 	public void showProgressDialog()
 	{
-		mDialog = new ProgressDialog(parent);
+		mDialog = new ProgressDialog(parent.getActivity());
 		mDialog.setCancelable(false);
 		mDialog.setIndeterminate(true);
 		mDialog.setTitle("Authorizing");
@@ -219,7 +216,7 @@ public class SigninWorker implements FirebaseAuth.AuthStateListener, OnCompleteL
 		if (pendingGoogleCredentual == null)
 		{
 			Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApi);
-			parent.startActivityForResult(signInIntent, GOOGLE_SIGNIN);
+			parent.getActivity().startActivityForResult(signInIntent, GOOGLE_SIGNIN);
 		}
 		else
 			handleGoogleCredential();
@@ -237,5 +234,12 @@ public class SigninWorker implements FirebaseAuth.AuthStateListener, OnCompleteL
 	public void stop()
 	{
 		FirebaseAuth.getInstance().removeAuthStateListener(this);
+	}
+
+	public interface SigninParent
+	{
+		void authStateChanged(FirebaseUser currentUser);
+
+		Activity getActivity();
 	}
 }

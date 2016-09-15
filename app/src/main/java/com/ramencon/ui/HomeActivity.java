@@ -1,6 +1,9 @@
 package com.ramencon.ui;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -17,20 +20,23 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.ramencon.data.Persistence;
 import com.penoaks.fragments.FragmentStack;
+import com.penoaks.helpers.Network;
 import com.ramencon.R;
 import com.ramencon.SigninWorker;
+import com.ramencon.data.Persistence;
 
-public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener
+public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, SigninWorker.SigninParent
 {
 	public static final StorageReference storageReference = FirebaseStorage.getInstance().getReferenceFromUrl("gs://ramencon-booklet.appspot.com");
 
 	public static HomeActivity instance;
 	public FragmentStack stacker;
 	private SigninWorker signinWorker;
+	private AsyncTask<Void, Void, Void> taskChecker;
 
 	public HomeActivity()
 	{
@@ -47,13 +53,34 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 		// stacker.registerFragment(R.id.nav_share, .class);
 	}
 
+	private Bundle savedInstanceState;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_home);
-
 		Log.i("APP", "HomeActivity.onCreate() (" + hashCode() + ") " + savedInstanceState);
+
+		super.onCreate(savedInstanceState);
+
+		setContentView(R.layout.activity_loading);
+
+		try
+		{
+			PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+			((TextView) findViewById(R.id.loading_version)).setText(pInfo.versionName);
+		}
+		catch (Exception ignore)
+		{
+
+		}
+
+		taskChecker = new InternalStateChecker().execute();
+		this.savedInstanceState = savedInstanceState;
+	}
+
+	private void createHomeView()
+	{
+		setContentView(R.layout.activity_home);
 
 		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 		assert toolbar != null;
@@ -101,41 +128,22 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 		navigationView.setNavigationItemSelectedListener(this);
 
 		View header = navigationView.getHeaderView(0);
-
 		ImageView iHeader = (ImageView) header.findViewById(R.id.header_image);
 		iHeader.setOnLongClickListener(new View.OnLongClickListener()
 		{
 			@Override
 			public boolean onLongClick(View v)
 			{
+				Persistence.getInstance().renew();
 				recreate();
+
+				Toast.makeText(HomeActivity.this, "Booklet data was force refreshed.", Toast.LENGTH_SHORT).show();
+
 				return true;
 			}
 		});
 
-		TextView tWelcomeText = (TextView) header.findViewById(R.id.header_text);
-
-		FirebaseAuth mAuth = FirebaseAuth.getInstance();
-		if (mAuth.getCurrentUser() == null || mAuth.getCurrentUser().isAnonymous())
-		{
-			navigationView.getMenu().findItem(R.id.nav_login_with_google).setVisible(true);
-			navigationView.getMenu().findItem(R.id.nav_signout).setVisible(false);
-
-			tWelcomeText.setVisibility(View.GONE);
-		}
-		else
-		{
-			navigationView.getMenu().findItem(R.id.nav_login_with_google).setVisible(false);
-			navigationView.getMenu().findItem(R.id.nav_signout).setVisible(true);
-
-			if (FirebaseAuth.getInstance().getCurrentUser().getDisplayName() == null)
-				tWelcomeText.setVisibility(View.GONE);
-			else
-			{
-				tWelcomeText.setVisibility(View.VISIBLE);
-				tWelcomeText.setText("Welcome, " + FirebaseAuth.getInstance().getCurrentUser().getDisplayName());
-			}
-		}
+		authStateChanged(FirebaseAuth.getInstance().getCurrentUser());
 
 		if (savedInstanceState == null)
 			stacker.setFragment(WelcomeFragment.class);
@@ -167,7 +175,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 		else
 		{
 			if (mBackToast == null)
-				mBackToast = Toast.makeText(this, "Press back again to quit", Toast.LENGTH_SHORT);
+				mBackToast = Toast.makeText(this, "Press back again to quit.", Toast.LENGTH_SHORT);
 			mBackToast.show();
 			backClickTime = System.currentTimeMillis();
 		}
@@ -217,7 +225,121 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 		Persistence.getInstance().destroy();
 
-		signinWorker.stop();
-		signinWorker = null;
+		if (signinWorker != null)
+		{
+			signinWorker.stop();
+			signinWorker = null;
+		}
+
+		if (taskChecker != null)
+		{
+			taskChecker.cancel(true);
+			taskChecker = null;
+		}
+	}
+
+	@Override
+	public void authStateChanged(FirebaseUser currentUser)
+	{
+		final NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+		if (navigationView != null)
+		{
+			View header = navigationView.getHeaderView(0);
+
+			TextView tWelcomeText = (TextView) header.findViewById(R.id.header_text);
+
+			FirebaseAuth mAuth = FirebaseAuth.getInstance();
+			if (mAuth.getCurrentUser() == null || mAuth.getCurrentUser().isAnonymous())
+			{
+				navigationView.getMenu().findItem(R.id.nav_login_with_google).setVisible(true);
+				navigationView.getMenu().findItem(R.id.nav_signout).setVisible(false);
+
+				tWelcomeText.setVisibility(View.GONE);
+			}
+			else
+			{
+				navigationView.getMenu().findItem(R.id.nav_login_with_google).setVisible(false);
+				navigationView.getMenu().findItem(R.id.nav_signout).setVisible(true);
+
+				if (FirebaseAuth.getInstance().getCurrentUser().getDisplayName() == null)
+					tWelcomeText.setVisibility(View.GONE);
+				else
+				{
+					tWelcomeText.setVisibility(View.VISIBLE);
+					tWelcomeText.setText("Welcome, " + FirebaseAuth.getInstance().getCurrentUser().getDisplayName());
+				}
+			}
+
+			stacker.refreshFragment();
+		}
+	}
+
+	@Override
+	public Activity getActivity()
+	{
+		return this;
+	}
+
+	class InternalStateChecker extends AsyncTask<Void, Void, Void>
+	{
+		private int tryCounter = 0;
+
+		@Override
+		protected void onPreExecute()
+		{
+			super.onPreExecute();
+
+			Persistence.getInstance().renew();
+		}
+
+		@Override
+		protected void onPostExecute(Void aVoid)
+		{
+			super.onPostExecute(aVoid);
+
+			if (notReady())
+			{
+				String msg;
+				if (!Network.internetAvailable())
+					msg = "We had a problem connecting to the internet. Please check your connection.";
+				else if (FirebaseAuth.getInstance().getCurrentUser() == null)
+					msg = "We had an authentication problem. Are you connected to the internet?";
+				else
+					msg = "We had a problem syncing with the remote database. Are you connected to the internet?";
+
+				startActivityForResult(new Intent(HomeActivity.this, ErroredActivity.class).putExtra(ErroredActivity.ERROR_MESSAGE, msg), -1);
+			}
+			else
+				createHomeView();
+
+			taskChecker = null;
+		}
+
+		@Override
+		protected Void doInBackground(Void... params)
+		{
+			while (notReady())
+			{
+				tryCounter++;
+
+				if (tryCounter > 300 || isCancelled()) // 6.5 Seconds
+					break;
+
+				try
+				{
+					Thread.sleep(25);
+				}
+				catch (InterruptedException e)
+				{
+					e.printStackTrace();
+				}
+			}
+			return null;
+		}
+
+		private boolean notReady()
+		{
+			return !Persistence.getInstance().check() && FirebaseAuth.getInstance().getCurrentUser() == null;
+		}
 	}
 }

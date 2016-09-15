@@ -96,6 +96,12 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 	}
 
 	@Override
+	public void refreshState()
+	{
+		onRefresh();
+	}
+
+	@Override
 	public void onRefresh()
 	{
 		savedState = new Bundle();

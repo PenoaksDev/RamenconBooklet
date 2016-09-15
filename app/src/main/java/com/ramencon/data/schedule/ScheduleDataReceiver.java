@@ -41,47 +41,42 @@ public class ScheduleDataReceiver implements DataReceiver
 		if (isUpdate)
 			return;
 
+		PLog.i("Schedule data path " + data.getCurrentPath() + " // " + data.getKeys());
+
+		String dateFormat = data.getString("dateFormat", "yyyy-MM-dd");
+		String timeFormat = data.getString("timeFormat", "hh:mm a");
+
 		try
 		{
-			PLog.i("Schedule data path " + data.getCurrentPath() + " // " + data.getKeys());
-
-			String dateFormat = data.getString("dateFormat", "yyyy-MM-dd");
-			String timeFormat = data.getString("timeFormat", "hh:mm a");
-
-			try
-			{
-				simpleDateFormat = new SimpleDateFormat(dateFormat);
-			}
-			catch (Exception e)
-			{
-				PLog.e(e, "We had a problem parsing the dateFormat, value: " + dateFormat);
-				simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-			}
-
-			try
-			{
-				simpleTimeFormat = new SimpleDateFormat(timeFormat);
-			}
-			catch (Exception e)
-			{
-				PLog.e(e, "We had a problem parsing the dateFormat, value: " + dateFormat);
-				simpleTimeFormat = new SimpleDateFormat("hh:mm a");
-			}
-
-			simpleCombinedFormat = new SimpleDateFormat(simpleDateFormat.toPattern() + " " + simpleTimeFormat.toPattern());
-
-			locations = new ArrayList<>();
-			for (ConfigurationSection section : data.getConfigurationSection("locations").getConfigurationSections())
-				locations.add(section.asObject(ModelLocation.class));
-
-			schedule = new TreeSet<>(new ModelEventComparator());
-			for (ConfigurationSection section : data.getConfigurationSection("schedule").getConfigurationSections())
-				schedule.add(section.asObject(ModelEvent.class));
+			simpleDateFormat = new SimpleDateFormat(dateFormat);
 		}
 		catch (Exception e)
 		{
-			Toast.makeText(HomeActivity.instance, "Internal App Error. " + e.getMessage(), Toast.LENGTH_SHORT).show();
+			PLog.e(e, "We had a problem parsing the dateFormat, value: " + dateFormat);
+			simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		}
+
+		try
+		{
+			simpleTimeFormat = new SimpleDateFormat(timeFormat);
+		}
+		catch (Exception e)
+		{
+			PLog.e(e, "We had a problem parsing the dateFormat, value: " + dateFormat);
+			simpleTimeFormat = new SimpleDateFormat("hh:mm a");
+		}
+
+		simpleCombinedFormat = new SimpleDateFormat(simpleDateFormat.toPattern() + " " + simpleTimeFormat.toPattern());
+
+		locations = new ArrayList<>();
+		if (data.getConfigurationSection("locations") != null)
+			for (ConfigurationSection section : data.getConfigurationSection("locations").getConfigurationSections())
+				locations.add(section.asObject(ModelLocation.class));
+
+		schedule = new TreeSet<>(new ModelEventComparator());
+		if (data.getConfigurationSection("schedule") != null)
+			for (ConfigurationSection section : data.getConfigurationSection("schedule").getConfigurationSections())
+				schedule.add(section.asObject(ModelEvent.class));
 	}
 
 	public static SimpleDateFormat simpleCombinedFormat()
@@ -138,18 +133,17 @@ public class ScheduleDataReceiver implements DataReceiver
 	{
 		TreeSet<ModelEvent> events = new TreeSet<>(new ModelEventComparator());
 
-		// SimpleDateFormat sdf = new SimpleDateFormat("M/d hh:mm");
-
 		for (ModelEvent event : schedule)
 			if (filter.filter(events, event))
 				events.add(event);
-		// PLog.i("Got ModelEvent: " + event.getKey() + " (" + sdf.format(new Date(event.getKey())) + " to " + sdf.format(new Date(event.getKey() + (60000 * Integer.parseInt(event.getValue().duration)))) + ") --> " + event.getValue().title);
 
 		return events;
 	}
 
 	public List<Date> sampleDays() throws ParseException
 	{
+		assert schedule.size() > 0;
+
 		return new ArrayList<Date>()
 		{{
 			for (ModelEvent event : schedule)

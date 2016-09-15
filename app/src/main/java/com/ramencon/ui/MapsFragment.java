@@ -23,11 +23,11 @@ import com.google.android.gms.tasks.Task;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.ProgressCallback;
-import com.ramencon.data.DataLoadingFragment;
 import com.penoaks.fragments.PersistentFragment;
 import com.penoaks.log.PLog;
 import com.penoaks.sepher.ConfigurationSection;
 import com.ramencon.R;
+import com.ramencon.data.DataLoadingFragment;
 import com.ramencon.data.maps.MapsDataReceiver;
 import com.ramencon.data.models.ModelMap;
 import com.ramencon.ui.widget.TouchImageView;
@@ -132,6 +132,15 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 	public void loadState(Bundle bundle)
 	{
 		this.savedState = bundle;
+	}
+
+	@Override
+	public void refreshState()
+	{
+		savedState = new Bundle();
+		saveState(savedState);
+
+		refreshData();
 	}
 
 	public class ViewPagerAdapter extends FragmentStatePagerAdapter
@@ -284,10 +293,7 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 				@Override
 				public boolean onLongClick(View v)
 				{
-					savedState = new Bundle();
-					saveState(savedState);
-
-					MapsFragment.this.refreshData();
+					refreshState();
 
 					Toast.makeText(getContext(), "Maps Refreshed", Toast.LENGTH_LONG).show();
 

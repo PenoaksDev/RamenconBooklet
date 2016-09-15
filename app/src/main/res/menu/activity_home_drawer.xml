@@ -14,7 +14,7 @@
             android:title="Schedule"/>
         <item
             android:id="@+id/nav_guests_vendors"
-            android:icon="@drawable/ic_menu_exhibitors_guests"
+            android:icon="@drawable/ic_menu_friends"
             android:title="Guests and Vendors"/>
         <item
             android:id="@+id/nav_maps"

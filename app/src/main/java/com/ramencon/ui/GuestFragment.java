@@ -8,10 +8,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ExpandableListView;
 
-import com.ramencon.data.DataLoadingFragment;
 import com.penoaks.fragments.PersistentFragment;
 import com.penoaks.sepher.ConfigurationSection;
 import com.ramencon.R;
+import com.ramencon.data.DataLoadingFragment;
 import com.ramencon.data.guests.GuestAdapter;
 import com.ramencon.data.guests.GuestDataReceiver;
 
@@ -105,5 +105,11 @@ public class GuestFragment extends DataLoadingFragment implements PersistentFrag
 	public void loadState(Bundle bundle)
 	{
 		this.savedState = bundle;
+	}
+
+	@Override
+	public void refreshState()
+	{
+		onRefresh();
 	}
 }
