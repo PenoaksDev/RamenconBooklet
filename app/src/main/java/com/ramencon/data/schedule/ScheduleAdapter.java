@@ -11,6 +11,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.penoaks.log.PLog;
 import com.ramencon.R;
@@ -120,7 +121,7 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 				SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
 				boolean use24h = pref.getBoolean("pref_military", false);
 
-				tv_title.setText(event.title);
+				tv_title.setText(event.getTitle());
 
 				String format_from = use24h ? DISPLAY_FORMAT_TIME24.format(from) : DISPLAY_FORMAT_TIME12.format(from);
 				String format_to = use24h ? DISPLAY_FORMAT_TIME24.format(to) : DISPLAY_FORMAT_TIME12.format(to);
@@ -155,48 +156,77 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 	@Override
 	public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent)
 	{
-		View childView = convertView == null ? inflater.inflate(R.layout.schedule_listitem_child, null) : convertView;
-
-		TextView tv_description = (TextView) childView.findViewById(R.id.description);
-
-		final ModelEvent event = events.get(groupPosition);
-
-		final ImageView iv_heart = (ImageView) childView.findViewById(R.id.heart);
-
-		iv_heart.setSelected(event.isHearted());
-
-		iv_heart.setOnClickListener(new View.OnClickListener()
+		try
 		{
-			@Override
-			public void onClick(final View v)
+			View childView = convertView == null ? inflater.inflate(R.layout.schedule_listitem_child, null) : convertView;
+
+			TextView tv_description = (TextView) childView.findViewById(R.id.description);
+			// WebView tv_description = (WebView) childView.findViewById(R.id.description);
+
+			final ModelEvent event = events.get(groupPosition);
+
+			final ImageView iv_heart = (ImageView) childView.findViewById(R.id.heart);
+
+			if (event.isHearted())
 			{
-				event.setHearted(!v.isSelected());
-
-				startAnimation(v, true);
+				iv_heart.setSelected(true);
+				iv_heart.setColorFilter(context.getResources().getColor(R.color.colorAccent));
 			}
-		});
+			else
+			{
+				iv_heart.setSelected(false);
+				iv_heart.setColorFilter(context.getResources().getColor(R.color.lighter_gray));
+			}
 
-		final ImageView iv_alarm = (ImageView) childView.findViewById(R.id.alarm);
+			iv_heart.setOnClickListener(new View.OnClickListener()
+			{
+				@Override
+				public void onClick(final View v)
+				{
+					event.setHearted(!v.isSelected());
 
-		if (event.getStartTime() < new Date().getTime())
-			iv_alarm.setVisibility(View.INVISIBLE);
+					startAnimation(v, true);
+				}
+			});
 
-		iv_alarm.setSelected(event.hasTimer());
+			final ImageView iv_alarm = (ImageView) childView.findViewById(R.id.alarm);
 
-		iv_alarm.setOnClickListener(new View.OnClickListener()
+			if (event.getStartTime() < new Date().getTime())
+				iv_alarm.setVisibility(View.INVISIBLE);
+
+			if (event.hasTimer())
+			{
+				iv_alarm.setSelected(true);
+				iv_alarm.setColorFilter(context.getResources().getColor(R.color.colorAccent));
+			}
+			else
+			{
+				iv_alarm.setSelected(false);
+				iv_alarm.setColorFilter(context.getResources().getColor(R.color.lighter_gray));
+			}
+
+			iv_alarm.setOnClickListener(new View.OnClickListener()
+			{
+				@Override
+				public void onClick(final View v)
+				{
+					event.setTimer(!v.isSelected());
+
+					startAnimation(v, false);
+				}
+			});
+
+			tv_description.setText(event.getDescription());
+			// tv_description.loadData("<p style=\"text-align: justified;\">" + event.getDescription() + "</p>", "text/html", "UTF-8");
+
+			return childView;
+		}
+		catch (Exception e)
 		{
-			@Override
-			public void onClick(final View v)
-			{
-				event.setTimer(!v.isSelected());
-
-				startAnimation(v, false);
-			}
-		});
-
-		tv_description.setText(event.description);
-
-		return childView;
+			e.printStackTrace();
+			Toast.makeText(context, "There was a problem displaying this event. The problem was reported to the developer.", Toast.LENGTH_LONG).show();
+			return new View(context);
+		}
 	}
 
 	public void startAnimation(final View v, final boolean op)
@@ -217,6 +247,9 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 				v.setVisibility(View.INVISIBLE);
 
 				v.setSelected(!v.isSelected());
+
+				if (v instanceof ImageView)
+					((ImageView) v).setColorFilter(context.getResources().getColor(v.isSelected() ? R.color.colorAccent : R.color.lighter_gray));
 
 				Animation pop = AnimationUtils.loadAnimation(context, v.isSelected() ? (op ? R.anim.icon_popout : R.anim.icon_shinkin) : R.anim.icon_shinkin);
 

@@ -19,6 +19,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.storage.FirebaseStorage;
@@ -31,6 +33,8 @@ import com.ramencon.data.Persistence;
 
 public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, SigninWorker.SigninParent
 {
+	private static final int UPDATE_GOOGLE_PLAY = 24;
+
 	public static final StorageReference storageReference = FirebaseStorage.getInstance().getReferenceFromUrl("gs://ramencon-booklet.appspot.com");
 
 	public static HomeActivity instance;
@@ -74,7 +78,12 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 		}
 
-		taskChecker = new InternalStateChecker().execute();
+		int error = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this);
+		if (error != ConnectionResult.SUCCESS)
+			GoogleApiAvailability.getInstance().getErrorDialog(this, error, UPDATE_GOOGLE_PLAY).show();
+		else
+			taskChecker = new InternalStateChecker().execute();
+
 		this.savedInstanceState = savedInstanceState;
 	}
 
@@ -207,7 +216,15 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 	{
 		super.onActivityResult(requestCode, resultCode, data);
 
-		signinWorker.onActivityResult(requestCode, resultCode, data);
+		if (requestCode == UPDATE_GOOGLE_PLAY)
+		{
+			if (resultCode == RESULT_OK)
+				taskChecker = new InternalStateChecker().execute();
+			else
+				finish();
+		}
+		else
+			signinWorker.onActivityResult(requestCode, resultCode, data);
 	}
 
 	@Override

@@ -9,8 +9,8 @@ android {
         applicationId "com.ramencon"
         minSdkVersion 16
         targetSdkVersion 23
-        versionCode 124
-        versionName "1.2.4"
+        versionCode 126
+        versionName "1.2.6"
     }
     buildTypes {
         release {
@@ -38,13 +38,13 @@ dependencies {
     compile 'ch.acra:acra:4.9.0'
 
     compile 'com.facebook.android:facebook-android-sdk:4.+'
-    compile 'com.google.android.gms:play-services-auth:9.4.0'
-    compile 'com.google.firebase:firebase-core:9.4.0'
-    compile 'com.google.firebase:firebase-storage:9.4.0'
-    compile 'com.google.firebase:firebase-database:9.4.0'
-    compile 'com.google.firebase:firebase-crash:9.4.0'
-    compile 'com.google.firebase:firebase-auth:9.4.0'
-    compile 'com.google.firebase:firebase-messaging:9.4.0'
+    compile 'com.google.android.gms:play-services-auth:9.2.+'
+    compile 'com.google.firebase:firebase-core:9.2.+'
+    compile 'com.google.firebase:firebase-storage:9.2.+'
+    compile 'com.google.firebase:firebase-database:9.2.+'
+    compile 'com.google.firebase:firebase-crash:9.2.+'
+    compile 'com.google.firebase:firebase-auth:9.2.+'
+    compile 'com.google.firebase:firebase-messaging:9.2.+'
 }
 
 apply plugin: 'com.google.gms.google-services'

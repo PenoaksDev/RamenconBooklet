@@ -613,13 +613,9 @@ public class TouchImageView extends ImageView
 	{
 		Drawable drawable = getDrawable();
 		if (drawable == null || drawable.getIntrinsicWidth() == 0 || drawable.getIntrinsicHeight() == 0)
-		{
 			return;
-		}
 		if (matrix == null || prevMatrix == null)
-		{
 			return;
-		}
 
 		int drawableWidth = drawable.getIntrinsicWidth();
 		int drawableHeight = drawable.getIntrinsicHeight();

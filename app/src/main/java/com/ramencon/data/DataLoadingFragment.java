@@ -39,6 +39,11 @@ public abstract class DataLoadingFragment extends Fragment implements OnConfigur
 	{
 		super.onStart();
 
+		mDialog = new ProgressDialog(getActivity());
+		mDialog.setMessage("Loading Data...");
+		mDialog.setCancelable(false);
+		mDialog.show();
+
 		started = true;
 		if (autoLoadData)
 			handleDataReceiver();
@@ -48,6 +53,9 @@ public abstract class DataLoadingFragment extends Fragment implements OnConfigur
 	public void onStop()
 	{
 		super.onStop();
+
+		if (mDialog != null)
+			mDialog.cancel();
 
 		started = false;
 	}
@@ -63,19 +71,16 @@ public abstract class DataLoadingFragment extends Fragment implements OnConfigur
 		// Test that the prerequisites were met
 		if (receiver != null && started)
 		{
-			mDialog = new ProgressDialog(getActivity());
-			mDialog.setMessage("Loading Data...");
-			mDialog.setCancelable(false);
-			mDialog.show();
-
 			if (data != null)
 				data.removeListener(this);
 
 			data = Persistence.getInstance().get(receiver.getReferenceUri());
 
-			data.addListener(this);
+			if (data != null)
+				data.addListener(this);
 
-			mDialog.cancel();
+			if (mDialog != null)
+				mDialog.cancel();
 
 			receiver.onDataReceived(data, false);
 			onDataReceived(data, false);

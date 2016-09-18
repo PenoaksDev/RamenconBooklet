@@ -1,6 +1,7 @@
 package com.ramencon.data.guests;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
@@ -12,6 +13,7 @@ import android.widget.TextView;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 import com.penoaks.log.PLog;
 import com.ramencon.R;
@@ -19,6 +21,8 @@ import com.ramencon.data.ListGroup;
 import com.ramencon.data.models.ModelGuest;
 import com.ramencon.ui.GuestViewFragment;
 import com.ramencon.ui.HomeActivity;
+
+import org.acra.ACRA;
 
 import java.util.List;
 
@@ -104,11 +108,23 @@ public class GuestAdapter extends BaseExpandableListAdapter
 		final ImageView iv_thumbnail = (ImageView) listItemView.findViewById(R.id.guest_thumbnail);
 		final TextView tv_title = (TextView) listItemView.findViewById(R.id.guest_title);
 
+		final FutureCallback<Bitmap> callback = new FutureCallback<Bitmap>()
+		{
+			@Override
+			public void onCompleted(Exception e, Bitmap result)
+			{
+				if (e != null)
+					ACRA.getErrorReporter().handleException(new RuntimeException("Recoverable Exception", e));
+
+				if (result != null)
+					iv_thumbnail.setImageBitmap(result);
+			}
+		};
+
 		if (guest.image == null)
 			iv_thumbnail.setImageResource(R.drawable.noimagefound);
 		else if (listGroup.resolvedImages.containsKey(guest.id))
-			Ion.with(context).load(listGroup.resolvedImages.get(guest.id)).intoImageView(iv_thumbnail);
-			// Picasso.with(context).load(listGroup.resolvedImages.get(guest.id)).placeholder(R.drawable.image_loading).into(iv_thumbnail);
+			Ion.with(context).load(listGroup.resolvedImages.get(guest.id)).asBitmap().setCallback(callback);
 		else
 			HomeActivity.storageReference.child("images/guests/" + listGroup.id + "/" + guest.image).getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>()
 			{
@@ -118,8 +134,7 @@ public class GuestAdapter extends BaseExpandableListAdapter
 					if (task.isSuccessful())
 					{
 						listGroup.resolvedImages.put(guest.id, task.getResult().toString());
-						Ion.with(context).load(task.getResult().toString()).intoImageView(iv_thumbnail);
-						// Picasso.with(context).load(task.getResult()).placeholder(R.drawable.image_loading).into(iv_thumbnail);
+						Ion.with(context).load(task.getResult().toString()).asBitmap().setCallback(callback);
 					}
 					else
 					{
@@ -129,7 +144,7 @@ public class GuestAdapter extends BaseExpandableListAdapter
 				}
 			});
 
-		tv_title.setText(guest.title);
+		tv_title.setText(guest.getTitle());
 
 		listItemView.setOnClickListener(new View.OnClickListener()
 		{

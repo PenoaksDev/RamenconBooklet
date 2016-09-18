@@ -69,7 +69,7 @@ public class WelcomeFragment extends Fragment
 		}
 		*/
 
-		Uri mapIntentUri = Uri.parse("gwo:0,0?q=800 E 81st Ave Merrillville, IN 46410");
+		Uri mapIntentUri = Uri.parse("geo:0,0?q=800 E 81st Ave Merrillville, IN 46410");
 		final Intent iMap = new Intent(Intent.ACTION_VIEW, mapIntentUri);
 		iMap.setPackage("com.google.android.apps.maps");
 

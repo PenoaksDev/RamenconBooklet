@@ -7,6 +7,7 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -52,10 +53,13 @@ public class GuestViewFragment extends Fragment
 
 		final ImageView image = (ImageView) root.findViewById(R.id.guest_view_image);
 		TextView tv_title = (TextView) root.findViewById(R.id.guest_view_title);
-		TextView tv_desc = (TextView) root.findViewById(R.id.guest_view_description);
+		// TextView tv_desc = (TextView) root.findViewById(R.id.guest_view_description);
+		WebView tv_desc = (WebView) root.findViewById(R.id.guest_view_description);
 
-		tv_title.setText(guest.title);
-		tv_desc.setText(guest.description);
+		tv_title.setText(guest.getTitle());
+		//tv_desc.setText(guest.getDescription());
+		tv_desc.setBackgroundColor(root.getDrawingCacheBackgroundColor());
+		tv_desc.loadData("<p style=\"text-align: justified;\">" + guest.getDescription() + "</p>", "text/html", "UTF-8");
 
 		if (guest.image == null)
 			image.setImageResource(R.drawable.noimagefound);

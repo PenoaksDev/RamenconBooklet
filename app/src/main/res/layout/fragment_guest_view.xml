@@ -1,94 +1,108 @@
-<LinearLayout
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/fragment_guest_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="top|center"
-    android:orientation="vertical"
-    android:padding="24dp"
-    android:weightSum="1"
     tools:context=".ui.ScheduleViewFragment">
 
-    <ImageView
-        android:id="@+id/guest_view_image"
-        android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:layout_gravity="center_horizontal"/>
-
-    <TextView
-        android:id="@+id/guest_view_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Guest Name"
-        android:textAlignment="center"
-        android:textAppearance="?android:attr/textAppearanceLarge"/>
-
     <LinearLayout
+        android:id="@+id/fragment_guest_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="10dp"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:visibility="gone">
-
-        <TextView
-            android:id="@+id/guest_view_date"
-            android:layout_width="wrap_content"
-            android:layout_height="20dp"
-            android:layout_gravity="center"
-            android:layout_marginLeft="15dp"
-            android:text="Friday"
-            android:textAppearance="?android:attr/textAppearanceSmall"/>
-
-        <TextView
-            android:id="@+id/guest_view_time"
-            android:layout_width="wrap_content"
-            android:layout_height="20dp"
-            android:layout_gravity="center"
-            android:layout_marginLeft="15dp"
-            android:text="11:30 AM — 1:00 PM"
-            android:textAppearance="?android:attr/textAppearanceSmall"/>
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:visibility="gone">
+        android:layout_height="match_parent"
+        android:gravity="top|center"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:weightSum="1">
 
         <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:scaleType="fitXY"
-            android:src="@drawable/ic_list_pin"/>
+            android:id="@+id/guest_view_image"
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:layout_gravity="center_horizontal"/>
 
         <TextView
-            android:id="@+id/guest_view_location"
+            android:id="@+id/guest_view_title"
             android:layout_width="wrap_content"
-            android:layout_height="20dp"
-            android:layout_gravity="center"
-            android:text="Panel Room 3"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textColor="@android:color/darker_gray"/>
+            android:layout_height="wrap_content"
+            android:text="Guest Name"
+            android:textAlignment="center"
+            android:textAppearance="?android:attr/textAppearanceLarge"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/guest_view_date"
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:layout_marginLeft="15dp"
+                android:text="Friday"
+                android:textAppearance="?android:attr/textAppearanceSmall"/>
+
+            <TextView
+                android:id="@+id/guest_view_time"
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:layout_marginLeft="15dp"
+                android:text="11:30 AM — 1:00 PM"
+                android:textAppearance="?android:attr/textAppearanceSmall"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/ic_list_pin"/>
+
+            <TextView
+                android:id="@+id/guest_view_location"
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:text="Panel Room 3"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textColor="@android:color/darker_gray"/>
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="3dp"
+            android:background="@android:color/darker_gray"/>
+
+        <TextView
+            android:id="@+id/guest_view_description1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/guest_view_title"
+            android:text="Guest Description"
+            android:visibility="gone"/>
+
+        <WebView
+            android:id="@+id/guest_view_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"/>
 
     </LinearLayout>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginBottom="10dp"
-        android:layout_marginTop="3dp"
-        android:background="@android:color/darker_gray"/>
-
-    <TextView
-        android:id="@+id/guest_view_description"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/guest_view_title"
-        android:text="Guest Description"/>
-</LinearLayout>
+</ScrollView>

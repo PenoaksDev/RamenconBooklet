@@ -3,11 +3,12 @@ package com.ramencon.data.models;
 import android.app.Notification;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.ramencon.data.Persistence;
 import com.penoaks.helpers.Formatting;
+import com.penoaks.helpers.Strings;
 import com.penoaks.sepher.ConfigurationSection;
-import com.ramencon.R;
 import com.ramencon.AppService;
+import com.ramencon.R;
+import com.ramencon.data.Persistence;
 import com.ramencon.data.schedule.ScheduleDataReceiver;
 import com.ramencon.ui.HomeActivity;
 import com.ramencon.ui.ScheduleFragment;
@@ -35,6 +36,16 @@ public class ModelEvent
 	public void setHearted(boolean hearted)
 	{
 		getConfigurationSection().set("hearted", hearted);
+	}
+
+	public String getTitle()
+	{
+		return Strings.fixQuotes(title);
+	}
+
+	public String getDescription()
+	{
+		return Strings.fixQuotes(description);
 	}
 
 	public long getStartTime()
@@ -82,6 +93,8 @@ public class ModelEvent
 			AppService.instance().schedulePushNotification(id, getStartTime(), getNotification());
 		else
 			AppService.instance().cancelPushNotification(id);
+
+		getConfigurationSection().set("timer", timer);
 	}
 
 	private Notification getNotification()

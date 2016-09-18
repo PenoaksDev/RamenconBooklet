@@ -13,11 +13,11 @@ import android.widget.ExpandableListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.ramencon.data.DataLoadingFragment;
 import com.penoaks.fragments.PersistentFragment;
 import com.penoaks.helpers.Formatting;
 import com.penoaks.sepher.ConfigurationSection;
 import com.ramencon.R;
+import com.ramencon.data.DataLoadingFragment;
 import com.ramencon.data.models.ModelEvent;
 import com.ramencon.data.models.ModelLocation;
 import com.ramencon.data.schedule.ScheduleAdapter;
@@ -25,6 +25,7 @@ import com.ramencon.data.schedule.ScheduleDataReceiver;
 import com.ramencon.data.schedule.ScheduleDayAdapter;
 import com.ramencon.data.schedule.filters.DefaultScheduleFilter;
 
+import org.acra.ACRA;
 import org.lucasr.twowayview.TwoWayView;
 
 import java.io.IOException;
@@ -201,7 +202,7 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 		{
 			assert receiver.schedule.size() > 0;
 
-			List<Date> days = receiver.sampleDays();
+			final List<Date> days = receiver.sampleDays();
 
 			TwoWayView mDayView = (TwoWayView) root.findViewById(R.id.daylist);
 			TextView mDateDisplay = (TextView) root.findViewById(R.id.date_display);
@@ -240,7 +241,7 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 					currentFilter.setHearted(DefaultScheduleFilter.TriStateList.SHOW);
 					selectedPosition = 0;
 				}
-				else
+				else if (days.size() > 0)
 				{
 					currentFilter.setMin(days.get(0).getTime());
 					currentFilter.setMax(days.get(0).getTime() + ONEDAY);
@@ -294,9 +295,11 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 			if (positionVisible > 0)
 				mListView.setSelectionFromTop(positionVisible, positionOffset);
 		}
-		catch (ParseException e)
+		catch (Exception e)
 		{
-			e.printStackTrace();
+			ACRA.getErrorReporter().handleException(new RuntimeException("Unexpected Exception.", e));
+
+			Toast.makeText(HomeActivity.instance, "We had a problem loading the schedule. The error has been reported.", Toast.LENGTH_LONG).show();
 		}
 	}
 
