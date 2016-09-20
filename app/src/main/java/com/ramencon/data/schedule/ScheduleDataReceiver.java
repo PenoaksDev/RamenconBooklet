@@ -1,16 +1,12 @@
 package com.ramencon.data.schedule;
 
-import android.widget.Toast;
-
 import com.penoaks.log.PLog;
-import com.ramencon.data.DataReceiver;
 import com.penoaks.sepher.ConfigurationSection;
+import com.ramencon.data.DataReceiver;
 import com.ramencon.data.models.ModelEvent;
 import com.ramencon.data.models.ModelEventComparator;
 import com.ramencon.data.models.ModelLocation;
 import com.ramencon.data.schedule.filters.ScheduleFilter;
-import com.ramencon.ui.HomeActivity;
-import com.ramencon.ui.ScheduleFragment;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -140,11 +136,11 @@ public class ScheduleDataReceiver implements DataReceiver
 		return events;
 	}
 
-	public List<Date> sampleDays() throws ParseException
+	public TreeSet<Date> sampleDays() throws ParseException
 	{
 		assert schedule.size() > 0;
 
-		return new ArrayList<Date>()
+		return new TreeSet<Date>()
 		{{
 			for (ModelEvent event : schedule)
 			{

@@ -22,6 +22,9 @@ public class AlarmReceiver extends BroadcastReceiver
 
 		NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
+		if (mNotificationManager == null)
+			throw new RuntimeException("The Notification Service is not available");
+
 		assert intent.hasExtra("notice");
 		assert intent.hasExtra("id");
 

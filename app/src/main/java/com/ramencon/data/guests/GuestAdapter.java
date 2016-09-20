@@ -2,8 +2,6 @@ package com.ramencon.data.guests;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.net.Uri;
-import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,18 +9,13 @@ import android.widget.BaseExpandableListAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.ion.Ion;
-import com.penoaks.log.PLog;
+import com.penoaks.helpers.ACRAHelper;
 import com.ramencon.R;
+import com.ramencon.data.ImageCache;
 import com.ramencon.data.ListGroup;
 import com.ramencon.data.models.ModelGuest;
 import com.ramencon.ui.GuestViewFragment;
 import com.ramencon.ui.HomeActivity;
-
-import org.acra.ACRA;
 
 import java.util.List;
 
@@ -108,41 +101,27 @@ public class GuestAdapter extends BaseExpandableListAdapter
 		final ImageView iv_thumbnail = (ImageView) listItemView.findViewById(R.id.guest_thumbnail);
 		final TextView tv_title = (TextView) listItemView.findViewById(R.id.guest_title);
 
-		final FutureCallback<Bitmap> callback = new FutureCallback<Bitmap>()
-		{
-			@Override
-			public void onCompleted(Exception e, Bitmap result)
-			{
-				if (e != null)
-					ACRA.getErrorReporter().handleException(new RuntimeException("Recoverable Exception", e));
-
-				if (result != null)
-					iv_thumbnail.setImageBitmap(result);
-			}
-		};
-
 		if (guest.image == null)
 			iv_thumbnail.setImageResource(R.drawable.noimagefound);
-		else if (listGroup.resolvedImages.containsKey(guest.id))
-			Ion.with(context).load(listGroup.resolvedImages.get(guest.id)).asBitmap().setCallback(callback);
 		else
-			HomeActivity.storageReference.child("images/guests/" + listGroup.id + "/" + guest.image).getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>()
+		{
+			iv_thumbnail.setImageResource(R.drawable.loading_image);
+			ImageCache.cacheRemoteImage("guest-" + guest.id, HomeActivity.storageReference.child("images/guests/" + listGroup.id + "/" + guest.image), false, new ImageCache.ImageFoundListener()
 			{
 				@Override
-				public void onComplete(@NonNull Task<Uri> task)
+				public void update(Bitmap bitmap)
 				{
-					if (task.isSuccessful())
-					{
-						listGroup.resolvedImages.put(guest.id, task.getResult().toString());
-						Ion.with(context).load(task.getResult().toString()).asBitmap().setCallback(callback);
-					}
-					else
-					{
-						PLog.e("Failed to loading image from Google Firebase [images/guests/" + listGroup.id + "/" + guest.image + "]");
-						iv_thumbnail.setImageResource(R.drawable.error);
-					}
+					iv_thumbnail.setImageBitmap(bitmap);
 				}
-			});
+
+				@Override
+				public void error(Exception exception)
+				{
+					ACRAHelper.handleExceptionOnce("loading_failure_" + listGroup.id + "_" + guest.image, new RuntimeException("Failed to load image from Google Firebase [images/guests/" + listGroup.id + "/" + guest.image + "]", exception));
+					iv_thumbnail.setImageResource(R.drawable.error);
+				}
+			}, null);
+		}
 
 		tv_title.setText(guest.getTitle());
 

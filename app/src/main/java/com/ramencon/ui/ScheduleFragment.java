@@ -33,7 +33,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.TreeSet;
 
 public class ScheduleFragment extends DataLoadingFragment implements PersistentFragment, SwipeRefreshLayout.OnRefreshListener
@@ -121,35 +120,47 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 			{
 				try
 				{
-					List<Date> days = receiver.sampleDays();
+					TreeSet<Date> days = receiver.sampleDays();
 					long nowTime = new Date().getTime();
 
 					assert days.size() > 0;
 
+
 					// Show earliest event one day ahead of time
-					if (days.get(0).getTime() - ONEDAY > nowTime)
+					if (days.first().getTime() - ONEDAY > nowTime)
 					{
 						Toast.makeText(getContext(), "Sorry, Ramencon has not started yet... err, hurray... Ramencon is starting soon!", Toast.LENGTH_LONG).show();
 						return true;
 					}
 
-					if (days.get(days.size() - 1).getTime() + ONEDAY < nowTime)
+					if (days.last().getTime() + ONEDAY < nowTime)
 					{
 						Toast.makeText(getContext(), "Sorry, Ramencon is over. :( We hope you had a great year!", Toast.LENGTH_LONG).show();
 						return true;
 					}
 
-					int dayPosition = 0;
-
 					SimpleDateFormat sdf = new SimpleDateFormat("MM d yyyy");
 					String now = sdf.format(new Date());
-					for (int i = 0; i < days.size(); i++)
-						if (sdf.format(days.get(i)).equals(now))
-							dayPosition = i;
+
+					Date nowMatch = null;
+					int dayPosition = 0;
+					for (Date day : days)
+					{
+						dayPosition++;
+						if (sdf.format(day).equals(now))
+						{
+							nowMatch = day;
+							break;
+						}
+					}
 
 					currentFilter.reset();
-					currentFilter.setMin(days.get(dayPosition).getTime());
-					currentFilter.setMax(days.get(dayPosition).getTime() + ONEDAY);
+
+					if (nowMatch != null)
+					{
+						currentFilter.setMin(nowMatch.getTime());
+						currentFilter.setMax(nowMatch.getTime() + ONEDAY);
+					}
 
 					TreeSet<ModelEvent> data = receiver.filterRange(currentFilter);
 
@@ -167,7 +178,7 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 						}
 					}
 
-					scheduleDayAdapter.setSelectedPosition(dayPosition + 1, new ArrayList<>(data), Formatting.date(ScheduleDayAdapter.DATEFORMAT, days.get(dayPosition)));
+					scheduleDayAdapter.setSelectedPosition(dayPosition, new ArrayList<>(data), Formatting.date(ScheduleDayAdapter.DATEFORMAT, nowMatch));
 
 					if (positionVisible > 0)
 						mListView.setSelectionFromTop(positionVisible, 0);
@@ -186,11 +197,8 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 	}
 
 	@Override
-	public void onDataReceived(ConfigurationSection section, boolean isUpdate)
+	public void onDataReceived(ConfigurationSection section, boolean isRefresh)
 	{
-		if (isUpdate)
-			return;
-
 		final View root = getView();
 
 		SwipeRefreshLayout refresher = (SwipeRefreshLayout) root.findViewById(R.id.schedule_refresher);
@@ -202,7 +210,7 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 		{
 			assert receiver.schedule.size() > 0;
 
-			final List<Date> days = receiver.sampleDays();
+			final TreeSet<Date> days = receiver.sampleDays();
 
 			TwoWayView mDayView = (TwoWayView) root.findViewById(R.id.daylist);
 			TextView mDateDisplay = (TextView) root.findViewById(R.id.date_display);
@@ -222,19 +230,26 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 
 			if (savedState == null || savedState.isEmpty())
 			{
-				int dayPosition = -1;
-
 				SimpleDateFormat sdf = new SimpleDateFormat("MM d yyyy");
 				String now = sdf.format(new Date());
-				for (int i = 0; i < days.size(); i++)
-					if (sdf.format(days.get(i)).equals(now))
-						dayPosition = i;
 
-				if (dayPosition >= 0)
+				Date nowMatch = null;
+				int dayPosition = 0;
+				for (Date day : days)
 				{
-					currentFilter.setMin(days.get(dayPosition).getTime());
-					currentFilter.setMax(days.get(dayPosition).getTime() + ONEDAY);
-					selectedPosition = dayPosition + 1;
+					dayPosition++;
+					if (sdf.format(day).equals(now))
+					{
+						nowMatch = day;
+						break;
+					}
+				}
+
+				if (nowMatch != null)
+				{
+					currentFilter.setMin(nowMatch.getTime());
+					currentFilter.setMax(nowMatch.getTime() + ONEDAY);
+					selectedPosition = dayPosition;
 				}
 				else if (receiver.hasHeartedEvents())
 				{
@@ -243,14 +258,14 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 				}
 				else if (days.size() > 0)
 				{
-					currentFilter.setMin(days.get(0).getTime());
-					currentFilter.setMax(days.get(0).getTime() + ONEDAY);
+					currentFilter.setMin(days.first().getTime());
+					currentFilter.setMax(days.first().getTime() + ONEDAY);
 					selectedPosition = 1;
 				}
 
 				data = receiver.filterRange(currentFilter);
 
-				if (dayPosition >= 0)
+				if (nowMatch != null)
 				{
 					// Find the most recent event and set the scroll position
 					long nowDate = new Date().getTime();
@@ -286,7 +301,7 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 				savedState = null;
 			}
 
-			scheduleDayAdapter = new ScheduleDayAdapter(this, days, mDateDisplay, receiver, mListView, mDayView, selectedPosition);
+			scheduleDayAdapter = new ScheduleDayAdapter(this, new ArrayList<>(days), mDateDisplay, receiver, mListView, mDayView, selectedPosition);
 			mDayView.setAdapter(scheduleDayAdapter);
 
 			scheduleAdapter = new ScheduleAdapter(getActivity(), receiver.simpleDateFormat(), receiver.simpleTimeFormat(), receiver.locations, new ArrayList<>(data));

@@ -17,5 +17,5 @@ public interface DataReceiver
 	 * @param data The Data Snapshot
 	 * @param isUpdate Was this appended update
 	 */
-	void onDataReceived(ConfigurationSection data, boolean isUpdate);
+	void onDataReceived(ConfigurationSection data, boolean isRefresh);
 }

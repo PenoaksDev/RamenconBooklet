@@ -50,11 +50,8 @@ public class GuestFragment extends DataLoadingFragment implements PersistentFrag
 	}
 
 	@Override
-	public void onDataReceived(ConfigurationSection data, boolean isUpdate)
+	public void onDataReceived(ConfigurationSection data, boolean isRefresh)
 	{
-		if (isUpdate)
-			return;
-
 		final View root = getView();
 
 		SwipeRefreshLayout refresher = (SwipeRefreshLayout) root.findViewById(R.id.guests_refresher);

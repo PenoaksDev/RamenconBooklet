@@ -63,10 +63,15 @@ public abstract class DataLoadingFragment extends Fragment implements OnConfigur
 	public final void refreshData()
 	{
 		Persistence.getInstance().renew();
-		handleDataReceiver();
+		handleDataReceiver(true);
 	}
 
 	private final void handleDataReceiver()
+	{
+		handleDataReceiver(false);
+	}
+
+	private final void handleDataReceiver(boolean isRefresh)
 	{
 		// Test that the prerequisites were met
 		if (receiver != null && started)
@@ -82,8 +87,8 @@ public abstract class DataLoadingFragment extends Fragment implements OnConfigur
 			if (mDialog != null)
 				mDialog.cancel();
 
-			receiver.onDataReceived(data, false);
-			onDataReceived(data, false);
+			receiver.onDataReceived(data, isRefresh);
+			onDataReceived(data, isRefresh);
 		}
 	}
 
@@ -143,5 +148,5 @@ public abstract class DataLoadingFragment extends Fragment implements OnConfigur
 	 * @param data     The Data Snapshot
 	 * @param isUpdate Was this appended update
 	 */
-	protected abstract void onDataReceived(ConfigurationSection data, boolean isUpdate);
+	protected abstract void onDataReceived(ConfigurationSection data, boolean isRefresh);
 }

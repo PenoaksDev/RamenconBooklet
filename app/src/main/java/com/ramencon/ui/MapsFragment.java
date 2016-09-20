@@ -23,6 +23,9 @@ import com.ramencon.ui.widget.TouchImageView;
 
 import org.lucasr.twowayview.TwoWayView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MapsFragment extends DataLoadingFragment implements PersistentFragment
 {
 	private static MapsFragment instance = null;
@@ -61,11 +64,8 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 	}
 
 	@Override
-	public void onDataReceived(ConfigurationSection data, boolean isUpdate)
+	public void onDataReceived(ConfigurationSection data, boolean isRefresh)
 	{
-		if (isUpdate)
-			return;
-
 		View root = getView();
 
 		if (savedState != null)
@@ -75,7 +75,7 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 		mTwoWayView.setAdapter(new PagedListAdapater());
 
 		mViewPager = (ViewPager) root.findViewById(R.id.maps_pager);
-		mViewPager.setAdapter(new ViewPagerAdapter(getFragmentManager()));
+		mViewPager.setAdapter(new ViewPagerAdapter(getFragmentManager(), isRefresh));
 		mViewPager.setCurrentItem(selectedPosition);
 		mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener()
 		{
@@ -130,9 +130,22 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 
 	public class ViewPagerAdapter extends FragmentStatePagerAdapter
 	{
-		public ViewPagerAdapter(FragmentManager fm)
+		private final List<Integer> refreshed = new ArrayList<>();
+		private boolean isRefresh;
+
+		public ViewPagerAdapter(FragmentManager fm, boolean isRefresh)
 		{
 			super(fm);
+			this.isRefresh = isRefresh;
+		}
+
+		public boolean isRefresh(int position)
+		{
+			if (refreshed.contains(position))
+				return false;
+
+			refreshed.add(position);
+			return isRefresh;
 		}
 
 		@Override
@@ -142,6 +155,7 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 
 			Bundle bundle = new Bundle();
 			bundle.putInt("index", position);
+			bundle.putBoolean("isRefresh", isRefresh(position));
 
 			MapsChildFragment frag = new MapsChildFragment();
 			frag.setArguments(bundle);
@@ -211,9 +225,9 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 				@Override
 				public boolean onLongClick(View v)
 				{
+
 					refreshState();
 
-					MapsChildFragment.resolvedImages.clear();
 					Toast.makeText(getContext(), "Maps Refreshed", Toast.LENGTH_LONG).show();
 
 					return true;
