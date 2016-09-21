@@ -7,7 +7,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.penoaks.helpers.FirebaseUtil;
 import com.penoaks.log.PLog;
-import com.penoaks.sepher.Configuration;
 import com.penoaks.sepher.ConfigurationSection;
 import com.penoaks.sepher.OnConfigurationListener;
 import com.penoaks.sepher.types.json.JsonConfiguration;
@@ -15,8 +14,6 @@ import com.ramencon.RamenApp;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -49,9 +46,8 @@ public class Persistence implements ValueEventListener, OnConfigurationListener
 
 	static
 	{
-		root.options().pathSeparator('/');
-
 		persistenceFile = new File(RamenApp.cacheDir, "PersistenceData.json");
+		root.options().pathSeparator('/');
 
 		try
 		{
@@ -59,9 +55,6 @@ public class Persistence implements ValueEventListener, OnConfigurationListener
 			{
 				root.load(persistenceFile);
 				PLog.i("Persistence file was loaded!");
-
-				for (String key : root.getKeys())
-					PLog.i("Key type: " + key + " --> " + root.get(key));
 			}
 			else
 				PLog.i("Persistence file was missing!");
@@ -183,7 +176,7 @@ public class Persistence implements ValueEventListener, OnConfigurationListener
 		{
 			try
 			{
-				PLog.i("Root values: " + root.getValues(false));
+				PLog.i("Saved JSON Data: " + root.saveToString());
 
 				root.save(persistenceFile);
 			}
@@ -203,7 +196,7 @@ public class Persistence implements ValueEventListener, OnConfigurationListener
 
 		ConfigurationSection section = root.getConfigurationSection(uri, true);
 
-		PLog.i("Data Change for [" + uri + " // " + section.getCurrentPath() + "]");
+		PLog.i("Data Change for [" + uri + "/" + dataSnapshot.getKey() + "] --> " + dataSnapshot.getValue());
 
 		FirebaseUtil.convertDataSnapshotToSection(dataSnapshot, section);
 

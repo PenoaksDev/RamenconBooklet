@@ -222,7 +222,7 @@ public class MemorySection implements ConfigurationSection
 			ConfigurationSection result = new MemorySection(this, key);
 			synchronized (map)
 			{
-				// PLog.i("Creating ConfigurationSection as " + getCurrentPath() + "/" + key);
+				// PLog.i("Creating ConfigurationSection: " + getCurrentPath() + "/" + key);
 				map.put(key, result);
 				changes.add(key);
 				forwardingListener.onSectionAdd(result);
@@ -625,7 +625,7 @@ public class MemorySection implements ConfigurationSection
 				return createSection(path);
 			else
 			{
-				PLog.w("Was asked for ConfigurationSection [" + path + "] but got " + val.getClass() + " [" + val + "]");
+				PLog.w("Asked for ConfigurationSection [" + path + "] but got " + val.getClass() + " [" + val + "]");
 				return null;
 			}
 		}
@@ -1029,11 +1029,11 @@ public class MemorySection implements ConfigurationSection
 				result.putAll(defaults.getValues(deep));
 		}
 
-		// mapChildrenValues(result, this, deep);
-
 		for (String key : new ArrayList<>(map.keySet()))
 		{
 			Object obj = map.get(key);
+
+			// PLog.i("Putting: " + getCurrentPath() + "/" + key + " --> (" + obj.getClass() + ") " + obj);
 
 			if (obj instanceof ConfigurationSection)
 			{
@@ -1046,7 +1046,9 @@ public class MemorySection implements ConfigurationSection
 					result.put(key, values);
 			}
 			else
+			{
 				result.put(key, obj);
+			}
 		}
 
 		if (deep)

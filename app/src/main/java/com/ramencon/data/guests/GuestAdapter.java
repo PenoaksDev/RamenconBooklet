@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.penoaks.helpers.ACRAHelper;
+import com.penoaks.log.PLog;
 import com.ramencon.R;
 import com.ramencon.data.ImageCache;
 import com.ramencon.data.models.ModelGroup;
@@ -95,6 +96,8 @@ public class GuestAdapter extends BaseExpandableListAdapter
 
 		final ModelGroup group = list.get(groupPosition);
 		final ModelGuest guest = group.children.get(childPosition);
+
+		PLog.i("Group " + group.id + " // Guest " + guest.id);
 
 		final ImageView iv_thumbnail = (ImageView) listItemView.findViewById(R.id.guest_thumbnail);
 		final TextView tv_title = (TextView) listItemView.findViewById(R.id.guest_title);

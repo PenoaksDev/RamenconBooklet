@@ -51,7 +51,7 @@ public class GuestViewFragment extends Fragment implements ImageCache.ImageFound
 		assert bundle != null;
 
 		ModelGroup listGroup = GuestDataReceiver.getInstance().getModel(bundle.getString("groupId"));
-		ModelGuest guest = listGroup.getModel(bundle.getString("id"));
+		ModelGuest guest = listGroup.getModel(bundle.getString("guestId"));
 
 		image = (ImageView) root.findViewById(R.id.guest_view_image);
 		TextView tv_title = (TextView) root.findViewById(R.id.guest_view_title);

@@ -6,6 +6,8 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 
+import com.penoaks.log.PLog;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -278,7 +280,7 @@ public class FragmentStack
 
 		private Fragment init(boolean force)
 		{
-			Log.i("APP", "Init " + clz.getSimpleName());
+			PLog.i("Init " + clz.getSimpleName());
 
 			if (fragment != null && !force)
 				return fragment;

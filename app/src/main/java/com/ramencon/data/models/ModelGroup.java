@@ -20,8 +20,11 @@ public class ModelGroup
 
 	public ModelGuest getModel(String id)
 	{
+		if (id == null)
+			throw new IllegalArgumentException("id can not be null");
+
 		for (ModelGuest guest : children)
-			if (id.equals(guest.id))
+			if (guest != null && id.equals(guest.id))
 				return guest;
 		return null;
 	}

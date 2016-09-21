@@ -1,5 +1,6 @@
 package com.ramencon.data.guests;
 
+import com.penoaks.log.PLog;
 import com.penoaks.sepher.ConfigurationSection;
 import com.ramencon.data.DataReceiver;
 import com.ramencon.data.models.ModelGroup;
@@ -19,7 +20,7 @@ public class GuestDataReceiver extends DataReceiver
 		return instance;
 	}
 
-	public List<ModelGroup> guests = new ArrayList<>();
+	public List<ModelGroup> guests;
 
 	private GuestDataReceiver()
 	{
@@ -42,7 +43,6 @@ public class GuestDataReceiver extends DataReceiver
 	public void onDataArrived(ConfigurationSection data, boolean isRefresh)
 	{
 		guests = new ArrayList<>();
-
 		for (ConfigurationSection section : data.getConfigurationSections())
 		{
 			List<ModelGuest> models = new ArrayList<>();
@@ -51,6 +51,13 @@ public class GuestDataReceiver extends DataReceiver
 
 			guests.add(new ModelGroup(section.getString("id"), section.getString("title"), models));
 		}
+
+		/* for (ModelGroup group : guests)
+		{
+			PLog.i("Got Group: " + group.id);
+			for (ModelGuest guest : group.children)
+				PLog.i("---> Got Guest: " + guest.id);
+		}*/
 	}
 
 	public ModelGroup getModel(String id)

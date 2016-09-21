@@ -9,11 +9,14 @@ import android.view.ViewGroup;
 import android.widget.ExpandableListView;
 
 import com.penoaks.fragments.PersistentFragment;
+import com.penoaks.log.PLog;
 import com.penoaks.sepher.ConfigurationSection;
 import com.ramencon.R;
 import com.ramencon.data.DataAwareFragment;
 import com.ramencon.data.guests.GuestAdapter;
 import com.ramencon.data.guests.GuestDataReceiver;
+import com.ramencon.data.models.ModelGroup;
+import com.ramencon.data.models.ModelGuest;
 
 public class GuestFragment extends DataAwareFragment<GuestDataReceiver> implements PersistentFragment, SwipeRefreshLayout.OnRefreshListener
 {
@@ -21,8 +24,6 @@ public class GuestFragment extends DataAwareFragment<GuestDataReceiver> implemen
 
 	public static GuestFragment instance()
 	{
-		if (instance == null)
-			instance = new GuestFragment();
 		return instance;
 	}
 
@@ -35,17 +36,11 @@ public class GuestFragment extends DataAwareFragment<GuestDataReceiver> implemen
 	}
 
 	@Override
-	public void onCreate(@Nullable Bundle savedInstanceState)
+	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 
 		getActivity().setTitle("Guests and Vendors");
-	}
-
-	@Override
-	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
-	{
-		return inflater.inflate(R.layout.fragment_guests, container, false);
 	}
 
 	@Override
@@ -113,5 +108,11 @@ public class GuestFragment extends DataAwareFragment<GuestDataReceiver> implemen
 	public void refreshState()
 	{
 		onRefresh();
+	}
+
+	@Override
+	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
+	{
+		return inflater.inflate(R.layout.fragment_guests, container, false);
 	}
 }

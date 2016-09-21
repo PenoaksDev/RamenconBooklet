@@ -32,10 +32,10 @@ public abstract class DataAwareFragment<R extends DataReceiver> extends Fragment
 	{
 		super.onStart();
 
-		started = true;
-
 		if (receiver != null)
 			receiver.attachFragment(this);
+
+		started = true;
 	}
 
 	@Override

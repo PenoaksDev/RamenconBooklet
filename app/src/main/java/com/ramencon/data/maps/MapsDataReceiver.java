@@ -9,7 +9,7 @@ import java.util.List;
 
 public class MapsDataReceiver extends DataReceiver
 {
-	public List<ModelMap> maps = new ArrayList<>();
+	public List<ModelMap> maps;
 
 	public MapsDataReceiver()
 	{
@@ -32,7 +32,6 @@ public class MapsDataReceiver extends DataReceiver
 	public void onDataArrived(ConfigurationSection data, boolean isRefresh)
 	{
 		maps = new ArrayList<>();
-
 		for (ConfigurationSection section : data.getConfigurationSections())
 			maps.add(section.asObject(ModelMap.class));
 	}

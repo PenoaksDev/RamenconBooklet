@@ -123,8 +123,6 @@ public class PersistenceStateChecker extends AsyncTask<Void, Void, Void>
 					break;
 				}
 			}
-
-		instance = null;
 	}
 
 	@Override

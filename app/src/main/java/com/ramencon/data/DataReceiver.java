@@ -4,12 +4,12 @@ import com.penoaks.log.PLog;
 import com.penoaks.sepher.ConfigurationSection;
 import com.penoaks.sepher.OnConfigurationListener;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public abstract class DataReceiver implements OnConfigurationListener
 {
-	private static List<DataAwareFragment> fragments = new ArrayList<>();
+	private Set<DataAwareFragment> fragments = new HashSet<>();
 
 	private ConfigurationSection data = null;
 

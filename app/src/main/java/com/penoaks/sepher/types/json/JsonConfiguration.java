@@ -8,6 +8,8 @@
  */
 package com.penoaks.sepher.types.json;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.penoaks.log.PLog;
 import com.penoaks.sepher.Configuration;
 import com.penoaks.sepher.ConfigurationSection;
@@ -174,6 +176,8 @@ public class JsonConfiguration extends FileConfiguration
 	@Override
 	public void loadFromString(String contents) throws InvalidConfigurationException
 	{
+		PLog.w("Loaded JSON Data: " + contents);
+
 		if (contents == null)
 			throw new IllegalArgumentException("Contents cannot be null");
 
@@ -278,22 +282,14 @@ public class JsonConfiguration extends FileConfiguration
 	@Override
 	public String saveToString()
 	{
-		try
-		{
-			JSONObject json = new JSONObject(getValues(false));
+		Gson gson = new GsonBuilder().create();
+		String dump = gson.toJson(getValues(false));
 
-			String header = buildHeader();
-			String dump = json.toString(options().indent());
+		String header = buildHeader();
 
-			if (dump.equals(BLANK_CONFIG))
-				dump = "";
+		if (dump.equals(BLANK_CONFIG))
+			dump = "";
 
-			return header + dump;
-		}
-		catch (JSONException e)
-		{
-			e.printStackTrace();
-			return null;
-		}
+		return header + dump;
 	}
 }

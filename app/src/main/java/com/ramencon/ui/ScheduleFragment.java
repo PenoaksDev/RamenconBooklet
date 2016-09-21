@@ -70,133 +70,6 @@ public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> im
 	}
 
 	@Override
-	public void saveState(Bundle bundle)
-	{
-		if (getView() == null)
-			return;
-
-		ExpandableListView lv = (ExpandableListView) getView().findViewById(R.id.schedule_listview);
-
-		bundle.putString("filter", DefaultScheduleFilter.getAdapter().toJson(currentFilter));
-
-		if (lv != null)
-		{
-			bundle.putInt("listViewPositionVisible", lv.getFirstVisiblePosition());
-			bundle.putInt("listViewPositionOffset", lv.getChildAt(0) == null ? 0 : lv.getChildAt(0).getTop() - lv.getPaddingTop());
-		}
-
-		if (scheduleDayAdapter != null)
-			bundle.putInt("selectedPosition", scheduleDayAdapter.getSelectedPosition());
-	}
-
-	@Override
-	public void loadState(Bundle bundle)
-	{
-		this.savedState = bundle;
-	}
-
-	@Override
-	public void refreshState()
-	{
-		onRefresh();
-	}
-
-	@Override
-	public void onRefresh()
-	{
-		savedState = new Bundle();
-		saveState(savedState);
-
-		super.refreshData();
-	}
-
-	@Override
-	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater)
-	{
-		menu.add("Show Next Events").setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener()
-		{
-			@Override
-			public boolean onMenuItemClick(MenuItem item)
-			{
-				try
-				{
-					TreeSet<Date> days = receiver.sampleDays();
-					long nowTime = new Date().getTime();
-
-					assert days.size() > 0;
-
-
-					// Show earliest event one day ahead of time
-					if (days.first().getTime() - ONEDAY > nowTime)
-					{
-						Toast.makeText(getContext(), "Sorry, Ramencon has not started yet... err, hurray... Ramencon is starting soon!", Toast.LENGTH_LONG).show();
-						return true;
-					}
-
-					if (days.last().getTime() + ONEDAY < nowTime)
-					{
-						Toast.makeText(getContext(), "Sorry, Ramencon is over. :( We hope you had a great year!", Toast.LENGTH_LONG).show();
-						return true;
-					}
-
-					SimpleDateFormat sdf = new SimpleDateFormat("MM d yyyy");
-					String now = sdf.format(new Date());
-
-					Date nowMatch = null;
-					int dayPosition = 0;
-					for (Date day : days)
-					{
-						dayPosition++;
-						if (sdf.format(day).equals(now))
-						{
-							nowMatch = day;
-							break;
-						}
-					}
-
-					currentFilter.reset();
-
-					if (nowMatch != null)
-					{
-						currentFilter.setMin(nowMatch.getTime());
-						currentFilter.setMax(nowMatch.getTime() + ONEDAY);
-					}
-
-					TreeSet<ModelEvent> data = receiver.filterRange(currentFilter);
-
-					int positionVisible = -1;
-
-					long nowDate = new Date().getTime();
-					ModelEvent[] events = data.toArray(new ModelEvent[0]);
-					for (int i = 0; i < events.length; i++)
-					{
-						Long l = events[i].getEndTime();
-						if (l > nowDate)
-						{
-							positionVisible = i;
-							break;
-						}
-					}
-
-					scheduleDayAdapter.setSelectedPosition(dayPosition, new ArrayList<>(data), Formatting.date(ScheduleDayAdapter.DATEFORMAT, nowMatch));
-
-					if (positionVisible > 0)
-						mListView.setSelectionFromTop(positionVisible, 0);
-
-					return true;
-				}
-				catch (ParseException e)
-				{
-					e.printStackTrace();
-					Toast.makeText(getContext(), "Sorry, there was a problem!", Toast.LENGTH_LONG).show();
-				}
-
-				return true;
-			}
-		});
-	}
-
-	@Override
 	protected void onDataUpdate(ConfigurationSection data)
 	{
 
@@ -325,9 +198,136 @@ public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> im
 	}
 
 	@Override
+	public void onRefresh()
+	{
+		savedState = new Bundle();
+		saveState(savedState);
+
+		super.refreshData();
+	}
+
+	@Override
+	public void saveState(Bundle bundle)
+	{
+		if (getView() == null)
+			return;
+
+		ExpandableListView lv = (ExpandableListView) getView().findViewById(R.id.schedule_listview);
+
+		bundle.putString("filter", DefaultScheduleFilter.getAdapter().toJson(currentFilter));
+
+		if (lv != null)
+		{
+			bundle.putInt("listViewPositionVisible", lv.getFirstVisiblePosition());
+			bundle.putInt("listViewPositionOffset", lv.getChildAt(0) == null ? 0 : lv.getChildAt(0).getTop() - lv.getPaddingTop());
+		}
+
+		if (scheduleDayAdapter != null)
+			bundle.putInt("selectedPosition", scheduleDayAdapter.getSelectedPosition());
+	}
+
+	@Override
+	public void loadState(Bundle bundle)
+	{
+		this.savedState = bundle;
+	}
+
+	@Override
+	public void refreshState()
+	{
+		onRefresh();
+	}
+
+	@Override
 	public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
 	{
 		return inflater.inflate(R.layout.fragment_schedule, container, false);
+	}
+
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater)
+	{
+		menu.add("Show Next Events").setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener()
+		{
+			@Override
+			public boolean onMenuItemClick(MenuItem item)
+			{
+				try
+				{
+					TreeSet<Date> days = receiver.sampleDays();
+					long nowTime = new Date().getTime();
+
+					assert days.size() > 0;
+
+
+					// Show earliest event one day ahead of time
+					if (days.first().getTime() - ONEDAY > nowTime)
+					{
+						Toast.makeText(getContext(), "Sorry, Ramencon has not started yet... err, hurray... Ramencon is starting soon!", Toast.LENGTH_LONG).show();
+						return true;
+					}
+
+					if (days.last().getTime() + ONEDAY < nowTime)
+					{
+						Toast.makeText(getContext(), "Sorry, Ramencon is over. :( We hope you had a great year!", Toast.LENGTH_LONG).show();
+						return true;
+					}
+
+					SimpleDateFormat sdf = new SimpleDateFormat("MM d yyyy");
+					String now = sdf.format(new Date());
+
+					Date nowMatch = null;
+					int dayPosition = 0;
+					for (Date day : days)
+					{
+						dayPosition++;
+						if (sdf.format(day).equals(now))
+						{
+							nowMatch = day;
+							break;
+						}
+					}
+
+					currentFilter.reset();
+
+					if (nowMatch != null)
+					{
+						currentFilter.setMin(nowMatch.getTime());
+						currentFilter.setMax(nowMatch.getTime() + ONEDAY);
+					}
+
+					TreeSet<ModelEvent> data = receiver.filterRange(currentFilter);
+
+					int positionVisible = -1;
+
+					long nowDate = new Date().getTime();
+					ModelEvent[] events = data.toArray(new ModelEvent[0]);
+					for (int i = 0; i < events.length; i++)
+					{
+						Long l = events[i].getEndTime();
+						if (l > nowDate)
+						{
+							positionVisible = i;
+							break;
+						}
+					}
+
+					scheduleDayAdapter.setSelectedPosition(dayPosition, new ArrayList<>(data), Formatting.date(ScheduleDayAdapter.DATEFORMAT, nowMatch));
+
+					if (positionVisible > 0)
+						mListView.setSelectionFromTop(positionVisible, 0);
+
+					return true;
+				}
+				catch (ParseException e)
+				{
+					e.printStackTrace();
+					Toast.makeText(getContext(), "Sorry, there was a problem!", Toast.LENGTH_LONG).show();
+				}
+
+				return true;
+			}
+		});
 	}
 
 	public ModelLocation getLocation(String locId)

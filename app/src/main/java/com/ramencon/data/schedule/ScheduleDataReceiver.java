@@ -55,7 +55,7 @@ public class ScheduleDataReceiver extends DataReceiver
 	@Override
 	public void onDataArrived(ConfigurationSection data, boolean isRefresh)
 	{
-		PLog.i("Schedule data path " + data.getCurrentPath() + " // " + data.getKeys());
+		PLog.i("Schedule data " + data.getCurrentPath() + " // " + data.getKeys());
 
 		String dateFormat = data.getString("dateFormat", "yyyy-MM-dd");
 		String timeFormat = data.getString("timeFormat", "hh:mm a");

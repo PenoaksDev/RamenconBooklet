@@ -59,10 +59,9 @@ public class FirebaseUtil
 			for (DataSnapshot snapshot : dataSnapshot.getChildren())
 				convertDataSnapshotToSection(snapshot, childSection);
 		}
-		else
+		else// if (dataSnapshot.getValue() != null)
 		{
-			// if (dataSnapshot.getValue() != null)
-				// PLog.i("Setting path [" + section.getCurrentPath() + "/" + dataSnapshot.getKey() + "] to [" + dataSnapshot.getValue() + "] with class [" + dataSnapshot.getValue().getClass() + "]");
+			// PLog.i("Setting path [" + section.getCurrentPath() + "/" + dataSnapshot.getKey() + "] to [" + dataSnapshot.getValue() + "] with class [" + dataSnapshot.getValue().getClass() + "]");
 			section.set(dataSnapshot.getKey(), dataSnapshot.getValue());
 		}
 	}
