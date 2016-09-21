@@ -5,7 +5,6 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageInfo;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.NavigationView;
@@ -15,7 +14,6 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
@@ -29,16 +27,17 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.penoaks.fragments.FragmentStack;
-import com.penoaks.helpers.Network;
 import com.penoaks.log.PLog;
 import com.ramencon.MonitorInstance;
 import com.ramencon.R;
 import com.ramencon.RamenApp;
 import com.ramencon.SigninWorker;
 import com.ramencon.data.Persistence;
+import com.ramencon.data.PersistenceStateChecker;
+import com.ramencon.data.PersistenceStateListener;
 import com.ramencon.system.AppService;
 
-public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, SigninWorker.SigninParent, MonitorInstance, ServiceConnection
+public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, SigninWorker.SigninParent, MonitorInstance, ServiceConnection, PersistenceStateListener
 {
 	private static final int UPDATE_GOOGLE_PLAY = 24;
 
@@ -49,7 +48,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 	public AppService service;
 
 	private SigninWorker signinWorker;
-	private AsyncTask<Void, Void, Void> taskChecker;
 
 	public HomeActivity()
 	{
@@ -71,7 +69,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
-		Log.i("APP", "HomeActivity.onCreate() (" + hashCode() + ") " + savedInstanceState);
+		PLog.i("HomeActivity.onCreate() (" + hashCode() + ") " + savedInstanceState);
 
 		super.onCreate(savedInstanceState);
 
@@ -87,17 +85,21 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 		}
 
+		PersistenceStateChecker.addListener(PersistenceStateChecker.ListenerLevel.HIGHEST, this);
+
 		int error = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this);
 		if (error != ConnectionResult.SUCCESS)
 			GoogleApiAvailability.getInstance().getErrorDialog(this, error, UPDATE_GOOGLE_PLAY).show();
 		else
-			taskChecker = new InternalStateChecker().execute();
+			PersistenceStateChecker.makeInstance(false);
 
 		this.savedInstanceState = savedInstanceState;
 	}
 
 	private void createHomeView()
 	{
+		PLog.i("HomeActivity.createHomeView(" + hashCode() + ")");
+
 		setContentView(R.layout.activity_home);
 
 		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -228,7 +230,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 		if (requestCode == UPDATE_GOOGLE_PLAY)
 		{
 			if (resultCode == RESULT_OK)
-				taskChecker = new InternalStateChecker().execute();
+				PersistenceStateChecker.makeInstance(true);
 			else
 				finish();
 		}
@@ -261,11 +263,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 			signinWorker = null;
 		}
 
-		if (taskChecker != null)
-		{
-			taskChecker.cancel(true);
-			taskChecker = null;
-		}
+		PersistenceStateChecker.cancel();
 
 		RamenApp.stop(this);
 	}
@@ -328,71 +326,23 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 		service = null;
 	}
 
-	class InternalStateChecker extends AsyncTask<Void, Void, Void>
-	{
-		private int tryCounter = 0;
-
-		@Override
-		protected void onPreExecute()
-		{
-			super.onPreExecute();
-
-			Persistence.getInstance().renew();
-		}
-
-		@Override
-		protected void onPostExecute(Void aVoid)
-		{
-			super.onPostExecute(aVoid);
-
-			if (notReady())
-			{
-				String msg;
-				if (!Network.internetAvailable())
-					msg = "We had a problem connecting to the internet. Please check your connection.";
-				else if (FirebaseAuth.getInstance().getCurrentUser() == null)
-					msg = "We had an authentication problem. Are you connected to the internet?";
-				else
-					msg = "We had a problem syncing with the remote database. Are you connected to the internet?";
-
-				startActivityForResult(new Intent(HomeActivity.this, ErroredActivity.class).putExtra(ErroredActivity.ERROR_MESSAGE, msg), -1);
-			}
-			else
-				createHomeView();
-
-			taskChecker = null;
-		}
-
-		@Override
-		protected Void doInBackground(Void... params)
-		{
-			while (notReady())
-			{
-				tryCounter++;
-
-				if (tryCounter > 300 || isCancelled()) // 6.5 Seconds
-					break;
-
-				try
-				{
-					Thread.sleep(25);
-				}
-				catch (InterruptedException e)
-				{
-					e.printStackTrace();
-				}
-			}
-			return null;
-		}
-
-		private boolean notReady()
-		{
-			return !Persistence.getInstance().check() && FirebaseAuth.getInstance().getCurrentUser() == null;
-		}
-	}
-
 	public void signOut()
 	{
-		signinWorker.signOut();
+		if (signinWorker == null)
+			FirebaseAuth.getInstance().signOut();
+		else
+			signinWorker.signOut();
+	}
+
+	@Override
+	public void onPersistenceError(String msg)
+	{
+		startActivityForResult(new Intent(HomeActivity.this, ErroredActivity.class).putExtra(ErroredActivity.ERROR_MESSAGE, msg), -1);
+	}
+
+	@Override
+	public void onPersistenceReady()
+	{
+		createHomeView();
 	}
 }

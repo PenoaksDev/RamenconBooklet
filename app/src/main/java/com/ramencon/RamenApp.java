@@ -4,7 +4,9 @@ import android.app.Application;
 import android.content.Context;
 
 import com.penoaks.log.PLog;
+import com.penoaks.sepher.ConfigurationSection;
 import com.ramencon.data.Persistence;
+import com.ramencon.data.UriChecker;
 
 import org.acra.ACRA;
 import org.acra.annotation.ReportsCrashes;
@@ -50,7 +52,39 @@ public class RamenApp extends Application
 
 		cacheDir = getCacheDir();
 
-		Persistence.keepPersistent("booklet-data", false);
+		Persistence.keepPersistent("booklet-data", new UriChecker()
+		{
+			@Override
+			public boolean isLoaded(String uri, ConfigurationSection root)
+			{
+				ConfigurationSection uSection = root.getConfigurationSection(uri);
+
+				if (uSection == null)
+					return false;
+
+				// PLog.i("Uri Checker for booklet-data: " + uSection.getKeys());
+
+				if (uSection.getConfigurationSection("guests") == null)
+					return false;
+
+				if (uSection.getConfigurationSection("locations") == null)
+					return false;
+
+				if (uSection.getConfigurationSection("maps") == null)
+					return false;
+
+				if (uSection.getConfigurationSection("schedule") == null)
+					return false;
+
+				if (uSection.get("dateFormat") == null)
+					return false;
+
+				if (uSection.get("timeFormat") == null)
+					return false;
+
+				return true;
+			}
+		});
 	}
 
 	@Override

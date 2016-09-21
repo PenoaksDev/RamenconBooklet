@@ -11,10 +11,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.penoaks.log.PLog;
 import com.ramencon.R;
 import com.ramencon.data.Persistence;
-import com.ramencon.system.AppService;
 
 public class SettingsFragment extends PreferenceFragment
 {
@@ -50,8 +48,7 @@ public class SettingsFragment extends PreferenceFragment
 			@Override
 			public boolean onPreferenceChange(Preference preference, Object newValue)
 			{
-				HomeActivity.instance.service.restartAllNotifications();
-				PLog.i("Event Reminder Delay was set to " + newValue + " minutes.");
+				HomeActivity.instance.service.restartAllNotifications(Long.parseLong((String) newValue) * 60 * 1000);
 				return true;
 			}
 		});
@@ -85,7 +82,6 @@ public class SettingsFragment extends PreferenceFragment
 						dialog.dismiss();
 					}
 				}).create().show();
-
 				return true;
 			}
 		});

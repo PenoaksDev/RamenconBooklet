@@ -12,6 +12,7 @@ import com.penoaks.helpers.Lists;
 import com.penoaks.helpers.Maps;
 import com.penoaks.helpers.Objects;
 import com.penoaks.log.PLog;
+import com.penoaks.sepher.file.FileConfiguration;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -208,7 +209,7 @@ public class MemorySection implements ConfigurationSection
 		while ((i1 = path.indexOf(separator, i2 = i1 + 1)) != -1)
 		{
 			String node = path.substring(i2, i1);
-			ConfigurationSection subSection = section.getConfigurationSection(node);
+			ConfigurationSection subSection = section.getConfigurationSection(node, true);
 			if (subSection == null)
 				section = section.createSection(node);
 			else
@@ -221,6 +222,7 @@ public class MemorySection implements ConfigurationSection
 			ConfigurationSection result = new MemorySection(this, key);
 			synchronized (map)
 			{
+				// PLog.i("Creating ConfigurationSection as " + getCurrentPath() + "/" + key);
 				map.put(key, result);
 				changes.add(key);
 				forwardingListener.onSectionAdd(result);
@@ -414,6 +416,11 @@ public class MemorySection implements ConfigurationSection
 	@Override
 	public Object get(String path, Object def)
 	{
+		return get(path, false, def);
+	}
+
+	public Object get(String path, boolean makeParents, Object def)
+	{
 		if (path == null)
 			throw new IllegalArgumentException("Path cannot be null");
 
@@ -431,7 +438,7 @@ public class MemorySection implements ConfigurationSection
 		ConfigurationSection section = this;
 		while ((i1 = path.indexOf(separator, i2 = i1 + 1)) != -1)
 		{
-			section = section.getConfigurationSection(path.substring(i2, i1));
+			section = section.getConfigurationSection(path.substring(i2, i1), makeParents);
 			if (section == null)
 				return def;
 		}
@@ -601,11 +608,46 @@ public class MemorySection implements ConfigurationSection
 	public ConfigurationSection getConfigurationSection(String path, boolean create)
 	{
 		Object val = get(path, null);
-		if (val != null)
-			return val instanceof ConfigurationSection ? (ConfigurationSection) val : null;
 
-		val = get(path, getDefault(path));
-		return val instanceof ConfigurationSection || create ? createSection(path) : null;
+		// PLog.i("Section Debug: " + path + " // " + (val == null ? "unknown-type" : val.getClass()) + " // " + val + " // " + create);
+
+		if (val != null)
+		{
+			if (val instanceof ConfigurationSection)
+				return (ConfigurationSection) val;
+			else if (val instanceof Map)
+			{
+				ConfigurationSection section = new MemorySection(this, path);
+				section.set((Map) val);
+				return section;
+			}
+			else if (create)
+				return createSection(path);
+			else
+			{
+				PLog.w("Was asked for ConfigurationSection [" + path + "] but got " + val.getClass() + " [" + val + "]");
+				return null;
+			}
+		}
+
+		val = getDefault(path);
+		if (val != null)
+		{
+			if (val instanceof ConfigurationSection)
+				return (ConfigurationSection) val;
+			else if (val instanceof Map)
+			{
+				ConfigurationSection section = new MemorySection(this, path);
+				section.set((Map) val);
+				return section;
+			}
+			else
+				return null;
+		}
+		else if (create)
+			return createSection(path);
+		else
+			return null;
 	}
 
 	@Override
@@ -1244,7 +1286,7 @@ public class MemorySection implements ConfigurationSection
 	@Override
 	public void set(Map<String, Object> values)
 	{
-		for (String key : new ArrayList<String>(values.keySet()))
+		for (String key : new ArrayList<>(values.keySet()))
 			set(key, values.get(key));
 	}
 

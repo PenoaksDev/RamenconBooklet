@@ -36,35 +36,53 @@ public class Persistence implements ValueEventListener, OnConfigurationListener
 		return instance;
 	}
 
-	private static final List<String> uris = new ArrayList<>();
+	private static JsonConfiguration root = new JsonConfiguration();
+	private static final Map<String, UriChecker> uris = new ConcurrentHashMap();
+	private static final File persistenceFile;
+
+	private DatabaseError lastFirebaseError = null;
+
+	public DatabaseError getLastFirebaseError()
+	{
+		return lastFirebaseError;
+	}
+
+	static
+	{
+		root.options().pathSeparator('/');
+
+		persistenceFile = new File(RamenApp.cacheDir, "PersistenceData.json");
+
+		try
+		{
+			if (persistenceFile.exists())
+			{
+				root.load(persistenceFile);
+				PLog.i("Persistence file was loaded!");
+
+				for (String key : root.getKeys())
+					PLog.i("Key type: " + key + " --> " + root.get(key));
+			}
+			else
+				PLog.i("Persistence file was missing!");
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
 
 	private final FirebaseDatabase database = FirebaseDatabase.getInstance();
 	private final Map<String, DatabaseReference> references = new ConcurrentHashMap<>();
-	private final JsonConfiguration root = new JsonConfiguration();
-	private final File persistenceFile;
 	private boolean loading = false;
 
 	public Persistence()
 	{
 		instance = this;
 
-		persistenceFile = new File(RamenApp.cacheDir, "PersistenceData.json");
-		root.options().pathSeparator('/');
-
-		try
-		{
-			if (persistenceFile.exists())
-				root.load(persistenceFile);
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
-
 		root.addListener(this);
 
-		// Init DatabaseReferences
-		for (String uri : uris)
+		for (String uri : uris.keySet())
 		{
 			DatabaseReference ref = database.getReference(uri);
 			ref.addValueEventListener(this);
@@ -74,18 +92,24 @@ public class Persistence implements ValueEventListener, OnConfigurationListener
 
 	public void destroy()
 	{
-		for (String uri : uris)
+		for (String uri : uris.keySet())
 			if (references.containsKey(uri))
 				references.remove(uri).removeEventListener(this);
+
 		instance = null;
+		root = new JsonConfiguration();
+		root.options().pathSeparator('/');
 	}
 
-	public static void keepPersistent(String uri, boolean uploadChanges)
+	public static void keepPersistent(String uri, UriChecker checker)
 	{
-		if (!uri.startsWith("/"))
-			uri = "/" + uri;
+		if (uri.startsWith("/"))
+			uri = uri.substring(1);
 
-		for (String u : uris)
+		if (uri.isEmpty())
+			throw new IllegalArgumentException("You can not keep the root uri persistent");
+
+		for (String u : uris.keySet())
 		{
 			if (u.equals(uri) || uri.startsWith(u))
 				return;
@@ -97,7 +121,7 @@ public class Persistence implements ValueEventListener, OnConfigurationListener
 			}
 		}
 
-		uris.add(uri);
+		uris.put(uri, checker);
 
 		if (instance != null)
 		{
@@ -131,10 +155,11 @@ public class Persistence implements ValueEventListener, OnConfigurationListener
 	{
 		synchronized (references)
 		{
+			lastFirebaseError = null;
 			for (DatabaseReference ref : references.values())
 				ref.removeEventListener(this);
 			references.clear();
-			for (String uri : uris)
+			for (String uri : uris.keySet())
 			{
 				DatabaseReference ref = database.getReference(uri);
 				ref.addValueEventListener(this);
@@ -145,9 +170,10 @@ public class Persistence implements ValueEventListener, OnConfigurationListener
 
 	public boolean check()
 	{
-		for (String uri : uris)
-			if (root.get(uri, null) == null && root.getConfigurationSection(uri, true).getKeys().size() > 0)
+		for (Map.Entry<String, UriChecker> entry : uris.entrySet())
+			if (!entry.getValue().isLoaded(entry.getKey(), root) || root.get(entry.getKey()) == null)
 				return false;
+
 		return true;
 	}
 
@@ -157,6 +183,8 @@ public class Persistence implements ValueEventListener, OnConfigurationListener
 		{
 			try
 			{
+				PLog.i("Root values: " + root.getValues(false));
+
 				root.save(persistenceFile);
 			}
 			catch (IOException e)
@@ -172,7 +200,10 @@ public class Persistence implements ValueEventListener, OnConfigurationListener
 		loading = true;
 
 		String uri = FirebaseUtil.getUri(dataSnapshot, true);
+
 		ConfigurationSection section = root.getConfigurationSection(uri, true);
+
+		PLog.i("Data Change for [" + uri + " // " + section.getCurrentPath() + "]");
 
 		FirebaseUtil.convertDataSnapshotToSection(dataSnapshot, section);
 
@@ -232,7 +263,7 @@ public class Persistence implements ValueEventListener, OnConfigurationListener
 	@Override
 	public void onCancelled(DatabaseError databaseError)
 	{
-		PLog.e("Firebase Database Error: " + databaseError.getMessage() + " --> " + databaseError.getDetails());
+		lastFirebaseError = databaseError;
 	}
 
 	@Override

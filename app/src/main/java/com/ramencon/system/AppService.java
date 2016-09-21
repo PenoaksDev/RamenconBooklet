@@ -14,6 +14,8 @@ import android.widget.Toast;
 import com.penoaks.log.PLog;
 import com.ramencon.MonitorInstance;
 import com.ramencon.RamenApp;
+import com.ramencon.data.PersistenceStateChecker;
+import com.ramencon.data.PersistenceStateListener;
 import com.ramencon.data.models.ModelEvent;
 import com.ramencon.data.schedule.ScheduleDataReceiver;
 import com.ramencon.data.schedule.filters.DefaultScheduleFilter;
@@ -25,11 +27,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class AppService extends Service implements MonitorInstance
+public class AppService extends Service implements MonitorInstance, PersistenceStateListener
 {
 	public final static String TRIGGER_ALARM = "com.ramencon.action.TRIGGER_ALARM";
 
-	public ScheduleDataReceiver scheduleData = ScheduleDataReceiver.getInstance();
+	public ScheduleDataReceiver scheduleData;
 
 	private final Map<String, PendingIntent> pendingNotices = new ConcurrentHashMap<>();
 
@@ -46,17 +48,18 @@ public class AppService extends Service implements MonitorInstance
 
 		RamenApp.start(this);
 
-		restartAllNotifications();
+		PersistenceStateChecker.addListener(PersistenceStateChecker.ListenerLevel.NORMAL, this);
+		PersistenceStateChecker.makeInstance(false);
 	}
 
-	public void restartAllNotifications()
+	public void restartAllNotifications(long reminderDelay)
 	{
 		cancelAllNotifications();
 
 		Set<ModelEvent> events = scheduleData.filterRange(new DefaultScheduleFilter().setHasTimer(DefaultScheduleFilter.TriStateList.SHOW));
 		for (ModelEvent event : events)
 			if (!hasPushNotificationPending(event.id))
-				if (!schedulePushNotification(event, false))
+				if (!schedulePushNotification(event, event.getStartTime() - reminderDelay, false))
 					event.setTimer(false);
 	}
 
@@ -90,6 +93,11 @@ public class AppService extends Service implements MonitorInstance
 
 	public boolean schedulePushNotification(ModelEvent event, boolean makeToast)
 	{
+		return schedulePushNotification(event, event.getStartTime() - getReminderDelay(), makeToast);
+	}
+
+	public boolean schedulePushNotification(ModelEvent event, long when, boolean makeToast)
+	{
 		Context context = HomeActivity.instance;
 
 		if (event.hasEventReminderPassed())
@@ -98,8 +106,6 @@ public class AppService extends Service implements MonitorInstance
 				Toast.makeText(context, "The event cannot be scheduled because the trigger has time has already passed", Toast.LENGTH_SHORT).show();
 			return false;
 		}
-
-		long alarmTime = event.getStartTime() - getReminderDelay();
 
 		AlarmManager mgr = (AlarmManager) (context.getSystemService(Context.ALARM_SERVICE));
 
@@ -115,11 +121,11 @@ public class AppService extends Service implements MonitorInstance
 		pendingNotices.put(event.id, pIntent);
 
 		if (makeToast)
-			Toast.makeText(context, "Event reminder set for " + new SimpleDateFormat("MM/dd hh:mm a").format(new Date(alarmTime)), Toast.LENGTH_LONG).show();
+			Toast.makeText(context, "Event reminder set for " + new SimpleDateFormat("MM/dd hh:mm a").format(new Date(when)), Toast.LENGTH_LONG).show();
 
-		PLog.i("The event " + event.id + " was scheduled for a push notification at " + new SimpleDateFormat("MM/dd hh:mm a").format(new Date(alarmTime)));
+		PLog.i("The event " + event.id + " was scheduled for a push notification at " + new SimpleDateFormat("MM/dd hh:mm a").format(new Date(when)));
 
-		mgr.set(AlarmManager.RTC_WAKEUP, alarmTime, pIntent);
+		mgr.set(AlarmManager.RTC_WAKEUP, when, pIntent);
 
 		return true;
 	}
@@ -148,6 +154,19 @@ public class AppService extends Service implements MonitorInstance
 	}
 
 	private final IBinder mBinder = new ServiceBinder();
+
+	@Override
+	public void onPersistenceError(String msg)
+	{
+		Toast.makeText(this, "Ramencon App Error: " + msg, Toast.LENGTH_SHORT).show();
+	}
+
+	@Override
+	public void onPersistenceReady()
+	{
+		scheduleData = ScheduleDataReceiver.getInstance();
+		restartAllNotifications(getReminderDelay());
+	}
 
 	public class ServiceBinder extends Binder
 	{

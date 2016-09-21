@@ -22,7 +22,9 @@ import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.penoaks.log.PLog;
+import com.penoaks.sepher.ConfigurationSection;
 import com.ramencon.data.Persistence;
+import com.ramencon.data.UriChecker;
 
 public class SigninWorker implements FirebaseAuth.AuthStateListener, OnCompleteListener<AuthResult>
 {
@@ -174,7 +176,15 @@ public class SigninWorker implements FirebaseAuth.AuthStateListener, OnCompleteL
 		{
 			PLog.i("Got login " + firebaseAuth.getCurrentUser().getUid());
 
-			Persistence.keepPersistent("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid(), true);
+			Persistence.keepPersistent("users/" + FirebaseAuth.getInstance().getCurrentUser().getUid(), new UriChecker()
+			{
+				@Override
+				public boolean isLoaded(String uri, ConfigurationSection root)
+				{
+					return root.getConfigurationSection(uri, true) != null;
+				}
+			});
+
 			lastIntent = SigninIntent.SIGNED_IN;
 		}
 

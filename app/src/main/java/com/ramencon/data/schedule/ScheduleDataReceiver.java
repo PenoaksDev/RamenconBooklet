@@ -49,7 +49,7 @@ public class ScheduleDataReceiver extends DataReceiver
 	@Override
 	protected void onDataUpdate(ConfigurationSection data)
 	{
-		PLog.i("Data Update");
+
 	}
 
 	@Override

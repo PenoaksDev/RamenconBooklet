@@ -14,7 +14,7 @@ public class PLog
 
 	public static void w(String msg, Object... objs)
 	{
-		Log.w(DEFAULT_TAG, String.format(msg, objs));
+		Log.w(DEFAULT_TAG, objs == null || objs.length == 0 ? msg : String.format(msg, objs));
 	}
 
 	public static void w(Throwable throwable, String msg, Object... objs)
