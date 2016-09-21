@@ -13,10 +13,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.penoaks.helpers.Formatting;
 import com.penoaks.log.PLog;
 import com.ramencon.R;
 import com.ramencon.data.models.ModelEvent;
 import com.ramencon.data.models.ModelLocation;
+import com.ramencon.system.AppService;
 import com.ramencon.ui.ScheduleViewFragment;
 
 import org.acra.ACRA;
@@ -184,15 +186,16 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 				public void onClick(final View v)
 				{
 					event.setHearted(!v.isSelected());
-
 					startAnimation(v, true);
 				}
 			});
 
 			final ImageView iv_alarm = (ImageView) childView.findViewById(R.id.alarm);
 
-			if (event.getStartTime() < new Date().getTime())
+			if (event.hasEventReminderPassed())
 				iv_alarm.setVisibility(View.INVISIBLE);
+			else
+				iv_alarm.setVisibility(View.VISIBLE);
 
 			if (event.hasTimer())
 			{
@@ -211,7 +214,6 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 				public void onClick(final View v)
 				{
 					event.setTimer(!v.isSelected());
-
 					startAnimation(v, false);
 				}
 			});

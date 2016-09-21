@@ -69,7 +69,7 @@ public class Formatting
 		}
 
 		if (format == null || format.isEmpty())
-			format = "MMM dx YYYY";
+			format = "MMM dx yyyy";
 
 		if (format.contains("U"))
 			format = format.replaceAll("U", date.getTime() / 1000 + "");

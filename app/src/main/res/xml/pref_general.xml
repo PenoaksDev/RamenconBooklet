@@ -1,22 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <CheckBoxPreference
+    <SwitchPreference
         android:defaultValue="false"
         android:key="pref_military"
         android:summary="Display event time in 24 hour format"
         android:title="Use Military Time"/>
 
-    <!-- <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="pref_cache"
-        android:summary="(Requires a restart to apply changes)"
-        android:title="Cache Data for Offline Browsing"/> -->
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="pref_reminder_vibrate"
+        android:summary="Vibrate for event reminders"
+        android:title="Vibrate on Reminder"/>
 
     <ListPreference
-        android:defaultValue="15"
+        android:defaultValue="10"
         android:key="pref_reminder_delays"
         android:summary="When would you like a reminder before an event?"
         android:title="Event Reminder Delay"/>
+
+    <Preference
+        android:key="pref_force_reset"
+        android:summary="Forcefully reverts the app to it's initial install state"
+        android:title="App Data Reset"/>
 
 </PreferenceScreen>

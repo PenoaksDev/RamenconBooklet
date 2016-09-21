@@ -12,7 +12,7 @@ import android.widget.TextView;
 import com.penoaks.helpers.ACRAHelper;
 import com.ramencon.R;
 import com.ramencon.data.ImageCache;
-import com.ramencon.data.ListGroup;
+import com.ramencon.data.models.ModelGroup;
 import com.ramencon.data.models.ModelGuest;
 import com.ramencon.ui.GuestViewFragment;
 import com.ramencon.ui.HomeActivity;
@@ -24,17 +24,15 @@ public class GuestAdapter extends BaseExpandableListAdapter
 	private LayoutInflater inflater = null;
 	private Context context;
 
-	private List<ListGroup> list;
+	private List<ModelGroup> list;
 
-	public GuestAdapter(Context context, List<ListGroup> list)
+	public GuestAdapter(Context context, List<ModelGroup> list)
 	{
 		this.inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		this.context = context;
 
 		assert list != null;
 		this.list = list;
-
-		GuestViewFragment.adapter = this;
 	}
 
 	@Override
@@ -95,8 +93,8 @@ public class GuestAdapter extends BaseExpandableListAdapter
 	{
 		View listItemView = convertView == null ? inflater.inflate(R.layout.guest_listitem, null) : convertView;
 
-		final ListGroup listGroup = list.get(groupPosition);
-		final ModelGuest guest = listGroup.children.get(childPosition);
+		final ModelGroup group = list.get(groupPosition);
+		final ModelGuest guest = group.children.get(childPosition);
 
 		final ImageView iv_thumbnail = (ImageView) listItemView.findViewById(R.id.guest_thumbnail);
 		final TextView tv_title = (TextView) listItemView.findViewById(R.id.guest_title);
@@ -106,7 +104,7 @@ public class GuestAdapter extends BaseExpandableListAdapter
 		else
 		{
 			iv_thumbnail.setImageResource(R.drawable.loading_image);
-			ImageCache.cacheRemoteImage("guest-" + guest.id, HomeActivity.storageReference.child("images/guests/" + listGroup.id + "/" + guest.image), false, new ImageCache.ImageFoundListener()
+			ImageCache.cacheRemoteImage("guest-" + guest.id, HomeActivity.storageReference.child("images/guests/" + group.id + "/" + guest.image), false, new ImageCache.ImageFoundListener()
 			{
 				@Override
 				public void update(Bitmap bitmap)
@@ -117,7 +115,7 @@ public class GuestAdapter extends BaseExpandableListAdapter
 				@Override
 				public void error(Exception exception)
 				{
-					ACRAHelper.handleExceptionOnce("loading_failure_" + listGroup.id + "_" + guest.image, new RuntimeException("Failed to load image from Google Firebase [images/guests/" + listGroup.id + "/" + guest.image + "]", exception));
+					ACRAHelper.handleExceptionOnce("loading_failure_" + group.id + "_" + guest.image, new RuntimeException("Failed to load image from Google Firebase [images/guests/" + group.id + "/" + guest.image + "]", exception));
 					iv_thumbnail.setImageResource(R.drawable.error);
 				}
 			}, null);
@@ -130,7 +128,7 @@ public class GuestAdapter extends BaseExpandableListAdapter
 			@Override
 			public void onClick(View v)
 			{
-				HomeActivity.instance.stacker.setFragment(GuestViewFragment.instance(groupPosition, childPosition), true, true);
+				HomeActivity.instance.stacker.setFragment(GuestViewFragment.instance(group.id, guest.id), true, true);
 			}
 		});
 
@@ -143,7 +141,7 @@ public class GuestAdapter extends BaseExpandableListAdapter
 		return true;
 	}
 
-	public ListGroup getListGroup(int groupPosition)
+	public ModelGroup getListGroup(int groupPosition)
 	{
 		return list.get(groupPosition);
 	}

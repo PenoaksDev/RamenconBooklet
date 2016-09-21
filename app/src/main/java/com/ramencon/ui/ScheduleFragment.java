@@ -15,9 +15,10 @@ import android.widget.Toast;
 
 import com.penoaks.fragments.PersistentFragment;
 import com.penoaks.helpers.Formatting;
+import com.penoaks.log.PLog;
 import com.penoaks.sepher.ConfigurationSection;
 import com.ramencon.R;
-import com.ramencon.data.DataLoadingFragment;
+import com.ramencon.data.DataAwareFragment;
 import com.ramencon.data.models.ModelEvent;
 import com.ramencon.data.models.ModelLocation;
 import com.ramencon.data.schedule.ScheduleAdapter;
@@ -35,7 +36,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.TreeSet;
 
-public class ScheduleFragment extends DataLoadingFragment implements PersistentFragment, SwipeRefreshLayout.OnRefreshListener
+public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> implements PersistentFragment, SwipeRefreshLayout.OnRefreshListener
 {
 	public static final long ONEDAY = 1440 * 60 * 1000;
 
@@ -51,17 +52,16 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 	private ScheduleAdapter scheduleAdapter;
 	private ExpandableListView mListView;
 
-	public ScheduleDataReceiver receiver = new ScheduleDataReceiver();
 	private Bundle savedState = null;
 
 	public ScheduleFragment()
 	{
 		instance = this;
-		setReceiver(receiver);
+		setReceiver(ScheduleDataReceiver.getInstance());
 	}
 
 	@Override
-	public void onCreate(@Nullable Bundle savedInstanceState)
+	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 
@@ -197,7 +197,13 @@ public class ScheduleFragment extends DataLoadingFragment implements PersistentF
 	}
 
 	@Override
-	public void onDataReceived(ConfigurationSection section, boolean isRefresh)
+	protected void onDataUpdate(ConfigurationSection data)
+	{
+
+	}
+
+	@Override
+	public void onDataArrived(ConfigurationSection section, boolean isRefresh)
 	{
 		final View root = getView();
 

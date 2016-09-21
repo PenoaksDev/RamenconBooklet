@@ -188,6 +188,12 @@ public class FragmentStack
 				((PersistentFragment) state.fragment).refreshState();
 	}
 
+	public void clearFragments()
+	{
+		backstack.clear();
+		states.clear();
+	}
+
 	public class FragmentSaveState
 	{
 		Class<? extends Fragment> clz;

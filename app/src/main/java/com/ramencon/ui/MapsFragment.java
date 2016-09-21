@@ -17,7 +17,7 @@ import android.widget.Toast;
 import com.penoaks.fragments.PersistentFragment;
 import com.penoaks.sepher.ConfigurationSection;
 import com.ramencon.R;
-import com.ramencon.data.DataLoadingFragment;
+import com.ramencon.data.DataAwareFragment;
 import com.ramencon.data.maps.MapsDataReceiver;
 import com.ramencon.ui.widget.TouchImageView;
 
@@ -26,7 +26,7 @@ import org.lucasr.twowayview.TwoWayView;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MapsFragment extends DataLoadingFragment implements PersistentFragment
+public class MapsFragment extends DataAwareFragment<MapsDataReceiver> implements PersistentFragment
 {
 	private static MapsFragment instance = null;
 
@@ -37,7 +37,6 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 		return instance;
 	}
 
-	public MapsDataReceiver receiver = new MapsDataReceiver();
 	private ViewPager mViewPager;
 	private TwoWayView mTwoWayView;
 	private Bundle savedState = null;
@@ -46,7 +45,7 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 	public MapsFragment()
 	{
 		instance = this;
-		setReceiver(receiver);
+		setReceiver(new MapsDataReceiver());
 	}
 
 	@Override
@@ -64,7 +63,13 @@ public class MapsFragment extends DataLoadingFragment implements PersistentFragm
 	}
 
 	@Override
-	public void onDataReceived(ConfigurationSection data, boolean isRefresh)
+	protected void onDataUpdate(ConfigurationSection data)
+	{
+
+	}
+
+	@Override
+	public void onDataArrived(ConfigurationSection data, boolean isRefresh)
 	{
 		View root = getView();
 

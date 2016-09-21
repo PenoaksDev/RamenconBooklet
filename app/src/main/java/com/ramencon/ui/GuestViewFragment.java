@@ -1,10 +1,7 @@
 package com.ramencon.ui;
 
 import android.graphics.Bitmap;
-import android.media.Image;
-import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,28 +11,23 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.koushikdutta.ion.Ion;
 import com.ramencon.R;
 import com.ramencon.data.ImageCache;
-import com.ramencon.data.ListGroup;
-import com.ramencon.data.guests.GuestAdapter;
+import com.ramencon.data.models.ModelGroup;
+import com.ramencon.data.guests.GuestDataReceiver;
 import com.ramencon.data.models.ModelGuest;
 
 import org.acra.ACRA;
 
 public class GuestViewFragment extends Fragment implements ImageCache.ImageFoundListener
 {
-	public static GuestAdapter adapter = null;
-
 	private ImageView image;
 
-	public static Fragment instance(int groupPosition, int childPosition)
+	public static Fragment instance(String groupId, String guestId)
 	{
 		Bundle bundle = new Bundle();
-		bundle.putInt("groupPosition", groupPosition);
-		bundle.putInt("childPosition", childPosition);
+		bundle.putString("groupId", groupId);
+		bundle.putString("guestId", guestId);
 
 		GuestViewFragment frag = new GuestViewFragment();
 		frag.setArguments(bundle);
@@ -56,8 +48,10 @@ public class GuestViewFragment extends Fragment implements ImageCache.ImageFound
 
 		Bundle bundle = getArguments();
 
-		ListGroup listGroup = adapter.getListGroup(bundle.getInt("groupPosition"));
-		ModelGuest guest = listGroup.children.get(bundle.getInt("childPosition"));
+		assert bundle != null;
+
+		ModelGroup listGroup = GuestDataReceiver.getInstance().getModel(bundle.getString("groupId"));
+		ModelGuest guest = listGroup.getModel(bundle.getString("id"));
 
 		image = (ImageView) root.findViewById(R.id.guest_view_image);
 		TextView tv_title = (TextView) root.findViewById(R.id.guest_view_title);

@@ -1,10 +1,13 @@
 package com.ramencon.ui;
 
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -27,11 +30,15 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.penoaks.fragments.FragmentStack;
 import com.penoaks.helpers.Network;
+import com.penoaks.log.PLog;
+import com.ramencon.MonitorInstance;
 import com.ramencon.R;
+import com.ramencon.RamenApp;
 import com.ramencon.SigninWorker;
 import com.ramencon.data.Persistence;
+import com.ramencon.system.AppService;
 
-public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, SigninWorker.SigninParent
+public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, SigninWorker.SigninParent, MonitorInstance, ServiceConnection
 {
 	private static final int UPDATE_GOOGLE_PLAY = 24;
 
@@ -39,6 +46,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 	public static HomeActivity instance;
 	public FragmentStack stacker;
+	public AppService service;
+
 	private SigninWorker signinWorker;
 	private AsyncTask<Void, Void, Void> taskChecker;
 
@@ -233,6 +242,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 		super.onStart();
 
 		signinWorker = SigninWorker.getInstance(this);
+
+		RamenApp.start(this);
+
+		bindService(new Intent(this, AppService.class), this, BIND_AUTO_CREATE);
 	}
 
 	@Override
@@ -240,7 +253,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 	{
 		super.onStop();
 
-		Persistence.getInstance().destroy();
+		unbindService(this);
 
 		if (signinWorker != null)
 		{
@@ -253,6 +266,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 			taskChecker.cancel(true);
 			taskChecker = null;
 		}
+
+		RamenApp.stop(this);
 	}
 
 	@Override
@@ -295,6 +310,22 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 	public Activity getActivity()
 	{
 		return this;
+	}
+
+	@Override
+	public void onServiceConnected(ComponentName name, IBinder service)
+	{
+		PLog.i("Success binding to AppService");
+
+		this.service = ((AppService.ServiceBinder) service).getService();
+	}
+
+	@Override
+	public void onServiceDisconnected(ComponentName name)
+	{
+		PLog.i("Failed binding to AppService");
+
+		service = null;
 	}
 
 	class InternalStateChecker extends AsyncTask<Void, Void, Void>
@@ -358,5 +389,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 		{
 			return !Persistence.getInstance().check() && FirebaseAuth.getInstance().getCurrentUser() == null;
 		}
+	}
+
+	public void signOut()
+	{
+		signinWorker.signOut();
 	}
 }

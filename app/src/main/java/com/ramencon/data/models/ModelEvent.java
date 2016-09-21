@@ -5,13 +5,16 @@ import android.app.Notification;
 import com.google.firebase.auth.FirebaseAuth;
 import com.penoaks.helpers.Formatting;
 import com.penoaks.helpers.Strings;
+import com.penoaks.log.PLog;
 import com.penoaks.sepher.ConfigurationSection;
-import com.ramencon.AppService;
+import com.ramencon.system.AppService;
 import com.ramencon.R;
 import com.ramencon.data.Persistence;
 import com.ramencon.data.schedule.ScheduleDataReceiver;
 import com.ramencon.ui.HomeActivity;
 import com.ramencon.ui.ScheduleFragment;
+
+import java.util.Date;
 
 public class ModelEvent
 {
@@ -48,6 +51,18 @@ public class ModelEvent
 		return Strings.fixQuotes(description);
 	}
 
+	public Date getStartDate()
+	{
+		try
+		{
+			return ScheduleDataReceiver.simpleCombinedFormat().parse(date + " " + time);
+		}
+		catch (Exception e)
+		{
+			throw new RuntimeException(e.getMessage() + " Pattern: " + ScheduleDataReceiver.simpleCombinedFormat().toPattern(), e);
+		}
+	}
+
 	public long getStartTime()
 	{
 		try
@@ -75,31 +90,56 @@ public class ModelEvent
 		return ScheduleFragment.instance().getLocation(location);
 	}
 
+	public boolean hasEventReminderPassed()
+	{
+		long nowTime = new Date().getTime();
+		long startTime = getStartTime();
+
+		PLog.i(">>> Event time debug (" + id + "): Now " + Formatting.date("MMM dx HH:mm:ss a", nowTime) + " (" + nowTime + ") // Then " + Formatting.date("MMM dx HH:mm:ss a", startTime) + " (" + startTime + ") // Reminder Delay " + AppService.getReminderDelay());
+		PLog.i("Result: " + startTime + " - " + nowTime + " - " + AppService.getReminderDelay() + " = " + (startTime - nowTime - AppService.getReminderDelay()));
+
+		return getStartTime() - new Date().getTime() - AppService.getReminderDelay() < 0;
+	}
+
+	public boolean hasEventPassed()
+	{
+		return getStartTime() - new Date().getTime() < 0;
+	}
+
 	public boolean hasTimer()
 	{
 		boolean timer = getConfigurationSection().getBoolean("timer", false);
 
-		if (timer && !AppService.instance().hasPushNotificationPending(id))
-			AppService.instance().schedulePushNotification(id, getStartTime(), getNotification());
-		else if (!timer && AppService.instance().hasPushNotificationPending(id))
-			AppService.instance().cancelPushNotification(id);
+		boolean pending = HomeActivity.instance.service.hasPushNotificationPending(id);
+		boolean pasted = hasEventReminderPassed();
+
+		if (timer)
+		{
+			if (pending && pasted)
+				HomeActivity.instance.service.cancelPushNotification(id);
+			else if (!pending && !pasted)
+				HomeActivity.instance.service.schedulePushNotification(this, false);
+		}
+		else if (pending)
+			HomeActivity.instance.service.cancelPushNotification(id);
 
 		return timer;
 	}
 
 	public void setTimer(boolean timer)
 	{
-		if (timer)
-			AppService.instance().schedulePushNotification(id, getStartTime(), getNotification());
+		if (timer && HomeActivity.instance.service.schedulePushNotification(this, true))
+			getConfigurationSection().set("timer", true);
 		else
-			AppService.instance().cancelPushNotification(id);
-
-		getConfigurationSection().set("timer", timer);
+		{
+			HomeActivity.instance.service.cancelPushNotification(id);
+			getConfigurationSection().set("timer", false);
+		}
 	}
 
-	private Notification getNotification()
+	public Notification getNotification()
 	{
 		ModelLocation mLocation = getLocation();
-		return new Notification.Builder(HomeActivity.instance).setContentTitle("You have an event starting soon!").setSmallIcon(R.mipmap.ic_app).setContentText(title + " starts at " + Formatting.date("h:mm a", getStartTime()) + (mLocation == null ? "" : " in " + mLocation.title)).build();
+		return new Notification.Builder(HomeActivity.instance).setWhen(getStartTime()).setContentTitle("You have an event starting soon!").setSmallIcon(R.mipmap.ic_app).setContentText(title + " starts at " + Formatting.date("h:mm a", getStartTime()) + (mLocation == null ? "" : " in " + mLocation.title)).build();
 	}
 }

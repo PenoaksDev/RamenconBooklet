@@ -1,4 +1,4 @@
-package com.ramencon;
+package com.penoaks.helpers;
 
 import android.content.Context;
 import android.net.ConnectivityManager;

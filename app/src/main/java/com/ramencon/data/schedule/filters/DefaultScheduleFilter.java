@@ -18,6 +18,7 @@ public class DefaultScheduleFilter implements ScheduleFilter
 	private long min = -1;
 	private long max = -1;
 
+	private TriStateList timed = TriStateList.UNSET;
 	private TriStateList hearted = TriStateList.UNSET;
 
 	public static JsonAdapter<DefaultScheduleFilter> getAdapter()
@@ -47,28 +48,46 @@ public class DefaultScheduleFilter implements ScheduleFilter
 		if (hearted == TriStateList.HIDE && event.isHearted())
 			return false;
 
+		if (timed == TriStateList.SHOW && !event.hasTimer())
+			return false;
+
+		if (timed == TriStateList.HIDE && event.hasTimer())
+			return false;
+
 		return true;
 	}
 
-	public void reset()
+	public DefaultScheduleFilter reset()
 	{
 		min = -1;
 		max = -1;
 		hearted = TriStateList.UNSET;
+		timed = TriStateList.UNSET;
+
+		return this;
 	}
 
-	public void setHearted(TriStateList hearted)
+	public DefaultScheduleFilter setHasTimer(TriStateList timed)
+	{
+		this.timed = timed;
+		return this;
+	}
+
+	public DefaultScheduleFilter setHearted(TriStateList hearted)
 	{
 		this.hearted = hearted;
+		return this;
 	}
 
-	public void setMin(long min)
+	public DefaultScheduleFilter setMin(long min)
 	{
 		this.min = min;
+		return this;
 	}
 
-	public void setMax(long max)
+	public DefaultScheduleFilter setMax(long max)
 	{
 		this.max = max;
+		return this;
 	}
 }

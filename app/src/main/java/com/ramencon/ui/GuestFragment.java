@@ -11,11 +11,11 @@ import android.widget.ExpandableListView;
 import com.penoaks.fragments.PersistentFragment;
 import com.penoaks.sepher.ConfigurationSection;
 import com.ramencon.R;
-import com.ramencon.data.DataLoadingFragment;
+import com.ramencon.data.DataAwareFragment;
 import com.ramencon.data.guests.GuestAdapter;
 import com.ramencon.data.guests.GuestDataReceiver;
 
-public class GuestFragment extends DataLoadingFragment implements PersistentFragment, SwipeRefreshLayout.OnRefreshListener
+public class GuestFragment extends DataAwareFragment<GuestDataReceiver> implements PersistentFragment, SwipeRefreshLayout.OnRefreshListener
 {
 	private static GuestFragment instance = null;
 
@@ -26,13 +26,12 @@ public class GuestFragment extends DataLoadingFragment implements PersistentFrag
 		return instance;
 	}
 
-	public GuestDataReceiver receiver = new GuestDataReceiver();
 	private Bundle savedState = null;
 
 	public GuestFragment()
 	{
 		instance = this;
-		setReceiver(receiver);
+		setReceiver(GuestDataReceiver.getInstance());
 	}
 
 	@Override
@@ -50,7 +49,13 @@ public class GuestFragment extends DataLoadingFragment implements PersistentFrag
 	}
 
 	@Override
-	public void onDataReceived(ConfigurationSection data, boolean isRefresh)
+	protected void onDataUpdate(ConfigurationSection data)
+	{
+
+	}
+
+	@Override
+	public void onDataArrived(ConfigurationSection data, boolean isRefresh)
 	{
 		final View root = getView();
 

@@ -7,6 +7,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.penoaks.helpers.FirebaseUtil;
 import com.penoaks.log.PLog;
+import com.penoaks.sepher.Configuration;
 import com.penoaks.sepher.ConfigurationSection;
 import com.penoaks.sepher.OnConfigurationListener;
 import com.penoaks.sepher.types.json.JsonConfiguration;
@@ -22,6 +23,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Persistence implements ValueEventListener, OnConfigurationListener
 {
 	private static Persistence instance;
+
+	public static boolean isInstigated()
+	{
+		return instance != null;
+	}
 
 	public static Persistence getInstance()
 	{
@@ -108,7 +114,17 @@ public class Persistence implements ValueEventListener, OnConfigurationListener
 
 	public ConfigurationSection get(String path)
 	{
-		return path == null || path.isEmpty() ? root : root.getConfigurationSection(path, true);
+		if (path == null || path.isEmpty())
+			return root;
+
+		ConfigurationSection section = root.getConfigurationSection(path, true);
+
+		if (section == null)
+			section = root.createSection(path);
+
+		assert section != null;
+
+		return section;
 	}
 
 	public void renew()
@@ -245,5 +261,11 @@ public class Persistence implements ValueEventListener, OnConfigurationListener
 		database.getReference(parent.getCurrentPath() + "/" + affectedKey).setValue(parent.get(affectedKey));
 
 		save();
+	}
+
+	public void factoryReset()
+	{
+		destroy();
+		persistenceFile.delete();
 	}
 }

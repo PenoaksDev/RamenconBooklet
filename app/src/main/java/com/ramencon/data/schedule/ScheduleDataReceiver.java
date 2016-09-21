@@ -7,6 +7,7 @@ import com.ramencon.data.models.ModelEvent;
 import com.ramencon.data.models.ModelEventComparator;
 import com.ramencon.data.models.ModelLocation;
 import com.ramencon.data.schedule.filters.ScheduleFilter;
+import com.ramencon.system.AppService;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -17,13 +18,27 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class ScheduleDataReceiver implements DataReceiver
+public class ScheduleDataReceiver extends DataReceiver
 {
 	private static SimpleDateFormat simpleCombinedFormat = null;
 	private static SimpleDateFormat simpleDateFormat = null;
 	private static SimpleDateFormat simpleTimeFormat = null;
 	public List<ModelLocation> locations;
 	public TreeSet<ModelEvent> schedule;
+
+	private static ScheduleDataReceiver instance = null;
+
+	public static ScheduleDataReceiver getInstance()
+	{
+		if (instance == null)
+			instance = new ScheduleDataReceiver();
+		return instance;
+	}
+
+	private ScheduleDataReceiver()
+	{
+		super(true);
+	}
 
 	@Override
 	public String getReferenceUri()
@@ -32,11 +47,14 @@ public class ScheduleDataReceiver implements DataReceiver
 	}
 
 	@Override
-	public void onDataReceived(ConfigurationSection data, boolean isUpdate)
+	protected void onDataUpdate(ConfigurationSection data)
 	{
-		if (isUpdate)
-			return;
+		PLog.i("Data Update");
+	}
 
+	@Override
+	public void onDataArrived(ConfigurationSection data, boolean isRefresh)
+	{
 		PLog.i("Schedule data path " + data.getCurrentPath() + " // " + data.getKeys());
 
 		String dateFormat = data.getString("dateFormat", "yyyy-MM-dd");
@@ -120,12 +138,12 @@ public class ScheduleDataReceiver implements DataReceiver
 		return results;
 	}
 
-	public List<ModelEvent> filterRangeList(ScheduleFilter filter) throws ParseException
+	public List<ModelEvent> filterRangeList(ScheduleFilter filter)
 	{
 		return new ArrayList<>(filterRange(filter));
 	}
 
-	public TreeSet<ModelEvent> filterRange(ScheduleFilter filter) throws ParseException
+	public TreeSet<ModelEvent> filterRange(ScheduleFilter filter)
 	{
 		TreeSet<ModelEvent> events = new TreeSet<>(new ModelEventComparator());
 
@@ -136,7 +154,7 @@ public class ScheduleDataReceiver implements DataReceiver
 		return events;
 	}
 
-	public TreeSet<Date> sampleDays() throws ParseException
+	public TreeSet<Date> sampleDays()
 	{
 		assert schedule.size() > 0;
 
@@ -144,15 +162,29 @@ public class ScheduleDataReceiver implements DataReceiver
 		{{
 			for (ModelEvent event : schedule)
 			{
-				Date day1 = simpleDateFormat().parse(event.date);
-				boolean add = true;
-				for (Date day2 : this)
-					if (day2.equals(day1))
-						add = false;
-				if (add)
-					add(day1);
+				try
+				{
+					Date day1 = simpleDateFormat().parse(event.date);
+					boolean add = true;
+					for (Date day2 : this)
+						if (day2.equals(day1))
+							add = false;
+					if (add)
+						add(day1);
+				}
+				catch (Exception ignore)
+				{
+				}
 			}
 		}};
+	}
+
+	public boolean hasTimerEvents()
+	{
+		for (ModelEvent event : schedule)
+			if (event.hasTimer())
+				return true;
+		return false;
 	}
 
 	public boolean hasHeartedEvents()
@@ -161,5 +193,21 @@ public class ScheduleDataReceiver implements DataReceiver
 			if (event.isHearted())
 				return true;
 		return false;
+	}
+
+	public boolean hasEvent(String id)
+	{
+		for (ModelEvent event : schedule)
+			if (id.equals(event.id))
+				return true;
+		return false;
+	}
+
+	public ModelEvent getEvent(String id)
+	{
+		for (ModelEvent event : schedule)
+			if (id.equals(event.id))
+				return event;
+		return null;
 	}
 }

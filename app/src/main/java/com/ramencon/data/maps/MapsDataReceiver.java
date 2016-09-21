@@ -7,9 +7,14 @@ import com.ramencon.data.models.ModelMap;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MapsDataReceiver implements DataReceiver
+public class MapsDataReceiver extends DataReceiver
 {
 	public List<ModelMap> maps = new ArrayList<>();
+
+	public MapsDataReceiver()
+	{
+		super(true);
+	}
 
 	@Override
 	public String getReferenceUri()
@@ -18,14 +23,17 @@ public class MapsDataReceiver implements DataReceiver
 	}
 
 	@Override
-	public void onDataReceived(ConfigurationSection data, boolean isUpdate)
+	protected void onDataUpdate(ConfigurationSection data)
 	{
-		if (isUpdate)
-			return;
 
-		maps.clear();
+	}
+
+	@Override
+	public void onDataArrived(ConfigurationSection data, boolean isRefresh)
+	{
+		maps = new ArrayList<>();
 
 		for (ConfigurationSection section : data.getConfigurationSections())
-			maps.add((ModelMap) section.asObject(ModelMap.class));
+			maps.add(section.asObject(ModelMap.class));
 	}
 }

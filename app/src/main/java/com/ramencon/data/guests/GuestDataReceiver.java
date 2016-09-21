@@ -1,16 +1,30 @@
 package com.ramencon.data.guests;
 
-import com.ramencon.data.DataReceiver;
 import com.penoaks.sepher.ConfigurationSection;
-import com.ramencon.data.ListGroup;
+import com.ramencon.data.DataReceiver;
+import com.ramencon.data.models.ModelGroup;
 import com.ramencon.data.models.ModelGuest;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class GuestDataReceiver implements DataReceiver
+public class GuestDataReceiver extends DataReceiver
 {
-	public List<ListGroup> guests = new ArrayList<>();
+	private static GuestDataReceiver instance = null;
+
+	public static GuestDataReceiver getInstance()
+	{
+		if (instance == null)
+			instance = new GuestDataReceiver();
+		return instance;
+	}
+
+	public List<ModelGroup> guests = new ArrayList<>();
+
+	private GuestDataReceiver()
+	{
+		super(true);
+	}
 
 	@Override
 	public String getReferenceUri()
@@ -19,11 +33,14 @@ public class GuestDataReceiver implements DataReceiver
 	}
 
 	@Override
-	public void onDataReceived(ConfigurationSection data, boolean isUpdate)
+	protected void onDataUpdate(ConfigurationSection data)
 	{
-		if (isUpdate)
-			return;
 
+	}
+
+	@Override
+	public void onDataArrived(ConfigurationSection data, boolean isRefresh)
+	{
 		guests = new ArrayList<>();
 
 		for (ConfigurationSection section : data.getConfigurationSections())
@@ -32,7 +49,23 @@ public class GuestDataReceiver implements DataReceiver
 			if (section.has("data"))
 				models = section.getObjectList("data", ModelGuest.class);
 
-			guests.add(new ListGroup(section.getString("id"), section.getString("title"), models));
+			guests.add(new ModelGroup(section.getString("id"), section.getString("title"), models));
 		}
+	}
+
+	public ModelGroup getModel(String id)
+	{
+		for (ModelGroup group : guests)
+			if (id.equals(group.id))
+				return group;
+		return null;
+	}
+
+	public ModelGuest getGuest(String groupId, String guestId)
+	{
+		ModelGroup group = getModel(groupId);
+		if (group == null)
+			return null;
+		return group.getModel(guestId);
 	}
 }
