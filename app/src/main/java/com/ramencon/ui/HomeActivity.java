@@ -71,6 +71,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 	{
 		PLog.i("HomeActivity.onCreate() (" + hashCode() + ") " + savedInstanceState);
 
+		this.savedInstanceState = savedInstanceState;
+
 		super.onCreate(savedInstanceState);
 
 		setContentView(R.layout.activity_loading);
@@ -85,15 +87,13 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 		}
 
-		PersistenceStateChecker.addListener(PersistenceStateChecker.ListenerLevel.HIGHEST, this);
-
 		int error = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this);
 		if (error != ConnectionResult.SUCCESS)
 			GoogleApiAvailability.getInstance().getErrorDialog(this, error, UPDATE_GOOGLE_PLAY).show();
 		else
 			PersistenceStateChecker.makeInstance(false);
 
-		this.savedInstanceState = savedInstanceState;
+		PersistenceStateChecker.addListener(PersistenceStateChecker.ListenerLevel.HIGHEST, this);
 	}
 
 	private void createHomeView()
@@ -185,8 +185,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 	public void onBackPressed()
 	{
 		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-		assert drawer != null;
-		if (drawer.isDrawerOpen(GravityCompat.START))
+		if (drawer != null && drawer.isDrawerOpen(GravityCompat.START))
 			drawer.closeDrawer(GravityCompat.START);
 		else if (stacker.hasBackstack())
 			stacker.popBackstack();
@@ -335,14 +334,14 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 	}
 
 	@Override
-	public void onPersistenceError(String msg)
+	public void onPersistenceEvent(PersistenceStateChecker.StateResultEvent event)
 	{
-		startActivityForResult(new Intent(HomeActivity.this, ErroredActivity.class).putExtra(ErroredActivity.ERROR_MESSAGE, msg), -1);
-	}
-
-	@Override
-	public void onPersistenceReady()
-	{
-		createHomeView();
+		if (event.success)
+			createHomeView();
+		else if (!event.isHandled)
+		{
+			startActivityForResult(new Intent(HomeActivity.this, ErroredActivity.class).putExtra(ErroredActivity.ERROR_MESSAGE, event.message), -1);
+			event.isHandled = true;
+		}
 	}
 }

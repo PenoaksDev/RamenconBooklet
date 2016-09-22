@@ -276,7 +276,7 @@ public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> im
 					SimpleDateFormat sdf = new SimpleDateFormat("MM d yyyy");
 					String now = sdf.format(new Date());
 
-					Date nowMatch = null;
+					Date nowMatch = days.first();
 					int dayPosition = 0;
 					for (Date day : days)
 					{

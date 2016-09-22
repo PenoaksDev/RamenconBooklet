@@ -35,9 +35,17 @@ public class AppService extends Service implements MonitorInstance, PersistenceS
 
 	private final Map<String, PendingIntent> pendingNotices = new ConcurrentHashMap<>();
 
+	private boolean hasStarted = false;
+	private boolean persistenceReady = false;
+
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId)
 	{
+		hasStarted = true;
+
+		if (hasStarted && persistenceReady)
+			restartAllNotifications(getReminderDelay());
+
 		return START_STICKY;
 	}
 
@@ -156,16 +164,22 @@ public class AppService extends Service implements MonitorInstance, PersistenceS
 	private final IBinder mBinder = new ServiceBinder();
 
 	@Override
-	public void onPersistenceError(String msg)
+	public void onPersistenceEvent(PersistenceStateChecker.StateResultEvent event)
 	{
-		Toast.makeText(this, "Ramencon App Error: " + msg, Toast.LENGTH_SHORT).show();
-	}
+		if (event.success)
+		{
+			scheduleData = ScheduleDataReceiver.getInstance();
 
-	@Override
-	public void onPersistenceReady()
-	{
-		scheduleData = ScheduleDataReceiver.getInstance();
-		restartAllNotifications(getReminderDelay());
+			persistenceReady = true;
+
+			if (hasStarted && persistenceReady)
+				restartAllNotifications(getReminderDelay());
+		}
+		else if (!event.isHandled)
+		{
+			Toast.makeText(this, "Ramencon App Error: " + event.message, Toast.LENGTH_SHORT).show();
+			event.isHandled = true;
+		}
 	}
 
 	public class ServiceBinder extends Binder

@@ -4,6 +4,7 @@ import android.os.AsyncTask;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.penoaks.helpers.Network;
+import com.penoaks.log.PLog;
 
 import java.lang.ref.WeakReference;
 import java.util.HashSet;
@@ -13,6 +14,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class PersistenceStateChecker extends AsyncTask<Void, Void, Void>
 {
+	private StateResultEvent lastEvent = null;
+
 	public enum ListenerLevel
 	{
 		HIGHEST, HIGH, NORMAL, LOW, LOWEST, MONITOR
@@ -67,10 +70,18 @@ public class PersistenceStateChecker extends AsyncTask<Void, Void, Void>
 		}};
 	}
 
+	public static void clearListeners()
+	{
+		listeners.clear();
+	}
+
 	public static void addListener(ListenerLevel level, PersistenceStateListener listener)
 	{
 		Set<WeakReference<PersistenceStateListener>> ls = getListenersRaw(level);
 		ls.add(new WeakReference<>(listener));
+
+		if (instance != null && instance.lastEvent != null)
+			listener.onPersistenceEvent(instance.lastEvent);
 	}
 
 	@Override
@@ -89,40 +100,31 @@ public class PersistenceStateChecker extends AsyncTask<Void, Void, Void>
 		if (isCancelled())
 			return;
 
+		lastEvent = new StateResultEvent();
+
 		if (notReady())
 		{
-			String msg;
-			if (Persistence.getInstance().getLastFirebaseError() != null)
-				msg = "We had an error with the remote google database, message: " + Persistence.getInstance().getLastFirebaseError().getMessage();
-			else if (!Network.internetAvailable())
-				msg = "We had a problem connecting to the internet. Please check your connection.";
-			else if (FirebaseAuth.getInstance().getCurrentUser() == null)
-				msg = "We had an authentication problem. Are you connected to the internet?";
-			else
-				msg = "We had a problem syncing with the remote database. Are you connected to the internet?";
-
-			for (ListenerLevel level : ListenerLevel.values())
-			{
-				Set<PersistenceStateListener> ls = getListeners(level);
-				if (ls.size() > 0)
-				{
-					for (PersistenceStateListener listener : ls)
-						listener.onPersistenceError(msg);
-					break;
-				}
-			}
+			lastEvent.message = getMessage();
+			lastEvent.success = false;
 		}
 		else
-			for (ListenerLevel level : ListenerLevel.values())
+		{
+			lastEvent.message = "The Persistence is ready";
+			lastEvent.success = true;
+		}
+
+		for (ListenerLevel level : ListenerLevel.values())
+		{
+			Set<PersistenceStateListener> ls = getListeners(level);
+			if (ls.size() > 0)
 			{
-				Set<PersistenceStateListener> ls = getListeners(level);
-				if (ls.size() > 0)
-				{
-					for (PersistenceStateListener listener : ls)
-						listener.onPersistenceReady();
-					break;
-				}
+				for (PersistenceStateListener listener : ls)
+					listener.onPersistenceEvent(lastEvent);
 			}
+		}
+
+		if (!lastEvent.isHandled)
+			PLog.w("The PersistenceEvent went unhandled!");
 	}
 
 	@Override
@@ -150,5 +152,26 @@ public class PersistenceStateChecker extends AsyncTask<Void, Void, Void>
 	private boolean notReady()
 	{
 		return !Persistence.getInstance().check() || FirebaseAuth.getInstance().getCurrentUser() == null;
+	}
+
+	private String getMessage()
+	{
+		if (Persistence.getInstance().getLastFirebaseError() != null)
+			return "We had an error with the remote google database, message: " + Persistence.getInstance().getLastFirebaseError().getMessage();
+
+		if (!Network.internetAvailable())
+			return "We had a problem connecting to the internet. Please check your connection.";
+
+		if (FirebaseAuth.getInstance().getCurrentUser() == null)
+			return "We had an authentication problem. Are you connected to the internet?";
+
+		return "We had a problem syncing with the remote database. Are you connected to the internet?";
+	}
+
+	public class StateResultEvent
+	{
+		public boolean isHandled = false;
+		public boolean success = true;
+		public String message = "";
 	}
 }

@@ -28,7 +28,7 @@ public class Formatting
 
 	public static String date(String format, Date date, String def)
 	{
-		return date(format, String.valueOf(date.getTime() / 1000), def);
+		return date(format, date == null ? "" : String.valueOf(date.getTime() / 1000), def);
 	}
 
 	public static String date(String format, Object data)

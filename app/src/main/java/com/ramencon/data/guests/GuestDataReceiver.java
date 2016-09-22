@@ -1,6 +1,5 @@
 package com.ramencon.data.guests;
 
-import com.penoaks.log.PLog;
 import com.penoaks.sepher.ConfigurationSection;
 import com.ramencon.data.DataReceiver;
 import com.ramencon.data.models.ModelGroup;
