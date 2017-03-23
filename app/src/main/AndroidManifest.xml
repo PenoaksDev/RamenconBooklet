@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.ramencon">
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        package="com.ramencon">
 
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -10,16 +10,16 @@
     <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
-        android:name=".RamenApp"
-        android:allowBackup="true"
-        android:icon="@mipmap/ic_app"
-        android:label="@string/app_name"
-        android:supportsRtl="true"
-        android:theme="@style/AppTheme.NoActionBar">
+            android:name=".RamenApp"
+            android:allowBackup="true"
+            android:icon="@mipmap/ic_app"
+            android:label="@string/app_name"
+            android:supportsRtl="true"
+            android:theme="@style/AppTheme.NoActionBar">
 
         <meta-data
-            android:name="com.facebook.sdk.ApplicationId"
-            android:value="@string/facebook_app_id"/>
+                android:name="com.facebook.sdk.ApplicationId"
+                android:value="@string/facebook_app_id"/>
 
         <service android:name=".system.FirebaseService">
             <intent-filter>
@@ -28,15 +28,15 @@
         </service>
 
         <service
-            android:name=".system.AppService"
-            android:exported="false">
+                android:name=".system.AppService"
+                android:exported="false">
         </service>
 
         <receiver
-            android:name=".system.AppReceiver"
-            android:enabled="true"
-            android:exported="true"
-            android:label="AppReceiver">
+                android:name=".system.AppReceiver"
+                android:enabled="true"
+                android:exported="true"
+                android:label="AppReceiver">
             <intent-filter>
                 <action android:name="com.ramencon.action.TRIGGER_ALARM"/>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
