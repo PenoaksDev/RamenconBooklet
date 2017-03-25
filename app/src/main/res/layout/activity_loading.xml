@@ -40,6 +40,7 @@
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
             android:paddingLeft="8dp"
+            android:paddingStart="8dp"
             android:text="Loading Content..."
             android:textAppearance="?android:attr/textAppearanceLarge"/>
     </LinearLayout>

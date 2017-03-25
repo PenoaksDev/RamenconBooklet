@@ -10,7 +10,7 @@
     <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
-            android:name=".RamenApp"
+            android:name="com.penoaks.booklet.App"
             android:allowBackup="true"
             android:icon="@mipmap/ic_app"
             android:label="@string/app_name"
@@ -21,19 +21,19 @@
                 android:name="com.facebook.sdk.ApplicationId"
                 android:value="@string/facebook_app_id"/>
 
-        <service android:name=".system.FirebaseService">
+        <service android:name=".FirebaseService">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
         </service>
 
         <service
-                android:name=".system.AppService"
+                android:name="com.penoaks.booklet.AppService"
                 android:exported="false">
         </service>
 
         <receiver
-                android:name=".system.AppReceiver"
+                android:name="com.penoaks.booklet.AppReceiver"
                 android:enabled="true"
                 android:exported="true"
                 android:label="AppReceiver">

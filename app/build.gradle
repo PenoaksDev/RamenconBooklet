@@ -1,16 +1,4 @@
-buildscript {
-	repositories {
-		jcenter()
-	}
-	dependencies {
-		classpath 'com.google.gms:google-services:3.0.0'
-		classpath 'com.android.tools.build:gradle:2.3.0'
-		classpath 'org.codehaus.groovy:groovy-android-gradle-plugin:1.1.0'
-	}
-}
-
 apply plugin: 'com.android.application'
-apply plugin: 'groovyx.android'
 
 android {
 	signingConfigs {}
@@ -22,7 +10,7 @@ android {
 		targetSdkVersion 25
 		versionCode 2000
 		versionName "2.0.0"
-		multiDexEnabled true
+		// multiDexEnabled true
 	}
 	buildTypes {
 		release {
@@ -30,26 +18,10 @@ android {
 			proguardFiles getDefaultProguardFile( 'proguard-android.txt' ), 'proguard-rules.pro'
 		}
 	}
-	packagingOptions {
-		// workaround for http://stackoverflow.com/questions/20673625/android-gradle-plugin-0-7-0-duplicate-files-during-packaging-of-apk
-		exclude 'META-INF/LICENSE.txt'
-		exclude 'META-INF/groovy-release-info.properties'
-
-		exclude 'META-INF/services/org.codehaus.groovy.transform.ASTTransformation'
-		exclude 'META-INF/services/org.codehaus.groovy.runtime.ExtensionModule'
-	}
 	compileOptions {
 		targetCompatibility JavaVersion.VERSION_1_7
 		sourceCompatibility JavaVersion.VERSION_1_7
 	}
-	dexOptions {
-		javaMaxHeapSize "4g"
-		jumboMode true
-	}
-}
-
-androidGroovy {
-	skipJavaC = true
 }
 
 dependencies {
@@ -73,12 +45,7 @@ dependencies {
 	compile 'com.google.firebase:firebase-auth:9.2.+'
 	compile 'com.google.firebase:firebase-messaging:9.2.+'
 
-	compile 'org.codehaus.groovy:groovy:2.4.7:grooid'
-	compile( 'org.codehaus.groovy:groovy-json:2.4.3' ) {
-		exclude group: 'org.codehaus.groovy'
-	}
-
-	compile 'com.android.support:multidex:1.0.1'
+	// compile 'com.android.support:multidex:1.0.1'
 }
 
 apply plugin: 'com.google.gms.google-services'
