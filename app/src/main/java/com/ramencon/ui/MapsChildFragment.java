@@ -63,7 +63,7 @@ public class MapsChildFragment extends Fragment implements ImageCache.ImageResol
 		else
 		{
 			image.setImageResource( R.drawable.loading_image );
-			ImageCache.cacheRemoteImage( "map-" + map.id, ImageCache.REMOTE_IMAGES_URL + "maps/" + map.image, isRefresh, this, this );
+			ImageCache.cacheRemoteImage( getActivity(), "map-" + map.id, ImageCache.REMOTE_IMAGES_URL + "maps/" + map.image, isRefresh, this, this );
 		}
 	}
 

@@ -1,10 +1,10 @@
 /**
  * This software may be modified and distributed under the terms
  * of the MIT license.  See the LICENSE file for details.
- *
+ * <p>
  * Copyright (c) 2017 Chiori Greene a.k.a. Chiori-chan <me@chiorichan.com>
  * Copyright (c) 2017 Penoaks Publishing LLC <development@penoaks.com>
- *
+ * <p>
  * All Rights Reserved.
  */
 package com.penoaks.android.utils;
@@ -118,5 +118,42 @@ public class UtilDate
 		}
 
 		return new SimpleDateFormat( format ).format( date );
+	}
+
+	public static String formatDateRange( Date from, Date to )
+	{
+		// September 23-25, 2016
+
+		Calendar calFrom = Calendar.getInstance();
+		calFrom.setTime( from );
+		Calendar calTo = Calendar.getInstance();
+		calTo.setTime( from );
+
+		if ( calFrom.get( Calendar.YEAR ) == calTo.get( Calendar.YEAR ) )
+		{
+			StringBuffer op = new StringBuffer();
+
+			if ( calFrom.get( Calendar.MONTH ) == calTo.get( Calendar.MONTH ) )
+			{
+				SimpleDateFormat formatFrom = new SimpleDateFormat( "MMMM dd" );
+				SimpleDateFormat formatTo = new SimpleDateFormat( "dd" );
+				op.append( formatFrom.format( from ) ).append( "-" ).append( formatTo.format( to ) );
+			}
+			else
+			{
+				SimpleDateFormat formatFrom = new SimpleDateFormat( "MM dd" );
+				SimpleDateFormat formatTo = new SimpleDateFormat( "MM dd" );
+				op.append( formatFrom.format( from ) ).append( " - " ).append( formatTo.format( to ) );
+			}
+
+			SimpleDateFormat year = new SimpleDateFormat( "yyyy" );
+			op.append( ", " ).append( year.format( to ) );
+			return op.toString();
+		}
+		else
+		{
+			SimpleDateFormat format = new SimpleDateFormat( "MM dd, yyyy" );
+			return format.format( from ) + " - " + format.format( to );
+		}
 	}
 }

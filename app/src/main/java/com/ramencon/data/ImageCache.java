@@ -1,5 +1,6 @@
 package com.ramencon.data;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
@@ -8,8 +9,7 @@ import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.ProgressCallback;
 import com.penoaks.android.log.PLog;
-import com.penoaks.booklet.App;
-import com.ramencon.ui.HomeActivity;
+import com.ramencon.App;
 
 import org.acra.ACRA;
 
@@ -40,13 +40,14 @@ public class ImageCache
 
 	}
 
-	public static void cacheRemoteImage( String id, String remoteUrl, boolean forceUpdate, ImageResolveTask.ImageFoundListener foundListener, ImageResolveTask.ImageProgressListener progressListener )
+	public static void cacheRemoteImage( Context context, String id, String remoteUrl, boolean forceUpdate, ImageResolveTask.ImageFoundListener foundListener, ImageResolveTask.ImageProgressListener progressListener )
 	{
-		new ImageResolveTask( id, remoteUrl, forceUpdate, foundListener, progressListener ).executeOnExecutor( App.getExecutorThreadPool() );
+		new ImageResolveTask( context, id, remoteUrl, forceUpdate, foundListener, progressListener ).executeOnExecutor( App.getExecutorThreadPool() );
 	}
 
 	public static class ImageResolveTask extends AsyncTask<Void, Void, Void>
 	{
+		Context context;
 		String id;
 		String remoteUrl;
 		boolean forceUpdate;
@@ -60,8 +61,9 @@ public class ImageCache
 		Bitmap resultBitmap;
 		Exception resultError;
 
-		ImageResolveTask( String id, String remoteUrl, boolean forceUpdate, ImageFoundListener foundListener, ImageProgressListener progressListener )
+		ImageResolveTask( Context context, String id, String remoteUrl, boolean forceUpdate, ImageFoundListener foundListener, ImageProgressListener progressListener )
 		{
+			this.context = context;
 			this.id = id;
 			this.remoteUrl = remoteUrl;
 			this.forceUpdate = forceUpdate;
@@ -138,7 +140,7 @@ public class ImageCache
 
 				PLog.i( "Loading image " + id + " from uri " + remoteUrl.toString() );
 
-				Ion.with( HomeActivity.instance ).load( remoteUrl ).progress( new ProgressCallback()
+				Ion.with( context ).load( remoteUrl ).progress( new ProgressCallback()
 				{
 					@Override
 					public void onProgress( long bytesTransferred, long totalByteCount )

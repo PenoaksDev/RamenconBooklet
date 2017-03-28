@@ -1,4 +1,4 @@
-package com.ramencon.ui;
+package com.penoaks.booklet.fragments;
 
 import android.content.DialogInterface;
 import android.os.Bundle;
@@ -12,7 +12,9 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.penoaks.booklet.DataPersistence;
+import com.penoaks.booklet.ui.BootActivity;
 import com.ramencon.R;
+import com.ramencon.ui.HomeActivity;
 
 public class SettingsFragment extends PreferenceFragment
 {
@@ -65,14 +67,15 @@ public class SettingsFragment extends PreferenceFragment
 					@Override
 					public void onClick( DialogInterface dialog, int which )
 					{
-						HomeActivity.instance.signOut();
 
+						( ( BootActivity ) getActivity() ).factoryReset();
+
+						/* HomeActivity.instance.signOut();
 						HomeActivity.instance.stacker.clearFragments();
-
-						DataPersistence.getInstance().factoryReset();
+						DataPersistence.getInstance().factoryReset(); */
 
 						Toast.makeText( getContext(), "App Successfully Factory Reset", Toast.LENGTH_LONG ).show();
-						HomeActivity.instance.finish();
+						// HomeActivity.instance.finish();
 					}
 				} ).setNegativeButton( "Opps, wrong button", new DialogInterface.OnClickListener()
 				{

@@ -11,6 +11,7 @@ android {
 		versionCode 2000
 		versionName "2.0.0"
 		// multiDexEnabled true
+		vectorDrawables.useSupportLibrary = true
 	}
 	buildTypes {
 		release {
@@ -22,30 +23,34 @@ android {
 		targetCompatibility JavaVersion.VERSION_1_7
 		sourceCompatibility JavaVersion.VERSION_1_7
 	}
+
+
 }
 
 dependencies {
 	compile fileTree( include: ['*.jar'], dir: 'libs' )
-	testCompile 'junit:junit:4.12'
+
+	// compile 'pl.droidsonroids.gif:android-gif-drawable:1.1.+'
+	compile group: 'org.yaml', name: 'snakeyaml', version: '1.17'
+	// compile 'com.android.support:multidex:1.0.1'
+	compile 'com.squareup.okhttp3:okhttp:3.6.0'
 	compile 'com.android.support:appcompat-v7:25.0.0'
 	compile 'com.android.support:design:25.0.0'
 	compile 'com.android.support:support-v4:25.0.0'
-
 	compile 'com.squareup.moshi:moshi:1.2.0'
 	compile 'com.koushikdutta.ion:ion:2.+'
 	compile 'org.lucasr.twowayview:twowayview:0.1.4'
-	// compile 'pl.droidsonroids.gif:android-gif-drawable:1.1.+'
-	compile group: 'org.yaml', name: 'snakeyaml', version: '1.17'
 	compile 'ch.acra:acra:4.9.0'
-
 	compile 'com.facebook.android:facebook-android-sdk:4.+'
-	compile 'com.google.android.gms:play-services-auth:9.2.+'
-	compile 'com.google.firebase:firebase-core:9.2.+'
-	compile 'com.google.firebase:firebase-crash:9.2.+'
-	compile 'com.google.firebase:firebase-auth:9.2.+'
-	compile 'com.google.firebase:firebase-messaging:9.2.+'
-
-	// compile 'com.android.support:multidex:1.0.1'
+	compile 'com.google.android.gms:play-services-auth:9.2.1'
+	compile 'com.google.firebase:firebase-core:9.2.1'
+	compile 'com.google.firebase:firebase-crash:9.2.1'
+	compile 'com.google.firebase:firebase-auth:9.2.1'
+	compile 'com.google.firebase:firebase-messaging:9.2.1'
+	compile 'com.android.support.constraint:constraint-layout:1.0.2'
+	compile 'com.android.support:support-vector-drawable:25.3.0'
+	compile 'com.android.support:recyclerview-v7:25.3.0'
+	testCompile 'junit:junit:4.12'
 }
 
 apply plugin: 'com.google.gms.google-services'

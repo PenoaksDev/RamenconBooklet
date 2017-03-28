@@ -7,6 +7,7 @@ import com.penoaks.configuration.ConfigurationSection;
 import com.penoaks.configuration.InvalidConfigurationException;
 import com.penoaks.configuration.OnConfigurationListener;
 import com.penoaks.configuration.types.json.JsonConfiguration;
+import com.ramencon.App;
 
 import java.io.File;
 import java.io.IOException;

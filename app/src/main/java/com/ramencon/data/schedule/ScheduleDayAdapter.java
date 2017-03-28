@@ -86,7 +86,7 @@ public class ScheduleDayAdapter extends BaseAdapter
 	@Override
 	public View getView( final int position, View convertView, ViewGroup parent )
 	{
-		View view = inflater.inflate( R.layout.scheduleday_listitem, null );
+		View view = inflater.inflate( R.layout.fragment_schedule_listitem_day, null );
 
 		TextView dayName = ( TextView ) view.findViewById( R.id.day_name );
 		TextView dayNumber = ( TextView ) view.findViewById( R.id.day_number );

@@ -96,7 +96,7 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 	@Override
 	public View getGroupView( final int position, boolean isExpanded, View convertView, ViewGroup parent )
 	{
-		View rowView = convertView == null ? inflater.inflate( R.layout.schedule_listitem, null ) : convertView;
+		View rowView = convertView == null ? inflater.inflate( R.layout.fragment_schedule_listitem, null ) : convertView;
 
 		ModelEvent event = events.get( position );
 
@@ -158,7 +158,7 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 	{
 		try
 		{
-			View childView = convertView == null ? inflater.inflate( R.layout.schedule_listitem_child, null ) : convertView;
+			View childView = convertView == null ? inflater.inflate( R.layout.fragment_schedule_listitem_child, null ) : convertView;
 
 			TextView tv_description = ( TextView ) childView.findViewById( R.id.description );
 			// WebView tv_description = (WebView) childView.findViewById(R.id.description);

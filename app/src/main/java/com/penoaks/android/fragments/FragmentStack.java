@@ -233,7 +233,7 @@ public class FragmentStack
 			if ( fragment.isVisible() )
 				return;
 
-			// Instruct visible fragments to save state
+			// Move visible fragments to save state
 			for ( FragmentSaveState state : states.values() )
 				if ( state.fragment != null && state.fragment.isVisible() )
 				{
@@ -350,6 +350,6 @@ public class FragmentStack
 		/**
 		 * Called whenever the contents of the back stack change.
 		 */
-		public void onBackStackChanged();
+		void onBackStackChanged();
 	}
 }

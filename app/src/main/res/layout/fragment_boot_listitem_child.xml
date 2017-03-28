@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:orientation="vertical"
+        android:paddingBottom="0dp"
+        android:paddingTop="0dp">
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:weightSum="1"
+            android:paddingLeft="24dp"
+            android:paddingRight="24dp"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp">
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingBottom="2dp">
+
+            <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/ic_list_time"/>
+
+            <TextView
+                    android:id="@+id/booklet_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="20dp"
+                    android:clickable="true"
+                    android:gravity="left|center_vertical"
+                    android:text="September 23-25, 2016"
+                    android:textAppearance="?android:attr/textAppearanceSmall"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingBottom="8dp">
+
+            <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/ic_list_pin"/>
+
+            <TextView
+                    android:id="@+id/booklet_location"
+                    android:layout_width="wrap_content"
+                    android:layout_height="20dp"
+                    android:clickable="true"
+                    android:gravity="left|center_vertical"
+                    android:text="800 E 81st Ave Merrillville, IN 46410"
+                    android:textAppearance="?android:attr/textAppearanceSmall"/>
+
+        </LinearLayout>
+
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="Ramencon is an anime convention in Northwest Indiana, built by anime fans, for anime fans. Much of what you experience at the con has been suggested by all of you! We want everyone to have the best time possible and be comfortable enough to do everything you want in one weekend."
+                android:textSize="16dp"
+                android:id="@+id/booklet_description"/>
+
+    </LinearLayout>
+</LinearLayout>

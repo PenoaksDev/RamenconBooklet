@@ -81,7 +81,7 @@ public class GuestAdapter extends BaseExpandableListAdapter
 	@Override
 	public View getGroupView( int groupPosition, boolean isExpanded, View convertView, ViewGroup parent )
 	{
-		View group = convertView == null ? inflater.inflate( R.layout.guest_listheader, null ) : convertView;
+		View group = convertView == null ? inflater.inflate( R.layout.fragment_guest_listheader, null ) : convertView;
 
 		( ( TextView ) group.findViewById( R.id.group_title ) ).setText( list.get( groupPosition ).title );
 
@@ -91,7 +91,7 @@ public class GuestAdapter extends BaseExpandableListAdapter
 	@Override
 	public View getChildView( final int groupPosition, final int childPosition, boolean isLastChild, View convertView, ViewGroup parent )
 	{
-		View listItemView = convertView == null ? inflater.inflate( R.layout.guest_listitem, null ) : convertView;
+		View listItemView = convertView == null ? inflater.inflate( R.layout.fragment_guest_listitem, null ) : convertView;
 
 		final ModelGroup group = list.get( groupPosition );
 		final ModelGuest guest = group.children.get( childPosition );
@@ -106,7 +106,7 @@ public class GuestAdapter extends BaseExpandableListAdapter
 		else
 		{
 			iv_thumbnail.setImageResource( R.drawable.loading_image );
-			ImageCache.cacheRemoteImage( "guest-" + guest.id, ImageCache.REMOTE_IMAGES_URL + "guests/" + group.id + "/" + guest.image, false, new ImageCache.ImageResolveTask.ImageFoundListener()
+			ImageCache.cacheRemoteImage( context, "guest-" + guest.id, ImageCache.REMOTE_IMAGES_URL + "guests/" + group.id + "/" + guest.image, false, new ImageCache.ImageResolveTask.ImageFoundListener()
 			{
 				@Override
 				public void update( Bitmap bitmap )

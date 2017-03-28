@@ -25,17 +25,17 @@ public class WelcomeFragment extends Fragment
 	}
 
 	@Override
-	public void onCreate(Bundle savedInstanceState)
+	public void onCreate( Bundle savedInstanceState )
 	{
-		super.onCreate(savedInstanceState);
+		super.onCreate( savedInstanceState );
 	}
 
 	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
+	public View onCreateView( LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState )
 	{
-		getActivity().setTitle("About the Convention");
+		getActivity().setTitle( "About the Convention" );
 
-		View root = inflater.inflate(R.layout.fragment_welcome, container, false);
+		View root = inflater.inflate( R.layout.fragment_welcome, container, false );
 
 		/*
 		try
@@ -69,26 +69,26 @@ public class WelcomeFragment extends Fragment
 		}
 		*/
 
-		Uri mapIntentUri = Uri.parse("geo:0,0?q=800 E 81st Ave Merrillville, IN 46410");
-		final Intent iMap = new Intent(Intent.ACTION_VIEW, mapIntentUri);
-		iMap.setPackage("com.google.android.apps.maps");
+		Uri mapIntentUri = Uri.parse( "geo:0,0?q=800 E 81st Ave Merrillville, IN 46410" );
+		final Intent iMap = new Intent( Intent.ACTION_VIEW, mapIntentUri );
+		iMap.setPackage( "com.google.android.apps.maps" );
 
-		TextView tv_location = (TextView) root.findViewById(R.id.welcome_location);
-		tv_location.setOnClickListener(new View.OnClickListener()
+		TextView tv_location = ( TextView ) root.findViewById( R.id.welcome_location );
+		tv_location.setOnClickListener( new View.OnClickListener()
 		{
 			@Override
-			public void onClick(View v)
+			public void onClick( View v )
 			{
 				try
 				{
-					startActivity(iMap);
+					startActivity( iMap );
 				}
-				catch (ActivityNotFoundException e)
+				catch ( ActivityNotFoundException e )
 				{
-					Toast.makeText(getActivity(), "Sorry, it appears you don't have Google Maps installed.", Toast.LENGTH_LONG).show();
+					Toast.makeText( getActivity(), "Sorry, it appears you don't have Google Maps installed.", Toast.LENGTH_LONG ).show();
 				}
 			}
-		});
+		} );
 
 		/*
 		WebView web = (WebView) root.findViewById(R.id.htmlWelcome);

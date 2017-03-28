@@ -3,8 +3,7 @@ package com.penoaks.android.helpers;
 import android.os.AsyncTask;
 
 import com.penoaks.android.log.PLog;
-import com.penoaks.booklet.App;
-import com.penoaks.booklet.AppTicks;
+import com.ramencon.App;
 
 import java.util.concurrent.Callable;
 

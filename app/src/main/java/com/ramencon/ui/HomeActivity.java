@@ -8,12 +8,12 @@ import android.content.pm.PackageInfo;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.NavigationView;
-import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
@@ -45,9 +45,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 	private static final int UPDATE_GOOGLE_PLAY = 24;
 
 	public static HomeActivity instance;
+
+	private Bundle savedInstanceState;
 	public FragmentStack stacker;
 	public AppService service;
-
 	private PostTask postTask;
 	private SigninWorker signinWorker;
 
@@ -57,16 +58,14 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 		stacker = new FragmentStack( getSupportFragmentManager(), R.id.content_frame );
 
-		stacker.registerFragment( R.id.nav_welcome, WelcomeFragment.class );
+		// stacker.registerFragment( R.id.nav_welcome, WelcomeFragment.class );
 		stacker.registerFragment( R.id.nav_schedule, ScheduleFragment.class );
 		stacker.registerFragment( R.id.nav_guests_vendors, GuestFragment.class );
 		stacker.registerFragment( R.id.nav_maps, MapsFragment.class );
 		// stacker.registerFragment(R.id.nav_friends, FriendsFragment.class);
-		stacker.registerFragment( R.id.nav_settings, SettingsFragment.class );
+		// stacker.registerFragment( R.id.nav_settings, SettingsFragment.class );
 		// stacker.registerFragment(R.id.nav_share, .class);
 	}
-
-	private Bundle savedInstanceState;
 
 	@Override
 	protected void onCreate( Bundle savedInstanceState )
@@ -150,7 +149,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 				if ( stacker.hasBackstack() )
 					stacker.popBackstack();
 				else
-					drawer.openDrawer( GravityCompat.START );
+					drawer.openDrawer( Gravity.START );
 			}
 		} );
 
@@ -196,8 +195,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 	public void onBackPressed()
 	{
 		DrawerLayout drawer = ( DrawerLayout ) findViewById( R.id.drawer_layout );
-		if ( drawer != null && drawer.isDrawerOpen( GravityCompat.START ) )
-			drawer.closeDrawer( GravityCompat.START );
+		if ( drawer != null && drawer.isDrawerOpen( Gravity.START ) )
+			drawer.closeDrawer( Gravity.START );
 		else if ( stacker.hasBackstack() )
 			stacker.popBackstack();
 		else if ( backClickTime > 0 && backClickTime - System.currentTimeMillis() < 3000 )
@@ -209,7 +208,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 			mBackToast.show();
 			backClickTime = System.currentTimeMillis();
 		}
-
 	}
 
 	@Override
@@ -227,7 +225,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 		DrawerLayout drawer = ( DrawerLayout ) findViewById( R.id.drawer_layout );
 		assert drawer != null;
-		drawer.closeDrawer( GravityCompat.START );
+		drawer.closeDrawer( Gravity.START );
 
 		return true;
 	}

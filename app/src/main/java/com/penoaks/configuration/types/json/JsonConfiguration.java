@@ -189,14 +189,24 @@ public class JsonConfiguration extends FileConfiguration
 
 		try
 		{
-			JSONObject input = new JSONObject( contents );
-
 			String header = parseHeader( contents );
 			if ( header.length() > 0 )
 				options().header( header );
 
-			if ( input != null )
-				convertJsonToSections( input, this );
+			if ( contents.trim().startsWith( "[" ) )
+			{
+				JSONArray input = new JSONArray( contents );
+
+				if ( input != null )
+					convertJsonToSections( input, this );
+			}
+			else
+			{
+				JSONObject input = new JSONObject( contents );
+
+				if ( input != null )
+					convertJsonToSections( input, this );
+			}
 		}
 		catch ( JSONException e )
 		{
