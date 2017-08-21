@@ -6,10 +6,10 @@ import android.view.View;
 import android.widget.ProgressBar;
 
 import com.penoaks.android.log.PLog;
-import com.penoaks.booklet.data.OkHttpProgress;
+import com.penoaks.android.data.OkHttpProgress;
 import com.penoaks.configuration.ConfigurationSection;
 import com.penoaks.configuration.types.json.JsonConfiguration;
-import com.ramencon.App;
+import com.penoaks.booklet.App;
 import com.ramencon.R;
 
 import java.io.File;

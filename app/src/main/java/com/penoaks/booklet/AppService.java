@@ -11,18 +11,10 @@ import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.widget.Toast;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.penoaks.android.events.EventManager;
 import com.penoaks.android.log.PLog;
-import com.penoaks.android.tasks.TaskManager;
-import com.penoaks.booklet.events.ApplicationExceptionEvent;
-import com.penoaks.booklet.events.ApplicationFinishEvent;
-import com.penoaks.booklet.events.ApplicationStateEvent;
-import com.penoaks.configuration.ConfigurationSection;
-import com.ramencon.data.models.ModelEvent;
-import com.ramencon.data.schedule.ScheduleDataReceiver;
-import com.ramencon.data.schedule.filters.DefaultScheduleFilter;
-import com.ramencon.ui.HomeActivity;
+import com.penoaks.booklet.data.models.ModelEvent;
+import com.penoaks.booklet.data.schedule.ScheduleDataReceiver;
+import com.penoaks.booklet.data.schedule.filters.DefaultScheduleFilter;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -34,85 +26,10 @@ public class AppService extends Service
 {
 	public final static String TRIGGER_ALARM = "com.ramencon.action.TRIGGER_ALARM";
 
-	private final EventManager eventManager = new EventManager( this );
-	private final TaskManager taskManager = new TaskManager( this );
-	private final AppTicks appTicks = new AppTicks( this );
-	private Thread primaryThread = null;
-	private AppStates lastState = null;
-	private Throwable lastException;
-
 	static
 	{
 		PLog.i( "The AppService has been started!" );
 	}
-
-	public EventManager getEventManager()
-	{
-		return eventManager;
-	}
-
-	public TaskManager getTaskManager()
-	{
-		return taskManager;
-	}
-
-	public boolean isPrimaryThread()
-	{
-		return Thread.currentThread().equals( primaryThread );
-	}
-
-	public void tick( int currentTick )
-	{
-		taskManager.heartbeat( currentTick );
-		DataPersistence.getInstance().heartbeat( currentTick );
-
-		AppStates newState = DataPersistence.getInstance().eventState();
-
-		// Every 4 seconds
-		if ( currentTick % 80 == 0 )
-			PLog.i( hashCode() + ") Application Tick! " + currentTick + " --> " + newState );
-
-		// Run state check every half-second.
-		if ( currentTick % 10 == 0 )
-		{
-			if ( newState == AppStates.SUCCESS && FirebaseAuth.getInstance().getCurrentUser() == null )
-				newState = AppStates.NO_USER;
-
-			if ( newState != lastState )
-			{
-				PLog.i( "App State has changed from " + lastState + " to " + newState );
-
-				ApplicationStateEvent event = new ApplicationStateEvent( newState );
-
-				lastState = newState;
-				eventManager.callEvent( event );
-
-				if ( newState == AppStates.SUCCESS )
-				{
-					scheduleData = ScheduleDataReceiver.getInstance();
-					restartAllNotifications( getReminderDelay() );
-				}
-			}
-		}
-	}
-
-	public void onException( Throwable t )
-	{
-		lastException = t;
-		t.printStackTrace();
-		eventManager.callEvent( new ApplicationExceptionEvent( t ) );
-	}
-
-	public void onFinish()
-	{
-		eventManager.callEvent( new ApplicationFinishEvent() );
-	}
-
-	public Throwable getLastException()
-	{
-		return lastException;
-	}
-
 
 	public ScheduleDataReceiver scheduleData;
 
@@ -129,28 +46,6 @@ public class AppService extends Service
 	{
 		super.onCreate();
 
-		if ( primaryThread != null )
-			throw new IllegalStateException( "The Primary Thread is not null! Something is wrong!" );
-
-		primaryThread = new Thread( appTicks, "Tick Thread" );
-		primaryThread.setPriority( Thread.MAX_PRIORITY );
-		primaryThread.start();
-
-		DataSource.DataIntegrityChecker checker = new DataSource.DataIntegrityChecker()
-		{
-			@Override
-			public boolean checkIntegrity( String uri, ConfigurationSection section )
-			{
-				// PLog.i( "Data Debug (" + uri + ") (" + ( section.getChildren().size() > 0 ) + ") " + section.getValues( false ) );
-				return section.getChildren().size() > 0;
-			}
-		};
-
-		DataPersistence.getInstance().registerDataSource( "booklet-data/guests", "guests", checker );
-		DataPersistence.getInstance().registerDataSource( "booklet-data/locations", "locations", checker );
-		DataPersistence.getInstance().registerDataSource( "booklet-data/maps", "maps", checker );
-		DataPersistence.getInstance().registerDataSource( "booklet-data/schedule", "schedule", checker );
-
 		PLog.i( "The AppService has been initialized!" );
 	}
 
@@ -158,8 +53,6 @@ public class AppService extends Service
 	public void onDestroy()
 	{
 		super.onDestroy();
-
-		appTicks.stop();
 
 		PLog.i( "The AppService has been destroyed!" );
 	}

@@ -11,9 +11,8 @@ import android.preference.PreferenceManager;
 
 import com.penoaks.android.utils.UtilObjects;
 import com.penoaks.android.log.PLog;
-import com.ramencon.data.models.ModelEvent;
-import com.ramencon.data.schedule.ScheduleDataReceiver;
-import com.ramencon.ui.HomeActivity;
+import com.penoaks.booklet.data.models.ModelEvent;
+import com.penoaks.booklet.data.schedule.ScheduleDataReceiver;
 
 public class AppReceiver extends BroadcastReceiver
 {

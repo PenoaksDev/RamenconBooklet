@@ -8,7 +8,7 @@
     android:focusable="false"
     android:orientation="vertical"
     android:theme="@style/Theme.AppCompat.Light.NoActionBar"
-    tools:context="com.ramencon.ui.SigninActivity">
+    tools:context="com.ramencon.com.penoaks.booklet.ui.SigninActivity">
 
     <ImageView
         android:layout_width="match_parent"

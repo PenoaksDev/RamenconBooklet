@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.ramencon.ui.widget.TouchImageView
+    <com.penoaks.booklet.ui.widget.TouchImageView
         android:id="@+id/maps_image"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>

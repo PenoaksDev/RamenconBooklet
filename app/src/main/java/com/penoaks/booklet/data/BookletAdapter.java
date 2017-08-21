@@ -13,12 +13,12 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.penoaks.android.data.ImageCache;
 import com.penoaks.android.helpers.ACRAHelper;
 import com.penoaks.android.utils.UtilDate;
-import com.penoaks.booklet.fragments.BootFragment;
+import com.penoaks.booklet.ui.fragments.BootFragment;
 import com.penoaks.booklet.models.ModelBooklet;
 import com.ramencon.R;
-import com.ramencon.data.ImageCache;
 
 import org.acra.ACRA;
 

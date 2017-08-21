@@ -24,7 +24,7 @@
 
     </LinearLayout>
 
-    <com.ramencon.ui.widget.ExtendedViewPager
+    <com.penoaks.booklet.ui.widget.ExtendedViewPager
         android:id="@+id/maps_pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

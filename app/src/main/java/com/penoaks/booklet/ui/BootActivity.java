@@ -16,8 +16,8 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.penoaks.android.fragments.FragmentStack;
 import com.penoaks.android.log.PLog;
-import com.penoaks.booklet.fragments.BootFragment;
-import com.penoaks.booklet.fragments.SettingsFragment;
+import com.penoaks.booklet.ui.fragments.BootFragment;
+import com.penoaks.booklet.ui.fragments.SettingsFragment;
 import com.ramencon.R;
 
 public class BootActivity extends AppCompatActivity
