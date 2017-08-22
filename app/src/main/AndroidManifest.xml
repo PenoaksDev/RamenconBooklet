@@ -9,7 +9,7 @@
     <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
-            android:name="com.penoaks.booklet.App"
+            android:name="io.amelia.booklet.App"
             android:allowBackup="true"
             android:icon="@mipmap/ic_app"
             android:label="@string/app_name"
@@ -19,18 +19,18 @@
                 android:name="com.facebook.sdk.ApplicationId"
                 android:value="@string/facebook_app_id"/>
 
-        <service android:name="com.penoaks.booklet.FirebaseService">
+        <service android:name="io.amelia.booklet.FirebaseService">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
         </service>
         <service
-                android:name="com.penoaks.booklet.AppService"
+                android:name="io.amelia.booklet.AppService"
                 android:exported="false">
         </service>
 
         <receiver
-                android:name="com.penoaks.booklet.AppReceiver"
+                android:name="io.amelia.booklet.AppReceiver"
                 android:enabled="true"
                 android:exported="true"
                 android:label="AppReceiver">
@@ -40,14 +40,14 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name="com.penoaks.booklet.ui.BootActivity">
+        <activity android:name="io.amelia.booklet.ui.BootActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name="com.penoaks.booklet.ui.ErroredActivity"/>
+        <activity android:name="io.amelia.booklet.ui.ErroredActivity"/>
     </application>
 
 </manifest>
