@@ -25,7 +25,7 @@ import java.util.List;
 import io.amelia.android.log.PLog;
 import io.amelia.booklet.data.models.ModelEvent;
 import io.amelia.booklet.data.models.ModelLocation;
-import io.amelia.booklet.ui.fragments.ScheduleViewFragment;
+import io.amelia.booklet.ui.fragment.ScheduleViewFragment;
 
 public class ScheduleAdapter extends BaseExpandableListAdapter
 {
@@ -33,11 +33,11 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 	public static final SimpleDateFormat DISPLAY_FORMAT_TIME12 = new SimpleDateFormat( "hh:mm a" );
 	public static final SimpleDateFormat DISPLAY_FORMAT_TIME24 = new SimpleDateFormat( "HH:mm" );
 	public SimpleDateFormat dateFormat;
-	public SimpleDateFormat timeFormat;
-	public List<ModelLocation> locations;
 	public List<ModelEvent> events;
-	private LayoutInflater inflater = null;
+	public List<ModelLocation> locations;
+	public SimpleDateFormat timeFormat;
 	private Context context;
+	private LayoutInflater inflater = null;
 
 	public ScheduleAdapter( Context context, SimpleDateFormat dateFormat, SimpleDateFormat timeFormat, List<ModelLocation> locations, List<ModelEvent> events )
 	{
@@ -51,21 +51,9 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 	}
 
 	@Override
-	public int getGroupCount()
+	public boolean areAllItemsEnabled()
 	{
-		return events.size();
-	}
-
-	@Override
-	public int getChildrenCount( int groupPosition )
-	{
-		return 1;
-	}
-
-	@Override
-	public Object getGroup( int groupPosition )
-	{
-		return groupPosition;
+		return true;
 	}
 
 	@Override
@@ -75,81 +63,9 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 	}
 
 	@Override
-	public long getGroupId( int groupPosition )
-	{
-		return groupPosition;
-	}
-
-	@Override
 	public long getChildId( int groupPosition, int childPosition )
 	{
 		return childPosition;
-	}
-
-	@Override
-	public boolean hasStableIds()
-	{
-		return false;
-	}
-
-	@Override
-	public View getGroupView( final int position, boolean isExpanded, View convertView, ViewGroup parent )
-	{
-		View rowView = convertView == null ? inflater.inflate( R.layout.fragment_schedule_listitem, null ) : convertView;
-
-		ModelEvent event = events.get( position );
-
-		try
-		{
-			TextView tv_title = ( TextView ) rowView.findViewById( R.id.title );
-			TextView tv_time = ( TextView ) rowView.findViewById( R.id.time );
-			TextView tv_location = ( TextView ) rowView.findViewById( R.id.location );
-
-			for ( ModelLocation loc : locations )
-				if ( loc.id.equals( event.location ) )
-					event.location = loc.title;
-
-			ScheduleViewFragment.adapter = this;
-
-			try
-			{
-				// Date date = dateFormat.parse(event.date);
-				Date from = timeFormat.parse( event.time );
-				Date to = new Date( from.getTime() + ( 60000 * ( event.duration == null ? 0 : Integer.parseInt( event.duration ) ) ) );
-
-				SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences( context );
-				boolean use24h = pref.getBoolean( "pref_military", false );
-
-				tv_title.setText( event.getTitle() );
-
-				String format_from = use24h ? DISPLAY_FORMAT_TIME24.format( from ) : DISPLAY_FORMAT_TIME12.format( from );
-				String format_to = use24h ? DISPLAY_FORMAT_TIME24.format( to ) : DISPLAY_FORMAT_TIME12.format( to );
-				tv_time.setText( format_from + " — " + format_to );
-				tv_location.setText( event.location );
-			}
-			catch ( ParseException e )
-			{
-				e.printStackTrace();
-			}
-
-			/*
-			rowView.setOnClickListener(new View.OnClickListener()
-			{
-				@Override
-				public void onClick(View v)
-				{
-					HomeActivity.instance.setFragment(ScheduleViewFragment.newInstance(position), true);
-				}
-			});
-			*/
-		}
-		catch ( Exception e )
-		{
-			ACRA.getErrorReporter().handleException( new RuntimeException( "Failure in event: " + event.title + " (" + event.id + ").", e ) );
-			PLog.e( e, "Failure in event: " + event.title + " (" + event.id + ")." );
-		}
-
-		return rowView;
 	}
 
 	@Override
@@ -228,18 +144,138 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 		}
 	}
 
+	@Override
+	public int getChildrenCount( int groupPosition )
+	{
+		return 1;
+	}
+
+	@Override
+	public long getCombinedChildId( long groupId, long childId )
+	{
+		return 0;
+	}
+
+	@Override
+	public long getCombinedGroupId( long groupId )
+	{
+		return groupId;
+	}
+
+	@Override
+	public Object getGroup( int groupPosition )
+	{
+		return groupPosition;
+	}
+
+	@Override
+	public int getGroupCount()
+	{
+		return events.size();
+	}
+
+	@Override
+	public long getGroupId( int groupPosition )
+	{
+		return groupPosition;
+	}
+
+	@Override
+	public View getGroupView( final int position, boolean isExpanded, View convertView, ViewGroup parent )
+	{
+		View rowView = convertView == null ? inflater.inflate( R.layout.fragment_schedule_listitem, null ) : convertView;
+
+		ModelEvent event = events.get( position );
+
+		try
+		{
+			TextView tv_title = ( TextView ) rowView.findViewById( R.id.title );
+			TextView tv_time = ( TextView ) rowView.findViewById( R.id.time );
+			TextView tv_location = ( TextView ) rowView.findViewById( R.id.location );
+
+			for ( ModelLocation loc : locations )
+				if ( loc.id.equals( event.location ) )
+					event.location = loc.title;
+
+			ScheduleViewFragment.adapter = this;
+
+			try
+			{
+				// Date date = dateFormat.parse(event.date);
+				Date from = timeFormat.parse( event.time );
+				Date to = new Date( from.getTime() + ( 60000 * ( event.duration == null ? 0 : Integer.parseInt( event.duration ) ) ) );
+
+				SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences( context );
+				boolean use24h = pref.getBoolean( "pref_military", false );
+
+				tv_title.setText( event.getTitle() );
+
+				String format_from = use24h ? DISPLAY_FORMAT_TIME24.format( from ) : DISPLAY_FORMAT_TIME12.format( from );
+				String format_to = use24h ? DISPLAY_FORMAT_TIME24.format( to ) : DISPLAY_FORMAT_TIME12.format( to );
+				tv_time.setText( format_from + " — " + format_to );
+				tv_location.setText( event.location );
+			}
+			catch ( ParseException e )
+			{
+				e.printStackTrace();
+			}
+
+			/*
+			rowView.setOnClickListener(new View.OnClickListener()
+			{
+				@Override
+				public void onClick(View v)
+				{
+					HomeActivity.instance.setFragment(ScheduleViewFragment.newInstance(position), true);
+				}
+			});
+			*/
+		}
+		catch ( Exception e )
+		{
+			ACRA.getErrorReporter().handleException( new RuntimeException( "Failure in event: " + event.title + " (" + event.id + ").", e ) );
+			PLog.e( e, "Failure in event: " + event.title + " (" + event.id + ")." );
+		}
+
+		return rowView;
+	}
+
+	@Override
+	public boolean hasStableIds()
+	{
+		return false;
+	}
+
+	@Override
+	public boolean isChildSelectable( int groupPosition, int childPosition )
+	{
+		return false;
+	}
+
+	@Override
+	public boolean isEmpty()
+	{
+		return events.isEmpty();
+	}
+
+	@Override
+	public void onGroupCollapsed( int groupPosition )
+	{
+
+	}
+
+	@Override
+	public void onGroupExpanded( int groupPosition )
+	{
+
+	}
+
 	public void startAnimation( final View v, final boolean op )
 	{
 		Animation pop = AnimationUtils.loadAnimation( context, R.anim.icon_fadeout );
 
 		pop.setAnimationListener( new Animation.AnimationListener()
 		{
-			@Override
-			public void onAnimationStart( Animation animation )
-			{
-
-			}
-
 			@Override
 			public void onAnimationEnd( Animation animation )
 			{
@@ -255,12 +291,6 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 				pop.setAnimationListener( new Animation.AnimationListener()
 				{
 					@Override
-					public void onAnimationStart( Animation animation )
-					{
-
-					}
-
-					@Override
 					public void onAnimationEnd( Animation animation )
 					{
 						v.setVisibility( View.VISIBLE );
@@ -268,6 +298,12 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 
 					@Override
 					public void onAnimationRepeat( Animation animation )
+					{
+
+					}
+
+					@Override
+					public void onAnimationStart( Animation animation )
 					{
 
 					}
@@ -281,50 +317,14 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 			{
 
 			}
+
+			@Override
+			public void onAnimationStart( Animation animation )
+			{
+
+			}
 		} );
 
 		v.startAnimation( pop );
-	}
-
-	@Override
-	public boolean isChildSelectable( int groupPosition, int childPosition )
-	{
-		return false;
-	}
-
-	@Override
-	public boolean areAllItemsEnabled()
-	{
-		return true;
-	}
-
-	@Override
-	public boolean isEmpty()
-	{
-		return events.isEmpty();
-	}
-
-	@Override
-	public void onGroupExpanded( int groupPosition )
-	{
-
-	}
-
-	@Override
-	public void onGroupCollapsed( int groupPosition )
-	{
-
-	}
-
-	@Override
-	public long getCombinedChildId( long groupId, long childId )
-	{
-		return 0;
-	}
-
-	@Override
-	public long getCombinedGroupId( long groupId )
-	{
-		return groupId;
 	}
 }

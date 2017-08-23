@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <io.amelia.booklet.ui.widget.TouchImageView
+    <io.amelia.android.ui.widget.TouchImageView
         android:id="@+id/maps_image"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>

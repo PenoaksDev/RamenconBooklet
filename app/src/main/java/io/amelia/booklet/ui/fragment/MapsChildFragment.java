@@ -1,4 +1,4 @@
-package io.amelia.booklet.ui.fragments;
+package io.amelia.booklet.ui.fragment;
 
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -18,7 +18,7 @@ import java.util.List;
 
 import io.amelia.android.data.ImageCache;
 import io.amelia.booklet.data.models.ModelMap;
-import io.amelia.booklet.ui.widget.TouchImageView;
+import io.amelia.android.ui.widget.TouchImageView;
 
 public class MapsChildFragment extends Fragment implements ImageCache.ImageResolveTask.ImageFoundListener, ImageCache.ImageResolveTask.ImageProgressListener
 {

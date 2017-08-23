@@ -21,6 +21,7 @@ import io.amelia.android.log.PLog;
 import io.amelia.booklet.data.models.ModelEvent;
 import io.amelia.booklet.data.schedule.ScheduleDataReceiver;
 import io.amelia.booklet.data.schedule.filters.DefaultScheduleFilter;
+import io.amelia.booklet.ui.activity.ContentActivity;
 
 public class AppService extends Service
 {
@@ -33,23 +34,52 @@ public class AppService extends Service
 
 	public static int getReminderDelay()
 	{
-		if ( HomeActivity.instance == null )
+		if ( ContentActivity.instance == null )
 			return 10 * 60 * 1000; // Temp fix for inherit app bugs.
 
-		int reminder_delay = Integer.parseInt( PreferenceManager.getDefaultSharedPreferences( HomeActivity.instance ).getString( "pref_reminder_delays", "10" ) );
+		int reminder_delay = Integer.parseInt( PreferenceManager.getDefaultSharedPreferences( ContentActivity.instance ).getString( "pref_reminder_delays", "10" ) );
 		reminder_delay = reminder_delay * 60 * 1000;
 
 		return reminder_delay;
 	}
 
-	private final Map<String, PendingIntent> pendingNotices = new ConcurrentHashMap<>();
 	private final IBinder mBinder = new ServiceBinder();
+	private final Map<String, PendingIntent> pendingNotices = new ConcurrentHashMap<>();
 	public ScheduleDataReceiver scheduleData;
 
-	@Override
-	public int onStartCommand( Intent intent, int flags, int startId )
+	public void cancelAllNotifications()
 	{
-		return START_STICKY;
+		if ( pendingNotices.size() > 0 )
+		{
+			AlarmManager mgr = ( AlarmManager ) ( ContentActivity.instance.getSystemService( Context.ALARM_SERVICE ) );
+
+			for ( PendingIntent pIntent : pendingNotices.values() )
+				mgr.cancel( pIntent );
+			pendingNotices.clear();
+		}
+	}
+
+	public void cancelPushNotification( String id )
+	{
+		if ( !pendingNotices.containsKey( id ) )
+			return;
+
+		AlarmManager mgr = ( AlarmManager ) ( ContentActivity.instance.getSystemService( Context.ALARM_SERVICE ) );
+
+		if ( mgr != null )
+			mgr.cancel( pendingNotices.remove( id ) );
+	}
+
+	public boolean hasPushNotificationPending( String id )
+	{
+		return pendingNotices.containsKey( id );
+	}
+
+	@Nullable
+	@Override
+	public IBinder onBind( Intent intent )
+	{
+		return mBinder;
 	}
 
 	@Override
@@ -68,6 +98,12 @@ public class AppService extends Service
 		PLog.i( "The AppService has been destroyed!" );
 	}
 
+	@Override
+	public int onStartCommand( Intent intent, int flags, int startId )
+	{
+		return START_STICKY;
+	}
+
 	public void restartAllNotifications( long reminderDelay )
 	{
 		cancelAllNotifications();
@@ -79,18 +115,6 @@ public class AppService extends Service
 					event.setTimer( false );
 	}
 
-	public void cancelAllNotifications()
-	{
-		if ( pendingNotices.size() > 0 )
-		{
-			AlarmManager mgr = ( AlarmManager ) ( HomeActivity.instance.getSystemService( Context.ALARM_SERVICE ) );
-
-			for ( PendingIntent pIntent : pendingNotices.values() )
-				mgr.cancel( pIntent );
-			pendingNotices.clear();
-		}
-	}
-
 	public boolean schedulePushNotification( ModelEvent event, boolean makeToast )
 	{
 		return schedulePushNotification( event, event.getStartTime() - getReminderDelay(), makeToast );
@@ -98,7 +122,7 @@ public class AppService extends Service
 
 	public boolean schedulePushNotification( ModelEvent event, long when, boolean makeToast )
 	{
-		Context context = HomeActivity.instance;
+		Context context = ContentActivity.instance;
 
 		if ( event.hasEventReminderPassed() )
 		{
@@ -128,29 +152,6 @@ public class AppService extends Service
 		mgr.set( AlarmManager.RTC_WAKEUP, when, pIntent );
 
 		return true;
-	}
-
-	public void cancelPushNotification( String id )
-	{
-		if ( !pendingNotices.containsKey( id ) )
-			return;
-
-		AlarmManager mgr = ( AlarmManager ) ( HomeActivity.instance.getSystemService( Context.ALARM_SERVICE ) );
-
-		if ( mgr != null )
-			mgr.cancel( pendingNotices.remove( id ) );
-	}
-
-	public boolean hasPushNotificationPending( String id )
-	{
-		return pendingNotices.containsKey( id );
-	}
-
-	@Nullable
-	@Override
-	public IBinder onBind( Intent intent )
-	{
-		return mBinder;
 	}
 
 	public class ServiceBinder extends Binder

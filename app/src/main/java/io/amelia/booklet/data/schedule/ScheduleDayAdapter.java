@@ -19,20 +19,20 @@ import java.util.Date;
 import java.util.List;
 
 import io.amelia.android.support.DateAndTime;
+import io.amelia.booklet.ContentManager;
 import io.amelia.booklet.data.models.ModelEvent;
 import io.amelia.booklet.data.schedule.filters.DefaultScheduleFilter;
-import io.amelia.booklet.ui.fragments.ScheduleFragment;
+import io.amelia.booklet.ui.fragment.ScheduleFragment;
 
 public class ScheduleDayAdapter extends BaseAdapter
 {
 	public static final String DATEFORMAT = "MMMM dx yyyy";
-
-	private LayoutInflater inflater = null;
 	private List<Date> days = new ArrayList<>();
+	private LayoutInflater inflater = null;
 	private TextView mDateDisplay;
-	private ScheduleDataReceiver mScheduleDataReceiver;
-	private ExpandableListView mListView;
 	private TwoWayView mDayView;
+	private ExpandableListView mListView;
+	private ScheduleDataReceiver mScheduleDataReceiver;
 	private int selectedPosition;
 
 	public ScheduleDayAdapter( ScheduleFragment parent, List<Date> days, TextView mDateDisplay, ScheduleDataReceiver mScheduleDataReceiver, ExpandableListView mListView, TwoWayView mDayView, int selectedPosition )
@@ -64,23 +64,9 @@ public class ScheduleDayAdapter extends BaseAdapter
 		return position;
 	}
 
-	public void setSelectedPosition( int position, List<ModelEvent> data, String title ) throws ParseException
+	public int getSelectedPosition()
 	{
-		if ( mDayView.getChildAt( position ) == null )
-			throw new IndexOutOfBoundsException();
-
-		ScheduleDayAdapter.this.selectedPosition = position;
-
-		mListView.setAdapter( new ScheduleAdapter( HomeActivity.instance, mScheduleDataReceiver.simpleDateFormat(), mScheduleDataReceiver.simpleTimeFormat(), mScheduleDataReceiver.locations, data ) );
-
-		for ( int i = 0; i < mDayView.getChildCount(); i++ )
-			if ( i != position )
-				mDayView.getChildAt( i ).setBackgroundColor( 0x00000000 );
-
-		mDayView.getChildAt( position ).setBackgroundColor( 0xFFff4081 );
-
-		if ( mDateDisplay != null && title != null )
-			mDateDisplay.setText( title );
+		return selectedPosition;
 	}
 
 	@Override
@@ -164,8 +150,22 @@ public class ScheduleDayAdapter extends BaseAdapter
 		return view;
 	}
 
-	public int getSelectedPosition()
+	public void setSelectedPosition( int position, List<ModelEvent> data, String title ) throws ParseException
 	{
-		return selectedPosition;
+		if ( mDayView.getChildAt( position ) == null )
+			throw new IndexOutOfBoundsException();
+
+		ScheduleDayAdapter.this.selectedPosition = position;
+
+		mListView.setAdapter( new ScheduleAdapter( ContentManager.getDownloadActivity(), mScheduleDataReceiver.simpleDateFormat(), mScheduleDataReceiver.simpleTimeFormat(), mScheduleDataReceiver.locations, data ) );
+
+		for ( int i = 0; i < mDayView.getChildCount(); i++ )
+			if ( i != position )
+				mDayView.getChildAt( i ).setBackgroundColor( 0x00000000 );
+
+		mDayView.getChildAt( position ).setBackgroundColor( 0xFFff4081 );
+
+		if ( mDateDisplay != null && title != null )
+			mDateDisplay.setText( title );
 	}
 }

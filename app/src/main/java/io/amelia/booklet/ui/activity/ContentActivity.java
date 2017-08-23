@@ -1,4 +1,4 @@
-package io.amelia.booklet.ui;
+package io.amelia.booklet.ui.activity;
 
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
@@ -18,28 +18,59 @@ import com.ramencon.R;
 
 import io.amelia.android.fragments.FragmentStack;
 import io.amelia.android.log.PLog;
-import io.amelia.booklet.ui.fragments.BootFragment;
-import io.amelia.booklet.ui.fragments.SettingsFragment;
+import io.amelia.booklet.ui.fragment.GuestFragment;
+import io.amelia.booklet.ui.fragment.MapsFragment;
+import io.amelia.booklet.ui.fragment.ScheduleFragment;
+import io.amelia.booklet.ui.fragment.WelcomeFragment;
 
-public class BootActivity extends AppCompatActivity
+public class ContentActivity extends AppCompatActivity
 {
 	private static final int UPDATE_GOOGLE_PLAY = 24;
+	public static ContentActivity instance;
 	public FragmentStack stacker;
 	long backClickTime = 0;
 	Toast mBackToast;
 	private Bundle savedInstanceState;
 
-	public BootActivity()
+	public ContentActivity()
 	{
+		instance = this;
+
 		stacker = new FragmentStack( getSupportFragmentManager(), R.id.boot_content );
 
-		// stacker.registerFragment( R.id.nav_welcome, WelcomeFragment.class );
-		// stacker.registerFragment( R.id.nav_schedule, ScheduleFragment.class );
-		// stacker.registerFragment( R.id.nav_guests_vendors, GuestFragment.class );
-		// stacker.registerFragment( R.id.nav_maps, MapsFragment.class );
+		stacker.registerFragment( R.id.nav_welcome, WelcomeFragment.class );
+		stacker.registerFragment( R.id.nav_schedule, ScheduleFragment.class );
+		stacker.registerFragment( R.id.nav_guests_vendors, GuestFragment.class );
+		stacker.registerFragment( R.id.nav_maps, MapsFragment.class );
 		// stacker.registerFragment( R.id.nav_friends, FriendsFragment.class );
-		stacker.registerFragment( R.id.options_settings, SettingsFragment.class );
+		// stacker.registerFragment( R.id.options_settings, SettingsFragment.class );
 		// stacker.registerFragment( R.id.nav_share, .class );
+	}
+
+	public void factoryReset()
+	{
+		stacker.clearFragments();
+
+		finish();
+	}
+
+	@Override
+	public void onBackPressed()
+	{
+		DrawerLayout drawer = ( DrawerLayout ) findViewById( R.id.drawer_layout );
+		if ( drawer != null && drawer.isDrawerOpen( Gravity.START ) )
+			drawer.closeDrawer( Gravity.START );
+		else if ( stacker.hasBackstack() )
+			stacker.popBackstack();
+		else if ( backClickTime > 0 && backClickTime - System.currentTimeMillis() < 3000 )
+			finish();
+		else
+		{
+			if ( mBackToast == null )
+				mBackToast = Toast.makeText( this, "Press back again to quit.", Toast.LENGTH_SHORT );
+			mBackToast.show();
+			backClickTime = System.currentTimeMillis();
+		}
 	}
 
 	@Override
@@ -89,7 +120,7 @@ public class BootActivity extends AppCompatActivity
 		} );
 
 		if ( savedInstanceState == null )
-			stacker.setFragment( BootFragment.class );
+			stacker.setFragment( WelcomeFragment.class );
 		else
 			stacker.loadInstanceState( savedInstanceState );
 	}
@@ -119,31 +150,5 @@ public class BootActivity extends AppCompatActivity
 	{
 		super.onSaveInstanceState( outState );
 		stacker.saveInstanceState( outState );
-	}
-
-	@Override
-	public void onBackPressed()
-	{
-		DrawerLayout drawer = ( DrawerLayout ) findViewById( R.id.drawer_layout );
-		if ( drawer != null && drawer.isDrawerOpen( Gravity.START ) )
-			drawer.closeDrawer( Gravity.START );
-		else if ( stacker.hasBackstack() )
-			stacker.popBackstack();
-		else if ( backClickTime > 0 && backClickTime - System.currentTimeMillis() < 3000 )
-			finish();
-		else
-		{
-			if ( mBackToast == null )
-				mBackToast = Toast.makeText( this, "Press back again to quit.", Toast.LENGTH_SHORT );
-			mBackToast.show();
-			backClickTime = System.currentTimeMillis();
-		}
-	}
-
-	public void factoryReset()
-	{
-		stacker.clearFragments();
-
-		finish();
 	}
 }

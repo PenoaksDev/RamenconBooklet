@@ -1,4 +1,4 @@
-package io.amelia.booklet.ui.fragments;
+package io.amelia.booklet.ui.fragment;
 
 import android.graphics.Bitmap;
 import android.os.Bundle;

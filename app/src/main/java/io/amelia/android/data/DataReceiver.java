@@ -26,7 +26,7 @@ public abstract class DataReceiver implements OnConfigurationListener
 		if ( data != null )
 			data.removeListener( this );
 
-		data = DataPersistence.getInstance().config( getReferenceUri() );
+		data = null; // DataPersistence.getInstance().config( getReferenceUri() );
 
 		onDataArrived( data, isRefresh );
 

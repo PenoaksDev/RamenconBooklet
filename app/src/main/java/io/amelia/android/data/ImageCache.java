@@ -16,13 +16,13 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 
 import io.amelia.android.log.PLog;
-import io.amelia.booklet.App;
+import io.amelia.booklet.ContentManager;
 
 public class ImageCache
 {
 	public static final String REMOTE_IMAGES_URL = "http://booklet.dev.penoaks.com/images/ramencon/";
 
-	private static File cacheDirectory = new File( App.cacheDir, "imageCache" );
+	private static File cacheDirectory = new File( ContentManager.getCacheDir(), "imageCache" );
 	private static BitmapFactory.Options options = new BitmapFactory.Options();
 
 	static
@@ -38,7 +38,7 @@ public class ImageCache
 
 	public static void cacheRemoteImage( Context context, String id, String remoteUrl, boolean forceUpdate, ImageResolveTask.ImageFoundListener foundListener, ImageResolveTask.ImageProgressListener progressListener )
 	{
-		new ImageResolveTask( context, id, remoteUrl, forceUpdate, foundListener, progressListener ).executeOnExecutor( App.getExecutorThreadPool() );
+		new ImageResolveTask( context, id, remoteUrl, forceUpdate, foundListener, progressListener ).executeOnExecutor( ContentManager.getExecutorThreadPool() );
 	}
 
 	private ImageCache()

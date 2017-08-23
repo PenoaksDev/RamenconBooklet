@@ -1,4 +1,4 @@
-package io.amelia.booklet.ui.fragments;
+package io.amelia.booklet.ui.fragment;
 
 import android.content.DialogInterface;
 import android.os.Bundle;
@@ -13,8 +13,9 @@ import android.widget.Toast;
 
 import com.ramencon.R;
 
-import io.amelia.booklet.ui.BootActivity;
+import io.amelia.booklet.ui.activity.ContentActivity;
 
+@Deprecated
 public class SettingsFragment extends PreferenceFragment
 {
 	public static SettingsFragment instance()
@@ -49,7 +50,7 @@ public class SettingsFragment extends PreferenceFragment
 			@Override
 			public boolean onPreferenceChange( Preference preference, Object newValue )
 			{
-				HomeActivity.instance.service.restartAllNotifications( Long.parseLong( ( String ) newValue ) * 60 * 1000 );
+				// HomeActivity.instance.service.restartAllNotifications( Long.parseLong( ( String ) newValue ) * 60 * 1000 );
 				return true;
 			}
 		} );
@@ -67,7 +68,7 @@ public class SettingsFragment extends PreferenceFragment
 					public void onClick( DialogInterface dialog, int which )
 					{
 
-						( ( BootActivity ) getActivity() ).factoryReset();
+						( ( ContentActivity ) getActivity() ).factoryReset();
 
 						/* HomeActivity.instance.signOut();
 						HomeActivity.instance.stacker.clearFragments();

@@ -8,7 +8,7 @@
     android:orientation="vertical"
     android:padding="24dp"
     android:weightSum="1"
-    tools:context="io.amelia.booklet.ui.fragments.ScheduleViewFragment">
+    tools:context="io.amelia.booklet.ui.fragment.ScheduleViewFragment">
 
 
     <TextView

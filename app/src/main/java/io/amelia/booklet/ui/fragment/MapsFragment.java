@@ -1,4 +1,4 @@
-package io.amelia.booklet.ui.fragments;
+package io.amelia.booklet.ui.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -25,7 +25,7 @@ import io.amelia.android.configuration.ConfigurationSection;
 import io.amelia.android.data.DataAwareFragment;
 import io.amelia.android.fragments.PersistentFragment;
 import io.amelia.booklet.data.maps.MapsDataReceiver;
-import io.amelia.booklet.ui.widget.TouchImageView;
+import io.amelia.android.ui.widget.TouchImageView;
 
 public class MapsFragment extends DataAwareFragment<MapsDataReceiver> implements PersistentFragment
 {

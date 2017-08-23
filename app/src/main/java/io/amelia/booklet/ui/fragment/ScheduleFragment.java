@@ -1,4 +1,4 @@
-package io.amelia.booklet.ui.fragments;
+package io.amelia.booklet.ui.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -193,7 +193,7 @@ public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> im
 		{
 			ACRA.getErrorReporter().handleException( new RuntimeException( "Unexpected Exception.", e ) );
 
-			Toast.makeText( HomeActivity.instance, "We had a problem loading the schedule. The error has been reported.", Toast.LENGTH_LONG ).show();
+			// Toast.makeText( HomeActivity.instance, "We had a problem loading the schedule. The error has been reported.", Toast.LENGTH_LONG ).show();
 		}
 	}
 

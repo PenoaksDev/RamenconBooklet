@@ -1,4 +1,4 @@
-package io.amelia.booklet.ui.widget;
+package io.amelia.android.ui.widget;
 
 import android.annotation.TargetApi;
 import android.content.Context;

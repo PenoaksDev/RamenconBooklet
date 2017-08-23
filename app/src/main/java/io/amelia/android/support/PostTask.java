@@ -5,7 +5,7 @@ import android.os.AsyncTask;
 import java.util.concurrent.Callable;
 
 import io.amelia.android.log.PLog;
-import io.amelia.booklet.App;
+import io.amelia.booklet.ContentManager;
 
 public class PostTask extends AsyncTask<Void, Void, Void>
 {
@@ -15,7 +15,7 @@ public class PostTask extends AsyncTask<Void, Void, Void>
 	public PostTask( Callable callable )
 	{
 		this.callable = callable;
-		executeOnExecutor( App.getExecutorThreadPool(), new Void[0] );
+		executeOnExecutor( ContentManager.getExecutorThreadPool(), new Void[0] );
 	}
 
 	public void done()

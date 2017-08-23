@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="io.amelia.booklet.ui.fragments.ScheduleViewFragment">
+    tools:context="io.amelia.booklet.ui.fragment.ScheduleViewFragment">
 
     <LinearLayout
         android:id="@+id/fragment_guest_view"

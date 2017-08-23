@@ -15,9 +15,11 @@ import java.util.List;
 
 import io.amelia.android.data.ImageCache;
 import io.amelia.android.support.ACRAHelper;
+import io.amelia.booklet.ContentManager;
 import io.amelia.booklet.data.models.ModelGroup;
 import io.amelia.booklet.data.models.ModelGuest;
-import io.amelia.booklet.ui.fragments.GuestViewFragment;
+import io.amelia.booklet.ui.activity.ContentActivity;
+import io.amelia.booklet.ui.fragment.GuestViewFragment;
 
 public class GuestAdapter extends BaseExpandableListAdapter
 {
@@ -130,7 +132,7 @@ public class GuestAdapter extends BaseExpandableListAdapter
 			@Override
 			public void onClick( View v )
 			{
-				HomeActivity.instance.stacker.setFragment( GuestViewFragment.instance( group.id, guest.id ), true, true );
+				ContentActivity.instance.stacker.setFragment( GuestViewFragment.instance( group.id, guest.id ), true, true );
 			}
 		} );
 

@@ -5,7 +5,7 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context="io.amelia.booklet.ui.BootActivity">
+        tools:context="io.amelia.booklet.ui.activity.ContentActivity">
 
     <android.support.v4.widget.SwipeRefreshLayout
             android:id="@+id/booklet_refresher"
@@ -21,7 +21,7 @@
                 android:divider="@color/lighter_gray"
                 android:footerDividersEnabled="true"
                 android:dividerHeight="1dp"
-                tools:listitem="@layout/fragment_boot_listitem"/>
+                tools:listitem="@layout/activity_download_listitem"/>
 
     </android.support.v4.widget.SwipeRefreshLayout>
 

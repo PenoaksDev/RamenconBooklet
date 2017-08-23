@@ -57,8 +57,8 @@ public class AppReceiver extends BroadcastReceiver
 			if ( ( event = ScheduleDataReceiver.getInstance().getEvent( id ) ) != null )
 				event.setTimer( false );
 
-			if ( HomeActivity.instance != null && HomeActivity.instance.service != null )
-				HomeActivity.instance.service.cancelPushNotification( id );
+			// if ( ContentActivity.instance != null && ContentActivity.instance.service != null )
+			// ContentActivity.instance.service.cancelPushNotification( id );
 
 			wl.release();
 		}

@@ -1,4 +1,4 @@
-package io.amelia.booklet.ui.widget;
+package io.amelia.android.ui.widget;
 
 import android.content.Context;
 import android.support.v4.view.ViewPager;

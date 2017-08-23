@@ -1,4 +1,4 @@
-package io.amelia.booklet.ui;
+package io.amelia.booklet.ui.activity;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -43,175 +43,15 @@ public class SigninActivity extends Activity implements GoogleApiClient.OnConnec
 	 * Organic first-time load, once false we've probably being called from another activity.
 	 */
 	private static boolean organicLast = true;
-	private boolean organic = true;
-
-	private GoogleSignInOptions mGoogleOptions;
-	private GoogleApiClient mGoogleApi;
+	private Button loginFacebook;
+	private Button loginGoogle;
+	private Button loginTwitter;
 	private FirebaseAuth mAuth;
 
 	private ProgressDialog mDialog;
-
-	private Button loginGoogle;
-	private Button loginTwitter;
-	private Button loginFacebook;
-
-	@Override
-	public void onCreate( @Nullable Bundle savedInstanceState )
-	{
-		super.onCreate( savedInstanceState );
-		setContentView( R.layout.activity_signin );
-
-		organic = organicLast;
-		organicLast = false;
-
-		mGoogleOptions = new GoogleSignInOptions.Builder( GoogleSignInOptions.DEFAULT_SIGN_IN ).requestIdToken( "496133665089-evn0i2maaasaugmqcilud7eb7u6dgakm.apps.googleusercontent.com" ).requestEmail().requestProfile().build();
-		mGoogleApi = new GoogleApiClient.Builder( this ).addApi( Auth.GOOGLE_SIGN_IN_API, mGoogleOptions ).build();
-		mAuth = FirebaseAuth.getInstance();
-
-		CallbackManager callbackManager = CallbackManager.Factory.create();
-
-		LoginManager.getInstance().registerCallback( callbackManager, new FacebookCallback<LoginResult>()
-		{
-			@Override
-			public void onSuccess( LoginResult loginResult )
-			{
-				Toast.makeText( SigninActivity.this, "Login Success", Toast.LENGTH_LONG ).show();
-			}
-
-			@Override
-			public void onCancel()
-			{
-				Toast.makeText( SigninActivity.this, "Login Cancel", Toast.LENGTH_LONG ).show();
-			}
-
-			@Override
-			public void onError( FacebookException exception )
-			{
-				Toast.makeText( SigninActivity.this, exception.getMessage(), Toast.LENGTH_LONG ).show();
-			}
-		} );
-
-		loginFacebook = ( Button ) findViewById( R.id.signLoginFacebook );
-		loginFacebook.setOnClickListener( new View.OnClickListener()
-		{
-			@Override
-			public void onClick( View v )
-			{
-				LoginManager.getInstance().logInWithReadPermissions( SigninActivity.this, Arrays.asList( "public_profile", "user_friends" ) );
-			}
-		} );
-
-		loginTwitter = ( Button ) findViewById( R.id.signLoginTwitter );
-		loginTwitter.setOnClickListener( new View.OnClickListener()
-		{
-			@Override
-			public void onClick( View v )
-			{
-
-			}
-		} );
-
-		loginGoogle = ( Button ) findViewById( R.id.signLoginGoogle );
-		loginGoogle.setOnClickListener( new View.OnClickListener()
-		{
-			@Override
-			public void onClick( View v )
-			{
-				Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent( mGoogleApi );
-				startActivityForResult( signInIntent, GOOGLE_SIGNIN );
-			}
-		} );
-
-		Button loginAnonymous = ( Button ) findViewById( R.id.signLoginAnonymous );
-		Button logout = ( Button ) findViewById( R.id.signLogout );
-		Button skip = ( Button ) findViewById( R.id.signSkip );
-
-		loginAnonymous.setOnClickListener( new View.OnClickListener()
-		{
-			@Override
-			public void onClick( View v )
-			{
-				// mAuth.signInAnonymously();
-			}
-		} );
-
-		logout.setOnClickListener( new View.OnClickListener()
-		{
-			@Override
-			public void onClick( View v )
-			{
-				mAuth.signOut();
-				recreate();
-			}
-		} );
-
-		skip.setOnClickListener( new View.OnClickListener()
-		{
-			@Override
-			public void onClick( View v )
-			{
-				startActivity( new Intent( SigninActivity.this, HomeActivity.class ) );
-			}
-		} );
-
-		if ( mAuth.getCurrentUser() == null )
-			signedOutMode();
-		else if ( mAuth.getCurrentUser() != null && organic )
-			startActivity( new Intent( this, HomeActivity.class ) );
-		else
-			signedInMode();
-	}
-
-	public void signedOutMode()
-	{
-		( ( TextView ) findViewById( R.id.signTextNewHere ) ).setText( "New here? Please sign-in with one of the following:" );
-		( ( TextView ) findViewById( R.id.signTextOrBrowse ) ).setText( "or browse anonymously; we won't judge." );
-
-		findViewById( R.id.signLoginAnonymous ).setVisibility( View.VISIBLE );
-		findViewById( R.id.signLogout ).setVisibility( View.GONE );
-		findViewById( R.id.signSkip ).setVisibility( View.GONE );
-		findViewById( R.id.signDescription ).setVisibility( View.VISIBLE );
-
-		loginGoogle.setText( "  Google" );
-		loginGoogle.setEnabled( true );
-		loginFacebook.setText( "  Facebook" );
-		loginFacebook.setEnabled( true );
-		loginTwitter.setText( "  Twitter" );
-		loginTwitter.setEnabled( true );
-	}
-
-	public void signedInMode()
-	{
-		( ( TextView ) findViewById( R.id.signTextNewHere ) ).setText( "Hello! Would you like to link additional social accounts?" );
-		( ( TextView ) findViewById( R.id.signTextOrBrowse ) ).setText( "You can also sign-out or go back." );
-
-		findViewById( R.id.signLoginAnonymous ).setVisibility( View.GONE );
-		findViewById( R.id.signLogout ).setVisibility( View.VISIBLE );
-		findViewById( R.id.signSkip ).setVisibility( View.VISIBLE );
-		findViewById( R.id.signDescription ).setVisibility( View.GONE );
-
-		FirebaseUser user = mAuth.getCurrentUser();
-		List<String> providers = user.getProviders();
-
-		loginGoogle.setText( providers.contains( "google.com" ) ? "  Google (Already Linked)" : "  Google" );
-		loginGoogle.setEnabled( !providers.contains( "google.com" ) );
-		// loginFacebook.setText( providers.contains("facebook") ? "  Facebook (Already Linked)" : "  Facebook" );
-		// loginFacebook.setEnabled( !providers.contains("facebook") );
-		// loginTwitter.setText( providers.contains("twitter") ? "  Twitter (Already Linked)" : "  Twitter" );
-		// loginTwitter.setEnabled( !providers.contains("twitter") );
-
-		for ( String provider : user.getProviders() )
-			Log.i( "APP", "Provider: " + provider );
-	}
-
-	public void showProgressDialog()
-	{
-		mDialog = new ProgressDialog( this );
-		mDialog.setCancelable( false );
-		mDialog.setIndeterminate( true );
-		mDialog.setTitle( "Authorizing" );
-		mDialog.setMessage( "Please Wait..." );
-	}
+	private GoogleApiClient mGoogleApi;
+	private GoogleSignInOptions mGoogleOptions;
+	private boolean organic = true;
 
 	public void hideProgressDialog()
 	{
@@ -277,12 +117,6 @@ public class SigninActivity extends Activity implements GoogleApiClient.OnConnec
 	}
 
 	@Override
-	public void onConnectionFailed( @NonNull ConnectionResult connectionResult )
-	{
-
-	}
-
-	@Override
 	public void onAuthStateChanged( @NonNull FirebaseAuth firebaseAuth )
 	{
 		hideProgressDialog();
@@ -294,10 +128,123 @@ public class SigninActivity extends Activity implements GoogleApiClient.OnConnec
 		else
 		{
 			if ( organic )
-				startActivity( new Intent( this, HomeActivity.class ) );
+				startActivity( new Intent( this, DownloadActivity.class ) );
 			else
 				signedInMode();
 		}
+	}
+
+	@Override
+	public void onConnectionFailed( @NonNull ConnectionResult connectionResult )
+	{
+
+	}
+
+	@Override
+	public void onCreate( @Nullable Bundle savedInstanceState )
+	{
+		super.onCreate( savedInstanceState );
+		setContentView( R.layout.activity_signin );
+
+		organic = organicLast;
+		organicLast = false;
+
+		mGoogleOptions = new GoogleSignInOptions.Builder( GoogleSignInOptions.DEFAULT_SIGN_IN ).requestIdToken( "496133665089-evn0i2maaasaugmqcilud7eb7u6dgakm.apps.googleusercontent.com" ).requestEmail().requestProfile().build();
+		mGoogleApi = new GoogleApiClient.Builder( this ).addApi( Auth.GOOGLE_SIGN_IN_API, mGoogleOptions ).build();
+		mAuth = FirebaseAuth.getInstance();
+
+		CallbackManager callbackManager = CallbackManager.Factory.create();
+
+		LoginManager.getInstance().registerCallback( callbackManager, new FacebookCallback<LoginResult>()
+		{
+			@Override
+			public void onCancel()
+			{
+				Toast.makeText( SigninActivity.this, "Login Cancel", Toast.LENGTH_LONG ).show();
+			}
+
+			@Override
+			public void onError( FacebookException exception )
+			{
+				Toast.makeText( SigninActivity.this, exception.getMessage(), Toast.LENGTH_LONG ).show();
+			}
+
+			@Override
+			public void onSuccess( LoginResult loginResult )
+			{
+				Toast.makeText( SigninActivity.this, "Login Success", Toast.LENGTH_LONG ).show();
+			}
+		} );
+
+		loginFacebook = ( Button ) findViewById( R.id.signLoginFacebook );
+		loginFacebook.setOnClickListener( new View.OnClickListener()
+		{
+			@Override
+			public void onClick( View v )
+			{
+				LoginManager.getInstance().logInWithReadPermissions( SigninActivity.this, Arrays.asList( "public_profile", "user_friends" ) );
+			}
+		} );
+
+		loginTwitter = ( Button ) findViewById( R.id.signLoginTwitter );
+		loginTwitter.setOnClickListener( new View.OnClickListener()
+		{
+			@Override
+			public void onClick( View v )
+			{
+
+			}
+		} );
+
+		loginGoogle = ( Button ) findViewById( R.id.signLoginGoogle );
+		loginGoogle.setOnClickListener( new View.OnClickListener()
+		{
+			@Override
+			public void onClick( View v )
+			{
+				Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent( mGoogleApi );
+				startActivityForResult( signInIntent, GOOGLE_SIGNIN );
+			}
+		} );
+
+		Button loginAnonymous = ( Button ) findViewById( R.id.signLoginAnonymous );
+		Button logout = ( Button ) findViewById( R.id.signLogout );
+		Button skip = ( Button ) findViewById( R.id.signSkip );
+
+		loginAnonymous.setOnClickListener( new View.OnClickListener()
+		{
+			@Override
+			public void onClick( View v )
+			{
+				// mAuth.signInAnonymously();
+			}
+		} );
+
+		logout.setOnClickListener( new View.OnClickListener()
+		{
+			@Override
+			public void onClick( View v )
+			{
+				mAuth.signOut();
+				recreate();
+			}
+		} );
+
+		skip.setOnClickListener( new View.OnClickListener()
+		{
+			@Override
+			public void onClick( View v )
+			{
+				startActivity( new Intent( SigninActivity.this, DownloadActivity.class ) );
+			}
+		} );
+
+		if ( mAuth.getCurrentUser() == null )
+			signedOutMode();
+		else if ( mAuth.getCurrentUser() != null && organic )
+			startActivity( new Intent( this, DownloadActivity.class ) );
+		else
+			signedInMode();
 	}
 
 	@Override
@@ -315,5 +262,56 @@ public class SigninActivity extends Activity implements GoogleApiClient.OnConnec
 		super.onStop();
 
 		mAuth.removeAuthStateListener( this );
+	}
+
+	public void showProgressDialog()
+	{
+		mDialog = new ProgressDialog( this );
+		mDialog.setCancelable( false );
+		mDialog.setIndeterminate( true );
+		mDialog.setTitle( "Authorizing" );
+		mDialog.setMessage( "Please Wait..." );
+	}
+
+	public void signedInMode()
+	{
+		( ( TextView ) findViewById( R.id.signTextNewHere ) ).setText( "Hello! Would you like to link additional social accounts?" );
+		( ( TextView ) findViewById( R.id.signTextOrBrowse ) ).setText( "You can also sign-out or go back." );
+
+		findViewById( R.id.signLoginAnonymous ).setVisibility( View.GONE );
+		findViewById( R.id.signLogout ).setVisibility( View.VISIBLE );
+		findViewById( R.id.signSkip ).setVisibility( View.VISIBLE );
+		findViewById( R.id.signDescription ).setVisibility( View.GONE );
+
+		FirebaseUser user = mAuth.getCurrentUser();
+		List<String> providers = user.getProviders();
+
+		loginGoogle.setText( providers.contains( "google.com" ) ? "  Google (Already Linked)" : "  Google" );
+		loginGoogle.setEnabled( !providers.contains( "google.com" ) );
+		// loginFacebook.setText( providers.contains("facebook") ? "  Facebook (Already Linked)" : "  Facebook" );
+		// loginFacebook.setEnabled( !providers.contains("facebook") );
+		// loginTwitter.setText( providers.contains("twitter") ? "  Twitter (Already Linked)" : "  Twitter" );
+		// loginTwitter.setEnabled( !providers.contains("twitter") );
+
+		for ( String provider : user.getProviders() )
+			Log.i( "APP", "Provider: " + provider );
+	}
+
+	public void signedOutMode()
+	{
+		( ( TextView ) findViewById( R.id.signTextNewHere ) ).setText( "New here? Please sign-in with one of the following:" );
+		( ( TextView ) findViewById( R.id.signTextOrBrowse ) ).setText( "or browse anonymously; we won't judge." );
+
+		findViewById( R.id.signLoginAnonymous ).setVisibility( View.VISIBLE );
+		findViewById( R.id.signLogout ).setVisibility( View.GONE );
+		findViewById( R.id.signSkip ).setVisibility( View.GONE );
+		findViewById( R.id.signDescription ).setVisibility( View.VISIBLE );
+
+		loginGoogle.setText( "  Google" );
+		loginGoogle.setEnabled( true );
+		loginFacebook.setText( "  Facebook" );
+		loginFacebook.setEnabled( true );
+		loginTwitter.setText( "  Twitter" );
+		loginTwitter.setEnabled( true );
 	}
 }

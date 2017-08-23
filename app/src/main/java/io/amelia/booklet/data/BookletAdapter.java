@@ -15,27 +15,25 @@ import android.widget.TextView;
 
 import com.ramencon.R;
 
-import org.acra.ACRA;
-
 import java.text.SimpleDateFormat;
 import java.util.List;
 
 import io.amelia.android.data.ImageCache;
 import io.amelia.android.support.ACRAHelper;
 import io.amelia.android.support.DateAndTime;
-import io.amelia.booklet.models.ModelBooklet;
-import io.amelia.booklet.ui.fragments.BootFragment;
+import io.amelia.booklet.Booklet;
+import io.amelia.booklet.ui.activity.DownloadActivity;
 
 public class BookletAdapter extends BaseExpandableListAdapter
 {
-	public List<ModelBooklet> booklets;
+	public List<Booklet> booklets;
 	private LayoutInflater inflater = null;
-	private BootFragment fragment;
+	private DownloadActivity activity;
 
-	public BookletAdapter( BootFragment fragment, List<ModelBooklet> booklets )
+	public BookletAdapter( DownloadActivity activity, List<Booklet> booklets )
 	{
-		this.inflater = ( LayoutInflater ) fragment.getActivity().getSystemService( Context.LAYOUT_INFLATER_SERVICE );
-		this.fragment = fragment;
+		this.inflater = ( LayoutInflater ) activity.getSystemService( Context.LAYOUT_INFLATER_SERVICE );
+		this.activity = activity;
 
 		this.booklets = booklets;
 	}
@@ -85,9 +83,9 @@ public class BookletAdapter extends BaseExpandableListAdapter
 	@Override
 	public View getGroupView( final int position, boolean isExpanded, View convertView, final ViewGroup parent )
 	{
-		View rowView = convertView == null ? inflater.inflate( R.layout.fragment_boot_listitem, null ) : convertView;
+		View rowView = convertView == null ? inflater.inflate( R.layout.activity_download_listitem, null ) : convertView;
 
-		final ModelBooklet booklet = booklets.get( position );
+		final Booklet booklet = booklets.get( position );
 
 		try
 		{
@@ -96,12 +94,12 @@ public class BookletAdapter extends BaseExpandableListAdapter
 			Button booket_info = ( Button ) rowView.findViewById( R.id.booklet_info );
 			FrameLayout booklet_view = ( FrameLayout ) rowView.findViewById( R.id.booklet_view );
 
-			if ( booklet.image == null )
+			if ( booklet.getDataImage() == null )
 				booklet_header.setImageResource( R.drawable.noimagefound );
 			else
 			{
 				booklet_header.setImageResource( R.drawable.loading_image );
-				ImageCache.cacheRemoteImage( parent.getContext(), "booklet-" + booklet.bookletId, ImageCache.REMOTE_IMAGES_URL + "booklet-headers/" + booklet.image, false, new ImageCache.ImageResolveTask.ImageFoundListener()
+				ImageCache.cacheRemoteImage( parent.getContext(), "booklet-" + booklet.getId(), ImageCache.REMOTE_IMAGES_URL + "booklet-headers/" + booklet.getDataImage(), false, new ImageCache.ImageResolveTask.ImageFoundListener()
 				{
 					@Override
 					public void update( Bitmap bitmap )
@@ -112,13 +110,13 @@ public class BookletAdapter extends BaseExpandableListAdapter
 					@Override
 					public void error( Exception exception )
 					{
-						ACRAHelper.handleExceptionOnce( "loading_failure_" + booklet.bookletId + "_" + booklet.image, new RuntimeException( "Failed to load image from server [images/booklet-headers/" + booklet.image + "]", exception ) );
+						ACRAHelper.handleExceptionOnce( "loading_failure_" + booklet.getId() + "_" + booklet.getDataImage(), new RuntimeException( "Failed to load image from server [images/booklet-headers/" + booklet.getDataImage() + "]", exception ) );
 						booklet_header.setImageResource( R.drawable.error );
 					}
 				}, null );
 			}
 
-			booklet_title.setText( booklet.title );
+			booklet_title.setText( booklet.getDataTitle() );
 
 			booket_info.setOnClickListener( new View.OnClickListener()
 			{
@@ -138,7 +136,7 @@ public class BookletAdapter extends BaseExpandableListAdapter
 				@Override
 				public void run()
 				{
-					fragment.onListItemClick( booklet );
+					activity.onListItemClick( booklet );
 				}
 			};
 
@@ -147,7 +145,8 @@ public class BookletAdapter extends BaseExpandableListAdapter
 				@Override
 				public void onClick( View v )
 				{
-					booklet.updateAndOpen( v, false, postTask );
+					activity.onListItemClick( booklet );
+					// booklet.updateAndOpen( v, false, postTask );
 				}
 			} );
 
@@ -156,7 +155,14 @@ public class BookletAdapter extends BaseExpandableListAdapter
 				@Override
 				public boolean onLongClick( View v )
 				{
-					booklet.updateAndOpen( v, true, postTask );
+					/* Open Menu
+					 * -> Open (If READY or OUTDATED)
+					 * -> Delete (If READY or OUTDATED)
+					 * -> Update (If OUTDATED)
+					 * -> Download (If AVAILABLE)
+					 */
+					// booklet.updateAndOpen( v, true, postTask );
+					booklet.goDownload( v );
 					return true;
 				}
 			} );
@@ -164,7 +170,7 @@ public class BookletAdapter extends BaseExpandableListAdapter
 		catch ( Exception e )
 		{
 			e.printStackTrace();
-			ACRA.getErrorReporter().handleException( new RuntimeException( "Failure in booklet: " + booklet.title + " (" + booklet.bookletId + ").", e ) );
+			ACRAHelper.handleExceptionOnce( "booklet-adapter-" + booklet.getId(), new RuntimeException( "Failure in booklet: " + booklet.getDataTitle() + " (" + booklet.getId() + ").", e ) );
 		}
 
 		return rowView;
@@ -175,18 +181,18 @@ public class BookletAdapter extends BaseExpandableListAdapter
 	{
 		try
 		{
-			View childView = convertView == null ? inflater.inflate( R.layout.fragment_boot_listitem_child, null ) : convertView;
+			View childView = convertView == null ? inflater.inflate( R.layout.activity_download_listitem_child, null ) : convertView;
 
-			final ModelBooklet booklet = booklets.get( groupPosition );
+			final Booklet booklet = booklets.get( groupPosition );
 
 			TextView booklet_date = ( TextView ) childView.findViewById( R.id.booklet_date );
 			TextView booklet_location = ( TextView ) childView.findViewById( R.id.booklet_location );
 			TextView booklet_description = ( TextView ) childView.findViewById( R.id.booklet_description );
 
 			SimpleDateFormat date = new SimpleDateFormat( "yyyy-MM-dd" );
-			booklet_date.setText( DateAndTime.formatDateRange( date.parse( booklet.whenFrom ), date.parse( booklet.whenTo ) ) );
-			booklet_location.setText( booklet.where );
-			booklet_description.setText( booklet.description );
+			booklet_date.setText( DateAndTime.formatDateRange( date.parse( booklet.getData().getString( Booklet.KEY_WHEN_FROM ) ), date.parse( booklet.getData().getString( Booklet.KEY_WHEN_TO ) ) ) );
+			booklet_location.setText( booklet.getData().getString( Booklet.KEY_WHERE ) );
+			booklet_description.setText( booklet.getDataDescription() );
 
 			return childView;
 		}
@@ -194,7 +200,7 @@ public class BookletAdapter extends BaseExpandableListAdapter
 		{
 			e.printStackTrace();
 			Snackbar.make( parent, "There was a problem displaying this booklet. The problem was reported to the developer.", Snackbar.LENGTH_LONG ).show();
-			return new View( fragment.getActivity() );
+			return new View( activity );
 		}
 	}
 

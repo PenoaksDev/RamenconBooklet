@@ -2,7 +2,6 @@ package io.amelia.booklet.data.models;
 
 import android.app.Notification;
 
-import com.google.firebase.auth.FirebaseAuth;
 import com.ramencon.R;
 
 import java.util.Date;
@@ -13,41 +12,50 @@ import io.amelia.android.support.DateAndTime;
 import io.amelia.android.support.Strs;
 import io.amelia.booklet.AppService;
 import io.amelia.booklet.data.schedule.ScheduleDataReceiver;
-import io.amelia.booklet.ui.fragments.ScheduleFragment;
+import io.amelia.booklet.ui.activity.ContentActivity;
+import io.amelia.booklet.ui.fragment.ScheduleFragment;
 
 public class ModelEvent
 {
-	public String id;
-	public String title;
 	public String date;
-	public String time;
-	public String duration;
-	public String location;
 	public String description;
+	public String duration;
+	public String id;
+	public String location;
+	public String time;
+	public String title;
 
 	private ConfigurationSection getConfigurationSection()
 	{
-		return DataPersistence.getInstance().config( "users/" + FirebaseAuth.getInstance().getCurrentUser().getUid() + "/events/" + id );
-	}
+		// return DataPersistence.getInstance().config( "users/" + FirebaseAuth.getInstance().getCurrentUser().getUid() + "/events/" + id );
 
-	public boolean isHearted()
-	{
-		return getConfigurationSection().getBoolean( "hearted", false );
-	}
-
-	public void setHearted( boolean hearted )
-	{
-		getConfigurationSection().set( "hearted", hearted );
-	}
-
-	public String getTitle()
-	{
-		return Strs.fixQuotes( title );
+		return null;
 	}
 
 	public String getDescription()
 	{
 		return Strs.fixQuotes( description );
+	}
+
+	public int getDuration()
+	{
+		return Integer.parseInt( duration );
+	}
+
+	public long getEndTime()
+	{
+		return getStartTime() + ( getDuration() * 60 );
+	}
+
+	public ModelLocation getLocation()
+	{
+		return ScheduleFragment.instance().getLocation( location );
+	}
+
+	public Notification getNotification()
+	{
+		ModelLocation mLocation = getLocation();
+		return new Notification.Builder( ContentActivity.instance ).setWhen( getStartTime() ).setContentTitle( "You have an event starting soon!" ).setSmallIcon( R.mipmap.ic_app ).setContentText( title + " starts at " + DateAndTime.now( "h:mm a", getStartTime() ) + ( mLocation == null ? "" : " in " + mLocation.title ) ).build();
 	}
 
 	public Date getStartDate()
@@ -74,19 +82,14 @@ public class ModelEvent
 		}
 	}
 
-	public long getEndTime()
+	public String getTitle()
 	{
-		return getStartTime() + ( getDuration() * 60 );
+		return Strs.fixQuotes( title );
 	}
 
-	public int getDuration()
+	public boolean hasEventPassed()
 	{
-		return Integer.parseInt( duration );
-	}
-
-	public ModelLocation getLocation()
-	{
-		return ScheduleFragment.instance().getLocation( location );
+		return getStartTime() - new Date().getTime() < 0;
 	}
 
 	public boolean hasEventReminderPassed()
@@ -100,14 +103,9 @@ public class ModelEvent
 		return getStartTime() - new Date().getTime() - AppService.getReminderDelay() < 0;
 	}
 
-	public boolean hasEventPassed()
-	{
-		return getStartTime() - new Date().getTime() < 0;
-	}
-
 	public boolean hasTimer()
 	{
-		if ( HomeActivity.instance == null || HomeActivity.instance.service == null )
+		/*if ( ContentActivity.instance == null || ContentActivity.instance.service == null )
 		{
 			PLog.e( "The AppService is not running. Why?" );
 			return false;
@@ -115,42 +113,48 @@ public class ModelEvent
 
 		boolean timer = getConfigurationSection().getBoolean( "timer", false );
 
-		boolean pending = HomeActivity.instance.service.hasPushNotificationPending( id );
+		boolean pending = ContentActivity.instance.service.hasPushNotificationPending( id );
 		boolean pasted = hasEventReminderPassed();
 
 		if ( timer )
 		{
 			if ( pending && pasted )
-				HomeActivity.instance.service.cancelPushNotification( id );
+				ContentActivity.instance.service.cancelPushNotification( id );
 			else if ( !pending && !pasted )
-				HomeActivity.instance.service.schedulePushNotification( this, false );
+				ContentActivity.instance.service.schedulePushNotification( this, false );
 		}
 		else if ( pending )
-			HomeActivity.instance.service.cancelPushNotification( id );
+			ContentActivity.instance.service.cancelPushNotification( id );
 
-		return timer;
+		return timer;*/
+
+		return false;
+	}
+
+	public boolean isHearted()
+	{
+		return getConfigurationSection().getBoolean( "hearted", false );
+	}
+
+	public void setHearted( boolean hearted )
+	{
+		getConfigurationSection().set( "hearted", hearted );
 	}
 
 	public void setTimer( boolean timer )
 	{
-		if ( HomeActivity.instance == null || HomeActivity.instance.service == null )
+		/*if ( ContentActivity.instance == null || ContentActivity.instance.service == null )
 		{
 			PLog.e( "The AppService is not running. Why?" );
 			return;
 		}
 
-		if ( timer && HomeActivity.instance.service.schedulePushNotification( this, true ) )
+		if ( timer && ContentActivity.instance.service.schedulePushNotification( this, true ) )
 			getConfigurationSection().set( "timer", true );
 		else
 		{
-			HomeActivity.instance.service.cancelPushNotification( id );
+			ContentActivity.instance.service.cancelPushNotification( id );
 			getConfigurationSection().set( "timer", false );
-		}
-	}
-
-	public Notification getNotification()
-	{
-		ModelLocation mLocation = getLocation();
-		return new Notification.Builder( HomeActivity.instance ).setWhen( getStartTime() ).setContentTitle( "You have an event starting soon!" ).setSmallIcon( R.mipmap.ic_app ).setContentText( title + " starts at " + DateAndTime.now( "h:mm a", getStartTime() ) + ( mLocation == null ? "" : " in " + mLocation.title ) ).build();
+		}*/
 	}
 }
