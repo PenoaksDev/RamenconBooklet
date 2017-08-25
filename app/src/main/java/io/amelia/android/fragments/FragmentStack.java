@@ -69,7 +69,7 @@ public class FragmentStack
 					save.loadState();
 					states.put( key, save );
 
-					if ( Objs.castToBool( bundle.getString( "visible" ) ) )
+					if ( Objs.castToBoolean( bundle.getString( "visible" ) ) )
 					{
 						PLog.i( "Showing Active Fragment: " + key );
 						save.show( false );

@@ -399,7 +399,7 @@ public class MemorySection implements ConfigurationSection
 					else if ( Long.class.isAssignableFrom( field.getType() ) )
 						field.set( obj, Objs.castToLong( value ) );
 					else if ( Boolean.class.isAssignableFrom( field.getType() ) )
-						field.set( obj, Objs.castToBool( value ) );
+						field.set( obj, Objs.castToBoolean( value ) );
 					else if ( field.get( obj ) == null )
 						Log.e( "Config", "Failed to find a casting for field \"" + entry.getKey() + "\" with type \"" + field.getType() + "\" in object \"" + value.getClass() + "\"." );
 				}

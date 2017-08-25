@@ -12,10 +12,18 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
+import io.amelia.android.data.BoundData;
+import io.amelia.android.data.BoundDataTypeAdapterFactory;
+import io.amelia.android.data.BundleTypeAdapterFactory;
 import io.amelia.booklet.ContentManager;
 
 public class LibAndroid
 {
+	public static Gson getGson()
+	{
+		return new GsonBuilder().registerTypeAdapterFactory( new BundleTypeAdapterFactory() ).registerTypeAdapterFactory( new BoundDataTypeAdapterFactory() ).create();
+	}
+
 	public static boolean haveNetworkConnection()
 	{
 		ConnectivityManager connectivityManager = ( ConnectivityManager ) ContentManager.getApplicationContext().getSystemService( Context.CONNECTIVITY_SERVICE );
@@ -23,22 +31,25 @@ public class LibAndroid
 		return activeNetworkInfo != null && activeNetworkInfo.isConnected();
 	}
 
-	public static Gson getGson()
+	public static BoundData[] readJsonToBoundData( InputStream inputStream ) throws IOException
 	{
-		return new GsonBuilder().registerTypeAdapterFactory( new BundleTypeAdapterFactory() ).create();
+		return readJsonToBoundData( LibIO.inputStream2String( inputStream ) );
 	}
 
-	public static String writeBundleToJson( Bundle bundle )
+	public static BoundData[] readJsonToBoundData( File file ) throws IOException
 	{
-		if ( bundle == null )
+		return readJsonToBoundData( LibIO.readFileToString( file ) );
+	}
+
+	public static BoundData[] readJsonToBoundData( String json )
+	{
+		if ( json == null )
 			return null;
 
-		return getGson().toJson( bundle );
-	}
-
-	public static void writeBundleToJsonFile( Bundle bundle, File file ) throws IOException
-	{
-		LibIO.writeStringToFile( file, writeBundleToJson( bundle ) );
+		if ( json.trim().startsWith( "[" ) )
+			return getGson().fromJson( json, BoundData[].class );
+		else
+			return new BoundData[] {getGson().fromJson( json, BoundData.class )};
 	}
 
 	public static Bundle[] readJsonToBundle( InputStream inputStream ) throws IOException
@@ -60,5 +71,31 @@ public class LibAndroid
 			return getGson().fromJson( json, Bundle[].class );
 		else
 			return new Bundle[] {getGson().fromJson( json, Bundle.class )};
+	}
+
+	public static String writeBoundDataToJson( BoundData bundle )
+	{
+		if ( bundle == null )
+			return null;
+
+		return getGson().toJson( bundle );
+	}
+
+	public static void writeBoundDataToJsonFile( BoundData bundle, File file ) throws IOException
+	{
+		LibIO.writeStringToFile( file, writeBoundDataToJson( bundle ) );
+	}
+
+	public static String writeBundleToJson( Bundle bundle )
+	{
+		if ( bundle == null )
+			return null;
+
+		return getGson().toJson( bundle );
+	}
+
+	public static void writeBundleToJsonFile( Bundle bundle, File file ) throws IOException
+	{
+		LibIO.writeStringToFile( file, writeBundleToJson( bundle ) );
 	}
 }

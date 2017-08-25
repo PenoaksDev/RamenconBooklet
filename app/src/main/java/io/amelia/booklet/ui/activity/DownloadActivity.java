@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
+import io.amelia.android.log.PLog;
 import io.amelia.android.support.DateAndTime;
 import io.amelia.booklet.Booklet;
 import io.amelia.booklet.ContentManager;
@@ -82,7 +83,11 @@ public class DownloadActivity extends AppCompatActivity
 	{
 		super.onStart();
 
+		PLog.i( "Starting DownloadActivity" );
+
 		ContentManager.setDownloadActivity( this );
+
+		updateBookletsView();
 
 		uiUpdater = new UIUpdater();
 		uiUpdater.executeOnExecutor( ContentManager.getExecutorThreadPool() );

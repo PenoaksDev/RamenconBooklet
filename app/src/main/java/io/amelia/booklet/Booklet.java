@@ -1,7 +1,6 @@
 package io.amelia.booklet;
 
 import android.content.SharedPreferences;
-import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.view.View;
@@ -12,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import io.amelia.android.data.BoundData;
+import io.amelia.android.log.PLog;
 import io.amelia.android.support.ACRAHelper;
 import io.amelia.android.support.LibAndroid;
 import okhttp3.Call;
@@ -89,7 +90,7 @@ public class Booklet
 		}
 	}
 
-	Bundle data;
+	BoundData data;
 	/*
 	static Booklet updateOrCreate( Bundle bundle )
 	{
@@ -121,19 +122,23 @@ public class Booklet
 
 	Booklet( String id )
 	{
-		data = new Bundle();
+		data = new BoundData();
 		this.id = id;
 
-		data.putString( KEY_ID, id );
-		data.putLong( KEY_LAST_UPDATED, 0 ); // Force Update
+		PLog.i( "Creating Booklet " + id );
+
+		data.put( KEY_ID, id );
+		data.put( KEY_LAST_UPDATED, 0 ); // Force Update
 
 		goCheckForUpdate();
 	}
 
 	Booklet( File dataFile ) throws IOException
 	{
-		data = LibAndroid.readJsonToBundle( dataFile )[0];
+		data = LibAndroid.readJsonToBoundData( dataFile )[0];
 		id = data.getString( KEY_ID );
+
+		PLog.i( "Loading Booklet " + id + " from file " + dataFile.getAbsolutePath() );
 
 		// Compare directory to provided file. Should this auto-correct?
 		if ( !getDataFile().getAbsolutePath().equals( dataFile.getAbsolutePath() ) )
@@ -145,7 +150,7 @@ public class Booklet
 		lastException = null;
 	}
 
-	public Bundle getData()
+	public BoundData getData()
 	{
 		return data;
 	}
@@ -203,7 +208,7 @@ public class Booklet
 			return BookletState.BUSY;
 		if ( isDownloaded() )
 		{
-			if ( data.getBoolean( KEY_OUTDATED ) )
+			if ( data.getBoolean( KEY_OUTDATED, false ) )
 				return BookletState.OUTDATED;
 			return BookletState.READY;
 		}
@@ -233,15 +238,15 @@ public class Booklet
 			{
 				try
 				{
-					Bundle responseBundle = LibAndroid.readJsonToBundle( response.body().string() )[0];
+					BoundData responseBundle = LibAndroid.readJsonToBoundData( response.body().string() )[0];
 
-					if ( responseBundle.getBundle( "details" ).getInt( "code" ) == 0 )
+					if ( responseBundle.getBoundData( "details" ).getInt( "code" ) == 0 )
 					{
 						showError();
 						return;
 					}
 
-					Bundle bundle = responseBundle.getBundle( "bundle" );
+					BoundData bundle = responseBundle.getBoundData( "data" );
 
 					if ( !bundle.containsKey( KEY_ID ) || !bundle.containsKey( KEY_LAST_UPDATED ) )
 						throw new IllegalArgumentException( "Bundle is missing essential keys" );
@@ -250,11 +255,11 @@ public class Booklet
 						throw new IllegalArgumentException( "Booklet Id Mismatch!" );
 
 					if ( isDownloaded() )
-						data.putBoolean( KEY_OUTDATED, bundle.getLong( KEY_LAST_UPDATED ) < bundle.getLong( KEY_LAST_UPDATED ) );
+						data.put( KEY_OUTDATED, bundle.getLong( KEY_LAST_UPDATED ) < bundle.getLong( KEY_LAST_UPDATED ) );
 					else
 					{
 						data.putAll( bundle );
-						data.putLong( KEY_LAST_UPDATED, 0 ); // Never Downloaded
+						data.put( KEY_LAST_UPDATED, 0 ); // Never Downloaded
 					}
 
 					// TODO An auto-update setting?
@@ -322,7 +327,9 @@ public class Booklet
 	{
 		try
 		{
-			LibAndroid.writeBundleToJsonFile( data, getDataFile() );
+			File dataFile = getDataFile();
+			dataFile.getParentFile().mkdirs();
+			LibAndroid.writeBoundDataToJsonFile( data, dataFile );
 		}
 		catch ( IOException e )
 		{

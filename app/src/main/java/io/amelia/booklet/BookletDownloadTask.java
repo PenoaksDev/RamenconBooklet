@@ -1,7 +1,6 @@
 package io.amelia.booklet;
 
 import android.os.AsyncTask;
-import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.view.View;
 import android.widget.ProgressBar;
@@ -13,10 +12,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.amelia.android.data.BoundData;
 import io.amelia.android.data.OkHttpProgress;
 import io.amelia.android.log.PLog;
 import io.amelia.android.support.LibAndroid;
-import io.amelia.android.support.LibIO;
 import io.amelia.android.support.Objs;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -32,7 +31,7 @@ class BookletDownloadTask
 	List<FileDownload> pendingFiles = new ArrayList<>();
 	String response;
 	private InternalDownloadTask internalDownloadTask = null;
-	private Bundle updatedData;
+	private BoundData updatedData;
 
 	public BookletDownloadTask( final Booklet booklet, final View view ) throws UpdateAbortException
 	{
@@ -40,6 +39,7 @@ class BookletDownloadTask
 
 		BookletState bookletState = booklet.getState();
 		final String bookletId = booklet.getId();
+		final String url = ContentManager.REMOTE_CATALOG_URL + bookletId;
 
 		if ( bookletState == BookletState.BUSY )
 			if ( view == null )
@@ -65,7 +65,7 @@ class BookletDownloadTask
 		this.booklet = booklet;
 
 		OkHttpClient client = new OkHttpClient();
-		Request request = new Request.Builder().url( ContentManager.REMOTE_CATALOG_URL + bookletId ).build();
+		Request request = new Request.Builder().url( url ).build();
 		client.newCall( request ).enqueue( new Callback()
 		{
 			@Override
@@ -77,17 +77,23 @@ class BookletDownloadTask
 			@Override
 			public void onResponse( Call call, Response response ) throws IOException
 			{
-				Bundle bundle = LibAndroid.readJsonToBundle( response.body().string() )[0];
-
-				if ( bundle.getBundle( "details" ).getInt( "code" ) == 0 )
+				if ( response.code() != 200 )
 				{
-					booklet.handleException( new RuntimeException( "The URL " + ContentManager.REMOTE_DATA_URL + bookletId + "returned code 0, failure." ) );
+					booklet.handleException( new RuntimeException( "The URL " + url + " returned HTTP code " + response.code() + ", failure." ) );
 					return;
 				}
 
-				updatedData = bundle.getBundle( "data" );
+				BoundData data = LibAndroid.readJsonToBoundData( response.body().string() )[0];
 
-				ArrayList<String> files = updatedData.getStringArrayList( Booklet.KEY_FILES );
+				if ( data.getBoundData( "details" ).getInt( "code" ) == 0 )
+				{
+					booklet.handleException( new RuntimeException( "The URL " + url + " returned code 0, failure." ) );
+					return;
+				}
+
+				updatedData = data.getBoundData( "data" );
+
+				List<String> files = updatedData.getStringList( Booklet.KEY_FILES );
 
 				synchronized ( pendingFiles )
 				{
@@ -155,14 +161,29 @@ class BookletDownloadTask
 					public void onFailure( Call call, IOException exception )
 					{
 						booklet.handleException( exception );
-
 						fileDownload.error = true;
 					}
 
 					@Override
 					public void onResponse( Call call, Response response ) throws IOException
 					{
-						LibIO.writeStringToFile( fileDownload.localFile, response.body().string() );
+						if ( response.code() != 200 )
+						{
+							booklet.handleException( new RuntimeException( "The URL " + fileDownload.remoteFile + " returned code " + response.code() + ", failure." ) );
+							fileDownload.error = true;
+							return;
+						}
+
+						BoundData data = LibAndroid.readJsonToBoundData( response.body().string() )[0];
+						PLog.i( "Data: " + data );
+
+						if ( data.getBoundData( "details" ).getInt( "code" ) == 0 )
+						{
+							booklet.handleException( new RuntimeException( "The URL " + fileDownload.remoteFile + " returned code 0, failure." ) );
+							return;
+						}
+
+						LibAndroid.writeBoundDataToJsonFile( data, fileDownload.localFile );
 					}
 				} );
 
@@ -170,6 +191,8 @@ class BookletDownloadTask
 
 			for ( ; ; )
 			{
+				PLog.i( "Waiting for files to finish!" );
+
 				boolean allDone = true;
 
 				for ( final FileDownload fileDownload : pendingFiles )
@@ -222,8 +245,11 @@ class BookletDownloadTask
 
 				for ( FileDownload fileDownload : pendingFiles )
 				{
-					int percent = ( int ) ( 100 * ( fileDownload.bytesRead / fileDownload.contentLength ) );
-					average = average + percent;
+					if ( fileDownload.contentLength > 0 )
+					{
+						int percent = ( int ) ( 100 * ( fileDownload.bytesRead / fileDownload.contentLength ) );
+						average = average + percent;
+					}
 
 					if ( !fileDownload.done )
 						isDone = false;
