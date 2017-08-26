@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.ramencon.R;
+import io.amelia.R;
 
 public class WelcomeFragment extends Fragment
 {

@@ -9,7 +9,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import io.amelia.android.support.LibAndroid;
-import io.amelia.booklet.ui.activity.DownloadActivity;
+import io.amelia.booklet.ui.fragment.DownloadFragment;
 
 public class ContentManager
 {
@@ -22,7 +22,7 @@ public class ContentManager
 	private static File cacheDir;
 	private static boolean contentManagerReady = false;
 	private static Context context;
-	private static DownloadActivity downloadActivity;
+	private static DownloadFragment downloadFragment;
 
 	public static Booklet getActiveBooklet()
 	{
@@ -53,14 +53,14 @@ public class ContentManager
 		return cacheDir;
 	}
 
-	public static DownloadActivity getDownloadActivity()
+	public static DownloadFragment getDownloadFragment()
 	{
-		return downloadActivity;
+		return downloadFragment;
 	}
 
-	public static void setDownloadActivity( DownloadActivity downloadActivity )
+	public static void setDownloadFragment( DownloadFragment downloadFragment )
 	{
-		ContentManager.downloadActivity = downloadActivity;
+		ContentManager.downloadFragment = downloadFragment;
 
 		refreshBooklets();
 	}
@@ -79,7 +79,7 @@ public class ContentManager
 	{
 		if ( !LibAndroid.haveNetworkConnection() )
 		{
-			downloadActivity.showErrorDialog( "We could not find an active internet connection. Please turn on data or connect to WiFi." );
+			downloadFragment.showErrorDialog( "We could not find an active internet connection. Please turn on data or connect to WiFi." );
 			return;
 		}
 

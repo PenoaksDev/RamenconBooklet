@@ -8,8 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ExpandableListView;
 
-import com.ramencon.R;
-
+import io.amelia.R;
 import io.amelia.android.configuration.ConfigurationSection;
 import io.amelia.android.data.DataAwareFragment;
 import io.amelia.android.fragments.PersistentFragment;
@@ -34,6 +33,12 @@ public class GuestFragment extends DataAwareFragment<GuestDataReceiver> implemen
 	}
 
 	@Override
+	public void loadState( Bundle bundle )
+	{
+		this.savedState = bundle;
+	}
+
+	@Override
 	public void onCreate( Bundle savedInstanceState )
 	{
 		super.onCreate( savedInstanceState );
@@ -42,9 +47,9 @@ public class GuestFragment extends DataAwareFragment<GuestDataReceiver> implemen
 	}
 
 	@Override
-	protected void onDataUpdate( ConfigurationSection data )
+	public View onCreateView( LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState )
 	{
-
+		return inflater.inflate( R.layout.fragment_guests, container, false );
 	}
 
 	@Override
@@ -72,12 +77,24 @@ public class GuestFragment extends DataAwareFragment<GuestDataReceiver> implemen
 	}
 
 	@Override
+	protected void onDataUpdate( ConfigurationSection data )
+	{
+
+	}
+
+	@Override
 	public void onRefresh()
 	{
 		savedState = new Bundle();
 		saveState( savedState );
 
 		super.refreshData();
+	}
+
+	@Override
+	public void refreshState()
+	{
+		onRefresh();
 	}
 
 	@Override
@@ -94,23 +111,5 @@ public class GuestFragment extends DataAwareFragment<GuestDataReceiver> implemen
 			bundle.putInt( "listViewPositionVisible", lv.getFirstVisiblePosition() );
 			bundle.putInt( "listViewPositionOffset", lv.getChildAt( 0 ) == null ? 0 : lv.getChildAt( 0 ).getTop() - lv.getPaddingTop() );
 		}
-	}
-
-	@Override
-	public void loadState( Bundle bundle )
-	{
-		this.savedState = bundle;
-	}
-
-	@Override
-	public void refreshState()
-	{
-		onRefresh();
-	}
-
-	@Override
-	public View onCreateView( LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState )
-	{
-		return inflater.inflate( R.layout.fragment_guests, container, false );
 	}
 }

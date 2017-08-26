@@ -274,8 +274,8 @@ public class Booklet
 
 			void showError()
 			{
-				if ( ContentManager.getDownloadActivity() != null )
-					Snackbar.make( ContentManager.getDownloadActivity().getCurrentFocus(), "Booklet " + id + " failed to retrieve an update.", Snackbar.LENGTH_LONG ).show();
+				if ( ContentManager.getDownloadFragment() != null )
+					Snackbar.make( ContentManager.getDownloadFragment().getActivity().getCurrentFocus(), "Booklet " + id + " failed to retrieve an update.", Snackbar.LENGTH_LONG ).show();
 			}
 		} );
 	}
@@ -302,8 +302,8 @@ public class Booklet
 
 		lastException = e;
 
-		if ( ContentManager.getDownloadActivity() != null )
-			Snackbar.make( ContentManager.getDownloadActivity().getCurrentFocus(), e.getMessage(), Snackbar.LENGTH_LONG ).show();
+		if ( ContentManager.getDownloadFragment() != null )
+			Snackbar.make( ContentManager.getDownloadFragment().getActivity().getCurrentFocus(), e.getMessage(), Snackbar.LENGTH_LONG ).show();
 	}
 
 	/**

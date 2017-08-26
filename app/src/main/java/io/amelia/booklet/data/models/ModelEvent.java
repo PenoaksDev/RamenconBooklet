@@ -2,10 +2,9 @@ package io.amelia.booklet.data.models;
 
 import android.app.Notification;
 
-import com.ramencon.R;
-
 import java.util.Date;
 
+import io.amelia.R;
 import io.amelia.android.configuration.ConfigurationSection;
 import io.amelia.android.log.PLog;
 import io.amelia.android.support.DateAndTime;

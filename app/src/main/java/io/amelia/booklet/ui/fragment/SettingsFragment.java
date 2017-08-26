@@ -11,11 +11,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.ramencon.R;
-
+import io.amelia.R;
 import io.amelia.booklet.ui.activity.ContentActivity;
 
-@Deprecated
 public class SettingsFragment extends PreferenceFragment
 {
 	public static SettingsFragment instance()
@@ -93,7 +91,7 @@ public class SettingsFragment extends PreferenceFragment
 	@Override
 	public View onCreateView( LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState )
 	{
-		getActivity().setTitle( "Settings" );
+		getActivity().setTitle( "App Settings" );
 
 		return super.onCreateView( inflater, container, savedInstanceState );
 	}

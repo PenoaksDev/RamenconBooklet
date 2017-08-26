@@ -14,8 +14,8 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.ramencon.R;
 
+import io.amelia.R;
 import io.amelia.android.fragments.FragmentStack;
 import io.amelia.android.log.PLog;
 import io.amelia.booklet.ui.fragment.GuestFragment;
@@ -76,7 +76,8 @@ public class ContentActivity extends AppCompatActivity
 	@Override
 	protected void onCreate( Bundle savedInstanceState )
 	{
-		PLog.i( "BootActivity.onCreate() (" + hashCode() + ") " + savedInstanceState );
+		PLog.i( "ContentActivity.onCreate() (" + hashCode() + ") " + savedInstanceState );
+
 		this.savedInstanceState = savedInstanceState;
 
 		super.onCreate( savedInstanceState );

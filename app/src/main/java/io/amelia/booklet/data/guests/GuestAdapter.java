@@ -9,13 +9,11 @@ import android.widget.BaseExpandableListAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.ramencon.R;
-
 import java.util.List;
 
+import io.amelia.R;
 import io.amelia.android.data.ImageCache;
 import io.amelia.android.support.ACRAHelper;
-import io.amelia.booklet.ContentManager;
 import io.amelia.booklet.data.models.ModelGroup;
 import io.amelia.booklet.data.models.ModelGuest;
 import io.amelia.booklet.ui.activity.ContentActivity;
@@ -23,9 +21,8 @@ import io.amelia.booklet.ui.fragment.GuestViewFragment;
 
 public class GuestAdapter extends BaseExpandableListAdapter
 {
-	private LayoutInflater inflater = null;
 	private Context context;
-
+	private LayoutInflater inflater = null;
 	private List<ModelGroup> list;
 
 	public GuestAdapter( Context context, List<ModelGroup> list )
@@ -38,56 +35,15 @@ public class GuestAdapter extends BaseExpandableListAdapter
 	}
 
 	@Override
-	public int getGroupCount()
-	{
-		return list.size();
-	}
-
-	@Override
-	public int getChildrenCount( int groupPosition )
-	{
-		List<ModelGuest> guests = list.get( groupPosition ).children;
-		return guests == null ? 0 : guests.size();
-	}
-
-	@Override
-	public Object getGroup( int groupPosition )
-	{
-		return groupPosition;
-	}
-
-	@Override
 	public Object getChild( int groupPosition, int childPosition )
 	{
 		return childPosition;
 	}
 
 	@Override
-	public long getGroupId( int groupPosition )
-	{
-		return groupPosition;
-	}
-
-	@Override
 	public long getChildId( int groupPosition, int childPosition )
 	{
 		return childPosition;
-	}
-
-	@Override
-	public boolean hasStableIds()
-	{
-		return false;
-	}
-
-	@Override
-	public View getGroupView( int groupPosition, boolean isExpanded, View convertView, ViewGroup parent )
-	{
-		View group = convertView == null ? inflater.inflate( R.layout.fragment_guest_listheader, null ) : convertView;
-
-		( ( TextView ) group.findViewById( R.id.group_title ) ).setText( list.get( groupPosition ).title );
-
-		return group;
 	}
 
 	@Override
@@ -111,16 +67,16 @@ public class GuestAdapter extends BaseExpandableListAdapter
 			ImageCache.cacheRemoteImage( context, "guest-" + guest.id, ImageCache.REMOTE_IMAGES_URL + "guests/" + group.id + "/" + guest.image, false, new ImageCache.ImageResolveTask.ImageFoundListener()
 			{
 				@Override
-				public void update( Bitmap bitmap )
-				{
-					iv_thumbnail.setImageBitmap( bitmap );
-				}
-
-				@Override
 				public void error( Exception exception )
 				{
 					ACRAHelper.handleExceptionOnce( "loading_failure_" + group.id + "_" + guest.image, new RuntimeException( "Failed to load image from Google Firebase [images/guests/" + group.id + "/" + guest.image + "]", exception ) );
 					iv_thumbnail.setImageResource( R.drawable.error );
+				}
+
+				@Override
+				public void update( Bitmap bitmap )
+				{
+					iv_thumbnail.setImageBitmap( bitmap );
 				}
 			}, null );
 		}
@@ -140,13 +96,54 @@ public class GuestAdapter extends BaseExpandableListAdapter
 	}
 
 	@Override
-	public boolean isChildSelectable( int groupPosition, int childPosition )
+	public int getChildrenCount( int groupPosition )
 	{
-		return true;
+		List<ModelGuest> guests = list.get( groupPosition ).children;
+		return guests == null ? 0 : guests.size();
+	}
+
+	@Override
+	public Object getGroup( int groupPosition )
+	{
+		return groupPosition;
+	}
+
+	@Override
+	public int getGroupCount()
+	{
+		return list.size();
+	}
+
+	@Override
+	public long getGroupId( int groupPosition )
+	{
+		return groupPosition;
+	}
+
+	@Override
+	public View getGroupView( int groupPosition, boolean isExpanded, View convertView, ViewGroup parent )
+	{
+		View group = convertView == null ? inflater.inflate( R.layout.fragment_guest_listheader, null ) : convertView;
+
+		( ( TextView ) group.findViewById( R.id.group_title ) ).setText( list.get( groupPosition ).title );
+
+		return group;
 	}
 
 	public ModelGroup getListGroup( int groupPosition )
 	{
 		return list.get( groupPosition );
+	}
+
+	@Override
+	public boolean hasStableIds()
+	{
+		return false;
+	}
+
+	@Override
+	public boolean isChildSelectable( int groupPosition, int childPosition )
+	{
+		return true;
 	}
 }

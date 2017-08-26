@@ -4,6 +4,7 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item>
     </style>
 
     <style name="AppTheme.Dark" parent="Theme.AppCompat">
@@ -11,6 +12,7 @@
         <item name="colorPrimary">#ff1b1b1b</item>
         <item name="colorPrimaryDark">#ff000000</item>
         <item name="colorAccent">#ffeeeeee</item>
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item>
     </style>
 
     <style name="AppTheme.NoActionBar" parent="AppTheme">

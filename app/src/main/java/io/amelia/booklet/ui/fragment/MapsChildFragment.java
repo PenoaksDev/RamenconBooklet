@@ -10,24 +10,39 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.ramencon.R;
-
 import org.acra.ACRA;
 
 import java.util.List;
 
+import io.amelia.R;
 import io.amelia.android.data.ImageCache;
-import io.amelia.booklet.data.models.ModelMap;
 import io.amelia.android.ui.widget.TouchImageView;
+import io.amelia.booklet.data.models.ModelMap;
 
 public class MapsChildFragment extends Fragment implements ImageCache.ImageResolveTask.ImageFoundListener, ImageCache.ImageResolveTask.ImageProgressListener
 {
 	public static List<ModelMap> maps;
-
-	private ProgressBar progressBar = null;
 	private TouchImageView image;
-	private ModelMap map;
 	private boolean isRefresh;
+	private ModelMap map;
+	private ProgressBar progressBar = null;
+
+	@Override
+	public void error( Exception exception )
+	{
+		if ( image != null )
+			image.setImageResource( R.drawable.error );
+
+		ACRA.getErrorReporter().handleException( new RuntimeException( "Recoverable Exception", exception ) );
+		Toast.makeText( getContext(), "We had a problem loading the map. The problem was reported to the developer.", Toast.LENGTH_LONG ).show();
+	}
+
+	@Override
+	public void finish()
+	{
+		if ( progressBar != null )
+			progressBar.setVisibility( View.GONE );
+	}
 
 	@Override
 	public void onCreate( Bundle savedInstanceState )
@@ -69,19 +84,13 @@ public class MapsChildFragment extends Fragment implements ImageCache.ImageResol
 	}
 
 	@Override
-	public void update( Bitmap bitmap )
+	public void progress( long bytesTransferred, long totalByteCount )
 	{
-		image.setImageBitmap( bitmap );
-	}
-
-	@Override
-	public void error( Exception exception )
-	{
-		if ( image != null )
-			image.setImageResource( R.drawable.error );
-
-		ACRA.getErrorReporter().handleException( new RuntimeException( "Recoverable Exception", exception ) );
-		Toast.makeText( getContext(), "We had a problem loading the map. The problem was reported to the developer.", Toast.LENGTH_LONG ).show();
+		if ( progressBar != null )
+		{
+			progressBar.setMax( ( int ) totalByteCount );
+			progressBar.setProgress( ( int ) bytesTransferred );
+		}
 	}
 
 	@Override
@@ -95,19 +104,8 @@ public class MapsChildFragment extends Fragment implements ImageCache.ImageResol
 	}
 
 	@Override
-	public void progress( long bytesTransferred, long totalByteCount )
+	public void update( Bitmap bitmap )
 	{
-		if ( progressBar != null )
-		{
-			progressBar.setMax( ( int ) totalByteCount );
-			progressBar.setProgress( ( int ) bytesTransferred );
-		}
-	}
-
-	@Override
-	public void finish()
-	{
-		if ( progressBar != null )
-			progressBar.setVisibility( View.GONE );
+		image.setImageBitmap( bitmap );
 	}
 }

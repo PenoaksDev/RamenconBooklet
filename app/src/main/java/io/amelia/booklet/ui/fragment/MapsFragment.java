@@ -14,18 +14,17 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.ramencon.R;
-
 import org.lucasr.twowayview.TwoWayView;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import io.amelia.R;
 import io.amelia.android.configuration.ConfigurationSection;
 import io.amelia.android.data.DataAwareFragment;
 import io.amelia.android.fragments.PersistentFragment;
-import io.amelia.booklet.data.maps.MapsDataReceiver;
 import io.amelia.android.ui.widget.TouchImageView;
+import io.amelia.booklet.data.maps.MapsDataReceiver;
 
 public class MapsFragment extends DataAwareFragment<MapsDataReceiver> implements PersistentFragment
 {
@@ -37,9 +36,8 @@ public class MapsFragment extends DataAwareFragment<MapsDataReceiver> implements
 			instance = new MapsFragment();
 		return instance;
 	}
-
-	private ViewPager mViewPager;
 	private TwoWayView mTwoWayView;
+	private ViewPager mViewPager;
 	private Bundle savedState = null;
 	private int selectedPosition = 0;
 
@@ -47,6 +45,12 @@ public class MapsFragment extends DataAwareFragment<MapsDataReceiver> implements
 	{
 		instance = this;
 		setReceiver( new MapsDataReceiver() );
+	}
+
+	@Override
+	public void loadState( Bundle bundle )
+	{
+		this.savedState = bundle;
 	}
 
 	@Override
@@ -61,12 +65,6 @@ public class MapsFragment extends DataAwareFragment<MapsDataReceiver> implements
 	public View onCreateView( LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState )
 	{
 		return inflater.inflate( R.layout.fragment_maps, container, false );
-	}
-
-	@Override
-	protected void onDataUpdate( ConfigurationSection data )
-	{
-
 	}
 
 	@Override
@@ -86,6 +84,12 @@ public class MapsFragment extends DataAwareFragment<MapsDataReceiver> implements
 		mViewPager.addOnPageChangeListener( new ViewPager.OnPageChangeListener()
 		{
 			@Override
+			public void onPageScrollStateChanged( int state )
+			{
+
+			}
+
+			@Override
 			public void onPageScrolled( int position, float positionOffset, int positionOffsetPixels )
 			{
 
@@ -101,28 +105,13 @@ public class MapsFragment extends DataAwareFragment<MapsDataReceiver> implements
 				if ( mViewPager.getChildAt( position ) != null )
 					( ( TouchImageView ) mViewPager.getChildAt( position ).findViewById( R.id.maps_image ) ).resetZoom();
 			}
-
-			@Override
-			public void onPageScrollStateChanged( int state )
-			{
-
-			}
 		} );
 	}
 
 	@Override
-	public void saveState( Bundle bundle )
+	protected void onDataUpdate( ConfigurationSection data )
 	{
-		if ( getView() == null )
-			return;
 
-		bundle.putInt( "selectedPosition", mViewPager.getCurrentItem() );
-	}
-
-	@Override
-	public void loadState( Bundle bundle )
-	{
-		this.savedState = bundle;
 	}
 
 	@Override
@@ -134,45 +123,13 @@ public class MapsFragment extends DataAwareFragment<MapsDataReceiver> implements
 		refreshData();
 	}
 
-	public class ViewPagerAdapter extends FragmentStatePagerAdapter
+	@Override
+	public void saveState( Bundle bundle )
 	{
-		private final List<Integer> refreshed = new ArrayList<>();
-		private boolean isRefresh;
+		if ( getView() == null )
+			return;
 
-		public ViewPagerAdapter( FragmentManager fm, boolean isRefresh )
-		{
-			super( fm );
-			this.isRefresh = isRefresh;
-		}
-
-		public boolean isRefresh( int position )
-		{
-			if ( refreshed.contains( position ) )
-				return false;
-
-			refreshed.add( position );
-			return isRefresh;
-		}
-
-		@Override
-		public Fragment getItem( int position )
-		{
-			MapsChildFragment.maps = receiver.maps;
-
-			Bundle bundle = new Bundle();
-			bundle.putInt( "index", position );
-			bundle.putBoolean( "isRefresh", isRefresh( position ) );
-
-			MapsChildFragment frag = new MapsChildFragment();
-			frag.setArguments( bundle );
-			return frag;
-		}
-
-		@Override
-		public int getCount()
-		{
-			return receiver.maps.size();
-		}
+		bundle.putInt( "selectedPosition", mViewPager.getCurrentItem() );
 	}
 
 	public class PagedListAdapater extends BaseAdapter
@@ -241,6 +198,47 @@ public class MapsFragment extends DataAwareFragment<MapsDataReceiver> implements
 			} );
 
 			return tv;
+		}
+	}
+
+	public class ViewPagerAdapter extends FragmentStatePagerAdapter
+	{
+		private final List<Integer> refreshed = new ArrayList<>();
+		private boolean isRefresh;
+
+		public ViewPagerAdapter( FragmentManager fm, boolean isRefresh )
+		{
+			super( fm );
+			this.isRefresh = isRefresh;
+		}
+
+		@Override
+		public int getCount()
+		{
+			return receiver.maps.size();
+		}
+
+		@Override
+		public Fragment getItem( int position )
+		{
+			MapsChildFragment.maps = receiver.maps;
+
+			Bundle bundle = new Bundle();
+			bundle.putInt( "index", position );
+			bundle.putBoolean( "isRefresh", isRefresh( position ) );
+
+			MapsChildFragment frag = new MapsChildFragment();
+			frag.setArguments( bundle );
+			return frag;
+		}
+
+		public boolean isRefresh( int position )
+		{
+			if ( refreshed.contains( position ) )
+				return false;
+
+			refreshed.add( position );
+			return isRefresh;
 		}
 	}
 }

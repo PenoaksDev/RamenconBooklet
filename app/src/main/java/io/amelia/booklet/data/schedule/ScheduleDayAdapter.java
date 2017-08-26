@@ -9,8 +9,6 @@ import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.ramencon.R;
-
 import org.lucasr.twowayview.TwoWayView;
 
 import java.text.ParseException;
@@ -18,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import io.amelia.R;
 import io.amelia.android.support.DateAndTime;
 import io.amelia.booklet.ContentManager;
 import io.amelia.booklet.data.models.ModelEvent;
@@ -157,7 +156,7 @@ public class ScheduleDayAdapter extends BaseAdapter
 
 		ScheduleDayAdapter.this.selectedPosition = position;
 
-		mListView.setAdapter( new ScheduleAdapter( ContentManager.getDownloadActivity(), mScheduleDataReceiver.simpleDateFormat(), mScheduleDataReceiver.simpleTimeFormat(), mScheduleDataReceiver.locations, data ) );
+		mListView.setAdapter( new ScheduleAdapter( ContentManager.getDownloadFragment().getActivity(), mScheduleDataReceiver.simpleDateFormat(), mScheduleDataReceiver.simpleTimeFormat(), mScheduleDataReceiver.locations, data ) );
 
 		for ( int i = 0; i < mDayView.getChildCount(); i++ )
 			if ( i != position )

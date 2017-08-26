@@ -9,12 +9,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.ramencon.R;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import io.amelia.R;
 import io.amelia.booklet.data.models.ModelEvent;
 import io.amelia.booklet.data.schedule.ScheduleAdapter;
 

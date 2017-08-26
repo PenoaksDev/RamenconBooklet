@@ -13,8 +13,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.ramencon.R;
-
 import org.acra.ACRA;
 
 import java.text.ParseException;
@@ -22,6 +20,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import io.amelia.R;
 import io.amelia.android.log.PLog;
 import io.amelia.booklet.data.models.ModelEvent;
 import io.amelia.booklet.data.models.ModelLocation;

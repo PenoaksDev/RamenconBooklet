@@ -11,10 +11,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.ramencon.R;
-
 import org.acra.ACRA;
 
+import io.amelia.R;
 import io.amelia.android.data.ImageCache;
 import io.amelia.booklet.data.guests.GuestDataReceiver;
 import io.amelia.booklet.data.models.ModelGroup;
@@ -32,7 +31,18 @@ public class GuestViewFragment extends Fragment implements ImageCache.ImageResol
 		frag.setArguments( bundle );
 		return frag;
 	}
+
 	private ImageView image;
+
+	@Override
+	public void error( Exception exception )
+	{
+		if ( image != null )
+			image.setImageResource( R.drawable.error );
+
+		ACRA.getErrorReporter().handleException( new RuntimeException( "Recoverable Exception", exception ) );
+		Toast.makeText( getContext(), "We had a problem loading the guest image. The problem was reported to the developer.", Toast.LENGTH_LONG ).show();
+	}
 
 	@Override
 	public View onCreateView( LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState )
@@ -74,15 +84,5 @@ public class GuestViewFragment extends Fragment implements ImageCache.ImageResol
 	{
 		if ( image != null )
 			image.setImageBitmap( bitmap );
-	}
-
-	@Override
-	public void error( Exception exception )
-	{
-		if ( image != null )
-			image.setImageResource( R.drawable.error );
-
-		ACRA.getErrorReporter().handleException( new RuntimeException( "Recoverable Exception", exception ) );
-		Toast.makeText( getContext(), "We had a problem loading the guest image. The problem was reported to the developer.", Toast.LENGTH_LONG ).show();
 	}
 }

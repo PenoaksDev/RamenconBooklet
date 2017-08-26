@@ -13,47 +13,34 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.ramencon.R;
-
 import java.text.SimpleDateFormat;
 import java.util.List;
 
+import io.amelia.R;
 import io.amelia.android.data.ImageCache;
 import io.amelia.android.support.ACRAHelper;
 import io.amelia.android.support.DateAndTime;
 import io.amelia.booklet.Booklet;
-import io.amelia.booklet.ui.activity.DownloadActivity;
+import io.amelia.booklet.ui.fragment.DownloadFragment;
 
 public class BookletAdapter extends BaseExpandableListAdapter
 {
 	public List<Booklet> booklets;
+	private Context context;
 	private LayoutInflater inflater = null;
-	private DownloadActivity activity;
 
-	public BookletAdapter( DownloadActivity activity, List<Booklet> booklets )
+	public BookletAdapter( Context context, List<Booklet> booklets )
 	{
-		this.inflater = ( LayoutInflater ) activity.getSystemService( Context.LAYOUT_INFLATER_SERVICE );
-		this.activity = activity;
+		this.inflater = ( LayoutInflater ) context.getSystemService( Context.LAYOUT_INFLATER_SERVICE );
+		this.context = context;
 
 		this.booklets = booklets;
 	}
 
 	@Override
-	public int getGroupCount()
+	public boolean areAllItemsEnabled()
 	{
-		return booklets.size();
-	}
-
-	@Override
-	public int getChildrenCount( int groupPosition )
-	{
-		return 1;
-	}
-
-	@Override
-	public Object getGroup( int groupPosition )
-	{
-		return groupPosition;
+		return true;
 	}
 
 	@Override
@@ -63,21 +50,73 @@ public class BookletAdapter extends BaseExpandableListAdapter
 	}
 
 	@Override
-	public long getGroupId( int groupPosition )
-	{
-		return groupPosition;
-	}
-
-	@Override
 	public long getChildId( int groupPosition, int childPosition )
 	{
 		return childPosition;
 	}
 
 	@Override
-	public boolean hasStableIds()
+	public View getChildView( int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent )
 	{
-		return false;
+		try
+		{
+			View childView = convertView == null ? inflater.inflate( R.layout.activity_download_listitem_child, null ) : convertView;
+
+			final Booklet booklet = booklets.get( groupPosition );
+
+			TextView booklet_date = ( TextView ) childView.findViewById( R.id.booklet_date );
+			TextView booklet_location = ( TextView ) childView.findViewById( R.id.booklet_location );
+			TextView booklet_description = ( TextView ) childView.findViewById( R.id.booklet_description );
+
+			SimpleDateFormat date = new SimpleDateFormat( "yyyy-MM-dd" );
+			booklet_date.setText( DateAndTime.formatDateRange( date.parse( booklet.getData().getString( Booklet.KEY_WHEN_FROM ) ), date.parse( booklet.getData().getString( Booklet.KEY_WHEN_TO ) ) ) );
+			booklet_location.setText( booklet.getData().getString( Booklet.KEY_WHERE ) );
+			booklet_description.setText( booklet.getDataDescription() );
+
+			return childView;
+		}
+		catch ( Exception e )
+		{
+			e.printStackTrace();
+			Snackbar.make( parent, "There was a problem displaying this booklet. The problem was reported to the developer.", Snackbar.LENGTH_LONG ).show();
+			return new View( context );
+		}
+	}
+
+	@Override
+	public int getChildrenCount( int groupPosition )
+	{
+		return 1;
+	}
+
+	@Override
+	public long getCombinedChildId( long groupId, long childId )
+	{
+		return 0;
+	}
+
+	@Override
+	public long getCombinedGroupId( long groupId )
+	{
+		return groupId;
+	}
+
+	@Override
+	public Object getGroup( int groupPosition )
+	{
+		return groupPosition;
+	}
+
+	@Override
+	public int getGroupCount()
+	{
+		return booklets.size();
+	}
+
+	@Override
+	public long getGroupId( int groupPosition )
+	{
+		return groupPosition;
 	}
 
 	@Override
@@ -102,16 +141,16 @@ public class BookletAdapter extends BaseExpandableListAdapter
 				ImageCache.cacheRemoteImage( parent.getContext(), "booklet-" + booklet.getId(), ImageCache.REMOTE_IMAGES_URL + "booklet-headers/" + booklet.getDataImage(), false, new ImageCache.ImageResolveTask.ImageFoundListener()
 				{
 					@Override
-					public void update( Bitmap bitmap )
-					{
-						booklet_header.setImageBitmap( bitmap );
-					}
-
-					@Override
 					public void error( Exception exception )
 					{
 						ACRAHelper.handleExceptionOnce( "loading_failure_" + booklet.getId() + "_" + booklet.getDataImage(), new RuntimeException( "Failed to load image from server [images/booklet-headers/" + booklet.getDataImage() + "]", exception ) );
 						booklet_header.setImageResource( R.drawable.error );
+					}
+
+					@Override
+					public void update( Bitmap bitmap )
+					{
+						booklet_header.setImageBitmap( bitmap );
 					}
 				}, null );
 			}
@@ -136,7 +175,7 @@ public class BookletAdapter extends BaseExpandableListAdapter
 				@Override
 				public void run()
 				{
-					activity.onListItemClick( booklet );
+					// context.onListItemClick( booklet );
 				}
 			};
 
@@ -145,7 +184,7 @@ public class BookletAdapter extends BaseExpandableListAdapter
 				@Override
 				public void onClick( View v )
 				{
-					activity.onListItemClick( booklet );
+					// context.onListItemClick( booklet );
 					// booklet.updateAndOpen( v, false, postTask );
 				}
 			} );
@@ -177,31 +216,9 @@ public class BookletAdapter extends BaseExpandableListAdapter
 	}
 
 	@Override
-	public View getChildView( int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent )
+	public boolean hasStableIds()
 	{
-		try
-		{
-			View childView = convertView == null ? inflater.inflate( R.layout.activity_download_listitem_child, null ) : convertView;
-
-			final Booklet booklet = booklets.get( groupPosition );
-
-			TextView booklet_date = ( TextView ) childView.findViewById( R.id.booklet_date );
-			TextView booklet_location = ( TextView ) childView.findViewById( R.id.booklet_location );
-			TextView booklet_description = ( TextView ) childView.findViewById( R.id.booklet_description );
-
-			SimpleDateFormat date = new SimpleDateFormat( "yyyy-MM-dd" );
-			booklet_date.setText( DateAndTime.formatDateRange( date.parse( booklet.getData().getString( Booklet.KEY_WHEN_FROM ) ), date.parse( booklet.getData().getString( Booklet.KEY_WHEN_TO ) ) ) );
-			booklet_location.setText( booklet.getData().getString( Booklet.KEY_WHERE ) );
-			booklet_description.setText( booklet.getDataDescription() );
-
-			return childView;
-		}
-		catch ( Exception e )
-		{
-			e.printStackTrace();
-			Snackbar.make( parent, "There was a problem displaying this booklet. The problem was reported to the developer.", Snackbar.LENGTH_LONG ).show();
-			return new View( activity );
-		}
+		return false;
 	}
 
 	@Override
@@ -211,21 +228,9 @@ public class BookletAdapter extends BaseExpandableListAdapter
 	}
 
 	@Override
-	public boolean areAllItemsEnabled()
-	{
-		return true;
-	}
-
-	@Override
 	public boolean isEmpty()
 	{
 		return booklets.isEmpty();
-	}
-
-	@Override
-	public void onGroupExpanded( int groupPosition )
-	{
-
 	}
 
 	@Override
@@ -235,14 +240,8 @@ public class BookletAdapter extends BaseExpandableListAdapter
 	}
 
 	@Override
-	public long getCombinedChildId( long groupId, long childId )
+	public void onGroupExpanded( int groupPosition )
 	{
-		return 0;
-	}
 
-	@Override
-	public long getCombinedGroupId( long groupId )
-	{
-		return groupId;
 	}
 }

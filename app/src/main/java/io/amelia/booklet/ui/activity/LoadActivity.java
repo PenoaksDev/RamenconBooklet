@@ -6,8 +6,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.TextView;
 
-import com.ramencon.R;
-
+import io.amelia.R;
 import io.amelia.android.support.WaitFor;
 import io.amelia.booklet.Booklet;
 import io.amelia.booklet.BookletState;
@@ -47,7 +46,7 @@ public class LoadActivity extends AppCompatActivity
 				if ( booklet == null || booklet.getState() == BookletState.OUTDATED )
 				{
 					// Send to DownloadActivity
-					startActivity( new Intent( LoadActivity.this, DownloadActivity.class ) );
+					startActivity( new Intent( LoadActivity.this, BootActivity.class ) );
 				}
 				else
 				{

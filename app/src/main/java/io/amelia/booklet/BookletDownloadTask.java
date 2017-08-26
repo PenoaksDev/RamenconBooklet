@@ -5,13 +5,12 @@ import android.support.design.widget.Snackbar;
 import android.view.View;
 import android.widget.ProgressBar;
 
-import com.ramencon.R;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.amelia.R;
 import io.amelia.android.data.BoundData;
 import io.amelia.android.data.OkHttpProgress;
 import io.amelia.android.log.PLog;

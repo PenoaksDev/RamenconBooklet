@@ -1,37 +1,51 @@
-package io.amelia.booklet.ui.activity;
+package io.amelia.booklet.ui.fragment;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.AppCompatActivity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ExpandableListView;
-
-import com.ramencon.R;
 
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
+import io.amelia.R;
 import io.amelia.android.log.PLog;
 import io.amelia.android.support.DateAndTime;
 import io.amelia.booklet.Booklet;
 import io.amelia.booklet.ContentManager;
 import io.amelia.booklet.data.BookletAdapter;
+import io.amelia.booklet.ui.activity.BootActivity;
 
-public class DownloadActivity extends AppCompatActivity
+public class DownloadFragment extends Fragment
 {
 	public static final int SHOW_PROGRESS_BAR = 0x00;
 	public static final int HIDE_PROGRESS_BAR = 0x01;
 	public static final int SHOW_ERROR_DIALOG = 0x02;
 	public static final int UPDATE_BOOKLETS = 0x03;
+
+	public static DownloadFragment instance()
+	{
+		return new DownloadFragment();
+	}
+
 	private ExpandableListView bookletListview;
 	private ProgressDialog loading;
 	private SwipeRefreshLayout refreshLayout;
 	private Thread uiThread;
 	private UIUpdater uiUpdater;
+
+	public DownloadFragment()
+	{
+	}
 
 	public UIUpdater getUiUpdater()
 	{
@@ -41,7 +55,7 @@ public class DownloadActivity extends AppCompatActivity
 	public void hideProgressBar()
 	{
 		Bundle bundle = new Bundle();
-		bundle.putInt( "type", HIDE_PROGRESS_BAR );
+		bundle.putInt( "type", DownloadFragment.HIDE_PROGRESS_BAR );
 		uiUpdater.putBundle( bundle );
 	}
 
@@ -51,26 +65,46 @@ public class DownloadActivity extends AppCompatActivity
 	}
 
 	@Override
-	protected void onCreate( Bundle savedInstanceState )
+	public void onCreate( Bundle savedInstanceState )
 	{
 		super.onCreate( savedInstanceState );
-		setContentView( R.layout.activity_download );
+	}
+
+	@Override
+	public View onCreateView( LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState )
+	{
+		View root = inflater.inflate( R.layout.activity_download, container, false );
 
 		uiThread = Thread.currentThread();
 
-		setTitle( "Ramencon Booklet" );
+		getActivity().setTitle( "Ramencon Booklet" );
 
-		refreshLayout = ( SwipeRefreshLayout ) findViewById( R.id.booklet_refresher );
+		FloatingActionButton settingsFab = ( FloatingActionButton ) root.findViewById( R.id.settings_fab );
+		settingsFab.setOnClickListener( new View.OnClickListener()
+		{
+			@Override
+			public void onClick( View v )
+			{
+				( ( BootActivity ) getActivity() ).stacker.setFragment( SettingsFragment.class, true );
+			}
+		} );
+
+		refreshLayout = ( SwipeRefreshLayout ) root.findViewById( R.id.booklet_refresher );
 		refreshLayout.setOnRefreshListener( new SwipeRefreshLayout.OnRefreshListener()
 		{
 			@Override
 			public void onRefresh()
 			{
 				ContentManager.refreshBooklets();
+
+				refreshLayout.setRefreshing( false );
+				// TODO Make this stay on screen until finished!
 			}
 		} );
 
-		bookletListview = ( ExpandableListView ) findViewById( R.id.bootlet_listview );
+		bookletListview = ( ExpandableListView ) root.findViewById( R.id.bootlet_listview );
+
+		return root;
 	}
 
 	public void onListItemClick( Booklet booklet )
@@ -79,13 +113,13 @@ public class DownloadActivity extends AppCompatActivity
 	}
 
 	@Override
-	protected void onStart()
+	public void onStart()
 	{
 		super.onStart();
 
 		PLog.i( "Starting DownloadActivity" );
 
-		ContentManager.setDownloadActivity( this );
+		ContentManager.setDownloadFragment( this );
 
 		updateBookletsView();
 
@@ -94,11 +128,11 @@ public class DownloadActivity extends AppCompatActivity
 	}
 
 	@Override
-	protected void onStop()
+	public void onStop()
 	{
 		super.onStop();
 
-		ContentManager.setDownloadActivity( null );
+		ContentManager.setDownloadFragment( null );
 
 		uiUpdater.cancel( false );
 		uiUpdater = null;
@@ -107,7 +141,7 @@ public class DownloadActivity extends AppCompatActivity
 	public void showErrorDialog( String message )
 	{
 		Bundle bundle = new Bundle();
-		bundle.putInt( "type", SHOW_ERROR_DIALOG );
+		bundle.putInt( "type", DownloadFragment.SHOW_ERROR_DIALOG );
 		bundle.putString( "message", message );
 		uiUpdater.putBundle( bundle );
 	}
@@ -115,7 +149,7 @@ public class DownloadActivity extends AppCompatActivity
 	public void showProgressBar( String title, String message )
 	{
 		Bundle bundle = new Bundle();
-		bundle.putInt( "type", SHOW_PROGRESS_BAR );
+		bundle.putInt( "type", DownloadFragment.SHOW_PROGRESS_BAR );
 		bundle.putString( "title", title );
 		bundle.putString( "message", message );
 		uiUpdater.putBundle( bundle );
@@ -125,14 +159,14 @@ public class DownloadActivity extends AppCompatActivity
 	{
 		Bundle bundle = new Bundle();
 
-		bundle.putInt( "type", UPDATE_BOOKLETS );
+		bundle.putInt( "type", DownloadFragment.UPDATE_BOOKLETS );
 
 		uiUpdater.putBundle( bundle );
 	}
 
 	private void updateBookletsView()
 	{
-		bookletListview.setAdapter( new BookletAdapter( this, Booklet.getBooklets() ) );
+		bookletListview.setAdapter( new BookletAdapter( getActivity(), Booklet.getBooklets() ) );
 	}
 
 	public class UIUpdater extends AsyncTask<Void, Bundle, Void>
@@ -179,20 +213,20 @@ public class DownloadActivity extends AppCompatActivity
 			{
 				int type = bundle.getInt( "type" );
 
-				if ( type == SHOW_PROGRESS_BAR )
+				if ( type == DownloadFragment.SHOW_PROGRESS_BAR )
 				{
 					String title = bundle.getString( "title", "" );
 					String message = bundle.getString( "message", "Please Wait..." );
 
-					loading = ProgressDialog.show( DownloadActivity.this, title, message, true );
+					loading = ProgressDialog.show( getActivity(), title, message, true );
 				}
-				else if ( type == HIDE_PROGRESS_BAR )
+				else if ( type == DownloadFragment.HIDE_PROGRESS_BAR )
 					loading.cancel();
-				else if ( type == SHOW_ERROR_DIALOG )
+				else if ( type == DownloadFragment.SHOW_ERROR_DIALOG )
 				{
 					String message = bundle.getString( "message", "Encountered an internal error." );
 
-					new AlertDialog.Builder( DownloadActivity.this ).setTitle( "Error" ).setIcon( R.drawable.errored ).setNeutralButton( "OK :(", new DialogInterface.OnClickListener()
+					new AlertDialog.Builder( getActivity() ).setTitle( "Error" ).setIcon( R.drawable.errored ).setNeutralButton( "OK :(", new DialogInterface.OnClickListener()
 					{
 						@Override
 						public void onClick( DialogInterface dialog, int which )
@@ -201,7 +235,7 @@ public class DownloadActivity extends AppCompatActivity
 						}
 					} ).setMessage( message ).create().show();
 				}
-				else if ( type == UPDATE_BOOKLETS )
+				else if ( type == DownloadFragment.UPDATE_BOOKLETS )
 					updateBookletsView();
 			}
 		}

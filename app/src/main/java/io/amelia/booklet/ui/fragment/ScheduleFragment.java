@@ -13,8 +13,6 @@ import android.widget.ExpandableListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.ramencon.R;
-
 import org.acra.ACRA;
 import org.lucasr.twowayview.TwoWayView;
 
@@ -25,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.TreeSet;
 
+import io.amelia.R;
 import io.amelia.android.configuration.ConfigurationSection;
 import io.amelia.android.data.DataAwareFragment;
 import io.amelia.android.fragments.PersistentFragment;
@@ -48,16 +47,29 @@ public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> im
 	}
 
 	public DefaultScheduleFilter currentFilter = new DefaultScheduleFilter();
-	private ScheduleDayAdapter scheduleDayAdapter;
-	private ScheduleAdapter scheduleAdapter;
 	private ExpandableListView mListView;
-
 	private Bundle savedState = null;
+	private ScheduleAdapter scheduleAdapter;
+	private ScheduleDayAdapter scheduleDayAdapter;
 
 	public ScheduleFragment()
 	{
 		instance = this;
 		setReceiver( ScheduleDataReceiver.getInstance() );
+	}
+
+	public ModelLocation getLocation( String locId )
+	{
+		for ( ModelLocation location : receiver.locations )
+			if ( location.id.equals( locId ) )
+				return location;
+		return null;
+	}
+
+	@Override
+	public void loadState( Bundle bundle )
+	{
+		this.savedState = bundle;
 	}
 
 	@Override
@@ -70,9 +82,95 @@ public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> im
 	}
 
 	@Override
-	protected void onDataUpdate( ConfigurationSection data )
+	public void onCreateOptionsMenu( Menu menu, MenuInflater inflater )
 	{
+		menu.add( "Show Next Events" ).setOnMenuItemClickListener( new MenuItem.OnMenuItemClickListener()
+		{
+			@Override
+			public boolean onMenuItemClick( MenuItem item )
+			{
+				try
+				{
+					TreeSet<Date> days = receiver.sampleDays();
+					long nowTime = new Date().getTime();
 
+					assert days.size() > 0;
+
+
+					// Show earliest event one day ahead of time
+					if ( days.first().getTime() - ONEDAY > nowTime )
+					{
+						Toast.makeText( getContext(), "Sorry, Ramencon has not started yet... err, hurray... Ramencon is starting soon!", Toast.LENGTH_LONG ).show();
+						return true;
+					}
+
+					if ( days.last().getTime() + ONEDAY < nowTime )
+					{
+						Toast.makeText( getContext(), "Sorry, Ramencon is over. :( We hope you had a great year!", Toast.LENGTH_LONG ).show();
+						return true;
+					}
+
+					SimpleDateFormat sdf = new SimpleDateFormat( "MM d yyyy" );
+					String now = sdf.format( new Date() );
+
+					Date nowMatch = days.first();
+					int dayPosition = 0;
+					for ( Date day : days )
+					{
+						dayPosition++;
+						if ( sdf.format( day ).equals( now ) )
+						{
+							nowMatch = day;
+							break;
+						}
+					}
+
+					currentFilter.reset();
+
+					if ( nowMatch != null )
+					{
+						currentFilter.setMin( nowMatch.getTime() );
+						currentFilter.setMax( nowMatch.getTime() + ONEDAY );
+					}
+
+					TreeSet<ModelEvent> data = receiver.filterRange( currentFilter );
+
+					int positionVisible = -1;
+
+					long nowDate = new Date().getTime();
+					ModelEvent[] events = data.toArray( new ModelEvent[0] );
+					for ( int i = 0; i < events.length; i++ )
+					{
+						Long l = events[i].getEndTime();
+						if ( l > nowDate )
+						{
+							positionVisible = i;
+							break;
+						}
+					}
+
+					scheduleDayAdapter.setSelectedPosition( dayPosition, new ArrayList<>( data ), DateAndTime.now( ScheduleDayAdapter.DATEFORMAT, nowMatch ) );
+
+					if ( positionVisible > 0 )
+						mListView.setSelectionFromTop( positionVisible, 0 );
+
+					return true;
+				}
+				catch ( ParseException e )
+				{
+					e.printStackTrace();
+					Toast.makeText( getContext(), "Sorry, there was a problem!", Toast.LENGTH_LONG ).show();
+				}
+
+				return true;
+			}
+		} );
+	}
+
+	@Override
+	public View onCreateView( LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState )
+	{
+		return inflater.inflate( R.layout.fragment_schedule, container, false );
 	}
 
 	@Override
@@ -198,12 +296,24 @@ public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> im
 	}
 
 	@Override
+	protected void onDataUpdate( ConfigurationSection data )
+	{
+
+	}
+
+	@Override
 	public void onRefresh()
 	{
 		savedState = new Bundle();
 		saveState( savedState );
 
 		super.refreshData();
+	}
+
+	@Override
+	public void refreshState()
+	{
+		onRefresh();
 	}
 
 	@Override
@@ -224,117 +334,5 @@ public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> im
 
 		if ( scheduleDayAdapter != null )
 			bundle.putInt( "selectedPosition", scheduleDayAdapter.getSelectedPosition() );
-	}
-
-	@Override
-	public void loadState( Bundle bundle )
-	{
-		this.savedState = bundle;
-	}
-
-	@Override
-	public void refreshState()
-	{
-		onRefresh();
-	}
-
-	@Override
-	public View onCreateView( LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState )
-	{
-		return inflater.inflate( R.layout.fragment_schedule, container, false );
-	}
-
-	@Override
-	public void onCreateOptionsMenu( Menu menu, MenuInflater inflater )
-	{
-		menu.add( "Show Next Events" ).setOnMenuItemClickListener( new MenuItem.OnMenuItemClickListener()
-		{
-			@Override
-			public boolean onMenuItemClick( MenuItem item )
-			{
-				try
-				{
-					TreeSet<Date> days = receiver.sampleDays();
-					long nowTime = new Date().getTime();
-
-					assert days.size() > 0;
-
-
-					// Show earliest event one day ahead of time
-					if ( days.first().getTime() - ONEDAY > nowTime )
-					{
-						Toast.makeText( getContext(), "Sorry, Ramencon has not started yet... err, hurray... Ramencon is starting soon!", Toast.LENGTH_LONG ).show();
-						return true;
-					}
-
-					if ( days.last().getTime() + ONEDAY < nowTime )
-					{
-						Toast.makeText( getContext(), "Sorry, Ramencon is over. :( We hope you had a great year!", Toast.LENGTH_LONG ).show();
-						return true;
-					}
-
-					SimpleDateFormat sdf = new SimpleDateFormat( "MM d yyyy" );
-					String now = sdf.format( new Date() );
-
-					Date nowMatch = days.first();
-					int dayPosition = 0;
-					for ( Date day : days )
-					{
-						dayPosition++;
-						if ( sdf.format( day ).equals( now ) )
-						{
-							nowMatch = day;
-							break;
-						}
-					}
-
-					currentFilter.reset();
-
-					if ( nowMatch != null )
-					{
-						currentFilter.setMin( nowMatch.getTime() );
-						currentFilter.setMax( nowMatch.getTime() + ONEDAY );
-					}
-
-					TreeSet<ModelEvent> data = receiver.filterRange( currentFilter );
-
-					int positionVisible = -1;
-
-					long nowDate = new Date().getTime();
-					ModelEvent[] events = data.toArray( new ModelEvent[0] );
-					for ( int i = 0; i < events.length; i++ )
-					{
-						Long l = events[i].getEndTime();
-						if ( l > nowDate )
-						{
-							positionVisible = i;
-							break;
-						}
-					}
-
-					scheduleDayAdapter.setSelectedPosition( dayPosition, new ArrayList<>( data ), DateAndTime.now( ScheduleDayAdapter.DATEFORMAT, nowMatch ) );
-
-					if ( positionVisible > 0 )
-						mListView.setSelectionFromTop( positionVisible, 0 );
-
-					return true;
-				}
-				catch ( ParseException e )
-				{
-					e.printStackTrace();
-					Toast.makeText( getContext(), "Sorry, there was a problem!", Toast.LENGTH_LONG ).show();
-				}
-
-				return true;
-			}
-		} );
-	}
-
-	public ModelLocation getLocation( String locId )
-	{
-		for ( ModelLocation location : receiver.locations )
-			if ( location.id.equals( locId ) )
-				return location;
-		return null;
 	}
 }

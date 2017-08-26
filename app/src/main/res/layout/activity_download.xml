@@ -1,10 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
+        android:fitsSystemWindows="true"
+        android:focusable="false"
+        android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context="io.amelia.booklet.ui.activity.ContentActivity">
+        tools:context="io.amelia.booklet.ui.activity.SigninActivity">
+
+    <android.support.design.widget.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            app:srcCompat="@drawable/ic_menu_manage"
+            android:id="@+id/settings_fab"
+            android:layout_margin="16dp"
+            android:layout_gravity="bottom|end"
+            app:backgroundTint="@color/colorAccent"/>
 
     <android.support.v4.widget.SwipeRefreshLayout
             android:id="@+id/booklet_refresher"
@@ -13,7 +27,7 @@
 
         <ExpandableListView
                 android:id="@+id/bootlet_listview"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:clipChildren="false"
                 android:clipToPadding="false"

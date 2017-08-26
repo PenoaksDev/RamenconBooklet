@@ -30,10 +30,11 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
-import com.ramencon.R;
 
 import java.util.Arrays;
 import java.util.List;
+
+import io.amelia.R;
 
 public class SigninActivity extends Activity implements GoogleApiClient.OnConnectionFailedListener, FirebaseAuth.AuthStateListener
 {
@@ -128,7 +129,7 @@ public class SigninActivity extends Activity implements GoogleApiClient.OnConnec
 		else
 		{
 			if ( organic )
-				startActivity( new Intent( this, DownloadActivity.class ) );
+				startActivity( new Intent( this, BootActivity.class ) );
 			else
 				signedInMode();
 		}
@@ -235,14 +236,14 @@ public class SigninActivity extends Activity implements GoogleApiClient.OnConnec
 			@Override
 			public void onClick( View v )
 			{
-				startActivity( new Intent( SigninActivity.this, DownloadActivity.class ) );
+				startActivity( new Intent( SigninActivity.this, BootActivity.class ) );
 			}
 		} );
 
 		if ( mAuth.getCurrentUser() == null )
 			signedOutMode();
 		else if ( mAuth.getCurrentUser() != null && organic )
-			startActivity( new Intent( this, DownloadActivity.class ) );
+			startActivity( new Intent( this, BootActivity.class ) );
 		else
 			signedInMode();
 	}

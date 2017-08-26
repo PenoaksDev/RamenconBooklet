@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-        package="com.ramencon">
+          package="io.amelia">
 
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
             android:name="io.amelia.booklet.App"
@@ -17,16 +17,16 @@
             android:theme="@style/AppTheme.NoActionBar">
         <meta-data
                 android:name="com.facebook.sdk.ApplicationId"
-                android:value="@string/facebook_app_id" />
+                android:value="@string/facebook_app_id"/>
 
         <service android:name="io.amelia.booklet.FirebaseService">
             <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
         </service>
         <service
                 android:name="io.amelia.booklet.AppService"
-                android:exported="false"></service>
+                android:exported="false"/>
 
         <receiver
                 android:name="io.amelia.booklet.AppReceiver"
@@ -34,26 +34,20 @@
                 android:exported="true"
                 android:label="AppReceiver">
             <intent-filter>
-                <action android:name="com.ramencon.action.TRIGGER_ALARM" />
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="com.ramencon.action.TRIGGER_ALARM"/>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>
         </receiver>
 
-        <activity android:name="io.amelia.booklet.ui.activity.ContentActivity" />
+        <activity android:name="io.amelia.booklet.ui.activity.ContentActivity"/>
         <activity android:name="io.amelia.booklet.ui.activity.LoadActivity">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name="io.amelia.booklet.ui.activity.DownloadActivity"></activity>
-        <activity
-                android:name="io.amelia.booklet.ui.activity.SettingsActivity"
-                android:parentActivityName="io.amelia.booklet.ui.activity.DownloadActivity">
-            <meta-data
-                    android:name="android.support.PARENT_ACTIVITY"
-                    android:value="io.amelia.booklet.ui.activity.DownloadActivity" />
-        </activity>
+        <activity android:name="io.amelia.booklet.ui.activity.BootActivity"/>
     </application>
 
 </manifest>
