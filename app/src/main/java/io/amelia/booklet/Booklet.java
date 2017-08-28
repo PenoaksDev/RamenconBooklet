@@ -1,7 +1,5 @@
 package io.amelia.booklet;
 
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.view.View;
 
@@ -286,6 +284,9 @@ public class Booklet
 	 */
 	public void goDownload( View view )
 	{
+		if ( isInUse() )
+			return;
+
 		try
 		{
 			new BookletDownloadTask( this, view );
@@ -299,11 +300,10 @@ public class Booklet
 	void handleException( Exception e )
 	{
 		e.printStackTrace();
-
 		lastException = e;
 
 		if ( ContentManager.getDownloadFragment() != null )
-			Snackbar.make( ContentManager.getDownloadFragment().getActivity().getCurrentFocus(), e.getMessage(), Snackbar.LENGTH_LONG ).show();
+			ContentManager.getDownloadFragment().showErrorDialog( e.getMessage() );
 	}
 
 	/**
@@ -312,8 +312,7 @@ public class Booklet
 	 */
 	public boolean isDownloaded()
 	{
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences( ContentManager.getApplicationContext() );
-		if ( prefs.getBoolean( "download_images", false ) )
+		if ( ContentManager.downloadImages() )
 		{
 
 		}
@@ -321,6 +320,17 @@ public class Booklet
 		// TODO
 
 		return data.getLong( KEY_LAST_UPDATED, 0L ) > 0;
+	}
+
+	public boolean isInUse()
+	{
+		return inUse;
+	}
+
+	public void setInUse( boolean inUse )
+	{
+		// Possibly tells the Download List to show a intermittent waiting background.
+		this.inUse = inUse;
 	}
 
 	public void saveData()
@@ -335,11 +345,5 @@ public class Booklet
 		{
 			handleException( e );
 		}
-	}
-
-	public void setInUse( boolean inUse )
-	{
-		// Possibly tells the Download List to show a intermittent waiting background.
-		this.inUse = inUse;
 	}
 }

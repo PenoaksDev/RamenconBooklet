@@ -39,6 +39,10 @@ public class BootActivity extends AppCompatActivity
 		assert toolbar != null;
 		setSupportActionBar( toolbar );
 
+		ActionBar actionBar = getSupportActionBar();
+		actionBar.setDisplayShowCustomEnabled( true );
+		actionBar.setDisplayUseLogoEnabled( true );
+
 		stacker.addOnBackStackChangedListener( new FragmentStack.OnBackStackChangedListener()
 		{
 			@Override

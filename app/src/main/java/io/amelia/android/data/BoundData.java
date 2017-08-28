@@ -132,12 +132,42 @@ public class BoundData extends AbstractMap<String, Object>
 		return Objs.castToString( get( keyId ), def );
 	}
 
+	public Set<Entry<String, String>> getStringEntrySet()
+	{
+		return new HashSet<Entry<String, String>>()
+		{{
+			for ( String key : keySet() )
+			{
+				String str = Objs.castToString( get( key ) );
+				if ( str != null )
+					add( new SimpleEntry<>( key, str ) );
+			}
+		}};
+	}
+
 	public List<String> getStringList( String keyId )
 	{
 		List<?> list = getList( keyId, null );
 		if ( list == null )
 			return null;
 		return Objs.castList( list, String.class );
+	}
+
+	public boolean hasBoundData( String keyId )
+	{
+		try
+		{
+			return getBoundData( keyId ) != null;
+		}
+		catch ( Exception e )
+		{
+			return false;
+		}
+	}
+
+	public boolean hasString( String keyId )
+	{
+		return getString( keyId ) != null;
 	}
 
 	public Object put( String key, Object value, Class<?> aClass )

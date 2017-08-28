@@ -5,6 +5,7 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item>
+        <item name="android:homeAsUpIndicator">@drawable/ic_back</item>
     </style>
 
     <style name="AppTheme.Dark" parent="Theme.AppCompat">
@@ -13,6 +14,7 @@
         <item name="colorPrimaryDark">#ff000000</item>
         <item name="colorAccent">#ffeeeeee</item>
         <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item>
+        <item name="android:homeAsUpIndicator">@drawable/ic_back</item>
     </style>
 
     <style name="AppTheme.NoActionBar" parent="AppTheme">

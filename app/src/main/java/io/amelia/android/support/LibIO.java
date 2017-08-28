@@ -48,55 +48,8 @@ import io.amelia.booklet.App;
 public class LibIO
 {
 	public static final String PATH_SEPERATOR = File.separator;
-	private static final int EOF = -1;
 	private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
-
-	public static void closeQuietly( Closeable closeable )
-	{
-		try
-		{
-			if ( closeable != null )
-				closeable.close();
-		}
-		catch ( IOException ioe )
-		{
-			// ignore
-		}
-	}
-
-	public static int copy( InputStream input, OutputStream output ) throws IOException
-	{
-		long count = copyLarge( input, output );
-		if ( count > Integer.MAX_VALUE )
-			return -1;
-		return ( int ) count;
-	}
-
-	public static long copyLarge( InputStream input, OutputStream output ) throws IOException
-	{
-		return copyLarge( input, output, new byte[DEFAULT_BUFFER_SIZE] );
-	}
-
-	public static long copyLarge( InputStream input, OutputStream output, byte[] buffer ) throws IOException
-	{
-		long count = 0;
-		int n = 0;
-		while ( EOF != ( n = input.read( buffer ) ) )
-		{
-			output.write( buffer, 0, n );
-			count += n;
-		}
-		return count;
-	}
-
-	public static String bytesToStringUTFNIO( byte[] bytes )
-	{
-		if ( bytes == null )
-			return null;
-
-		CharBuffer cBuffer = ByteBuffer.wrap( bytes ).asCharBuffer();
-		return cBuffer.toString();
-	}
+	private static final int EOF = -1;
 
 	public static File buildFile( boolean absolute, String... args )
 	{
@@ -135,6 +88,15 @@ public class LibIO
 		return builder.toString();
 	}
 
+	public static String bytesToStringUTFNIO( byte[] bytes )
+	{
+		if ( bytes == null )
+			return null;
+
+		CharBuffer cBuffer = ByteBuffer.wrap( bytes ).asCharBuffer();
+		return cBuffer.toString();
+	}
+
 	public static boolean checkMd5( File file, String expectedMd5 )
 	{
 		if ( expectedMd5 == null || file == null || !file.exists() )
@@ -142,6 +104,27 @@ public class LibIO
 
 		String md5 = md5( file );
 		return md5 != null && md5.equals( expectedMd5 );
+	}
+
+	public static void closeQuietly( Closeable closeable )
+	{
+		try
+		{
+			if ( closeable != null )
+				closeable.close();
+		}
+		catch ( IOException ioe )
+		{
+			// ignore
+		}
+	}
+
+	public static int copy( InputStream input, OutputStream output ) throws IOException
+	{
+		long count = copyLarge( input, output );
+		if ( count > Integer.MAX_VALUE )
+			return -1;
+		return ( int ) count;
 	}
 
 	/**
@@ -193,14 +176,159 @@ public class LibIO
 		return true;
 	}
 
+	public static long copyLarge( InputStream input, OutputStream output ) throws IOException
+	{
+		return copyLarge( input, output, new byte[DEFAULT_BUFFER_SIZE] );
+	}
+
+	public static long copyLarge( InputStream input, OutputStream output, byte[] buffer ) throws IOException
+	{
+		long count = 0;
+		int n = 0;
+		while ( EOF != ( n = input.read( buffer ) ) )
+		{
+			output.write( buffer, 0, n );
+			count += n;
+		}
+		return count;
+	}
+
 	public static String fileExtension( File file )
 	{
 		return fileExtension( file.getName() );
 	}
 
-	private static String fileExtension( String fileName )
+	public static String fileExtension( String fileName )
 	{
 		return Strs.regexCapture( fileName, ".*\\.(.*)$" );
+	}
+
+	public static String getFileName( String path )
+	{
+		path = path.replace( "\\/", "/" );
+		if ( path.contains( File.pathSeparator ) )
+			return path.substring( path.lastIndexOf( File.pathSeparator ) + 1 );
+		if ( path.contains( "/" ) )
+			return path.substring( path.lastIndexOf( "/" ) + 1 );
+		if ( path.contains( "\\" ) )
+			return path.substring( path.lastIndexOf( "\\" ) + 1 );
+		return path;
+	}
+
+	public static String getFileNameWithoutExtension( String path )
+	{
+		path = getFileName( path );
+		if ( path.contains( "." ) )
+			path = path.substring( 0, path.lastIndexOf( "." ) );
+		return path;
+	}
+
+	/**
+	 * List directory contents for a resource folder. Not recursive.
+	 * This is basically a brute-force implementation.
+	 * Works for regular files and also JARs.
+	 *
+	 * @param clazz Any java class that lives in the same place as the resources you want.
+	 * @param path  Should end with "/", but not start with one.
+	 * @return Just the name of each member item, not the full paths.
+	 * @throws URISyntaxException
+	 * @throws IOException
+	 * @author Greg Briggs
+	 */
+	public static String[] getResourceListing( Class<?> clazz, String path ) throws URISyntaxException, IOException
+	{
+		URL dirURL = clazz.getClassLoader().getResource( path );
+
+		if ( dirURL == null )
+		{
+			/*
+			 * In case of a jar file, we can't actually find a directory.
+			 * Have to assume the same jar as clazz.
+			 */
+			String me = clazz.getName().replace( ".", "/" ) + ".class";
+			dirURL = clazz.getClassLoader().getResource( me );
+		}
+
+		if ( dirURL.getProtocol().equals( "file" ) )
+			/* A file path: easy enough */
+			return new File( dirURL.toURI() ).list();
+
+		if ( dirURL.getProtocol().equals( "jar" ) )
+		{
+			/* A JAR path */
+			String jarPath = dirURL.getPath().substring( 5, dirURL.getPath().indexOf( "!" ) ); // strip out only the JAR file
+			JarFile jar = new JarFile( URLDecoder.decode( jarPath, "UTF-8" ) );
+			Enumeration<JarEntry> entries = jar.entries(); // gives ALL entries in jar
+			Set<String> result = new HashSet<String>(); // avoid duplicates in case it is a subdirectory
+			while ( entries.hasMoreElements() )
+			{
+				String name = entries.nextElement().getName();
+				if ( name.startsWith( path ) )
+				{ // filter according to the path
+					String entry = name.substring( path.length() );
+					int checkSubdir = entry.indexOf( "/" );
+					if ( checkSubdir >= 0 )
+						// if it is a subdirectory, we just return the directory name
+						entry = entry.substring( 0, checkSubdir );
+					result.add( entry );
+				}
+			}
+			jar.close();
+			return result.toArray( new String[result.size()] );
+		}
+
+		if ( dirURL.getProtocol().equals( "zip" ) )
+		{
+			/* A ZIP path */
+			String zipPath = dirURL.getPath().substring( 5, dirURL.getPath().indexOf( "!" ) ); // strip out only the JAR file
+			ZipFile zip = new ZipFile( URLDecoder.decode( zipPath, "UTF-8" ) );
+			Enumeration<? extends ZipEntry> entries = zip.entries(); // gives ALL entries in jar
+			Set<String> result = new HashSet<String>(); // avoid duplicates in case it is a subdirectory
+			while ( entries.hasMoreElements() )
+			{
+				String name = entries.nextElement().getName();
+				if ( name.startsWith( path ) )
+				{ // filter according to the path
+					String entry = name.substring( path.length() );
+					int checkSubdir = entry.indexOf( "/" );
+					if ( checkSubdir >= 0 )
+						// if it is a subdirectory, we just return the directory name
+						entry = entry.substring( 0, checkSubdir );
+					result.add( entry );
+				}
+			}
+			zip.close();
+			return result.toArray( new String[result.size()] );
+		}
+
+		throw new UnsupportedOperationException( "Cannot list files for URL " + dirURL );
+	}
+
+	public static String getStringFromFile( String filePath ) throws IOException
+	{
+		return getStringFromFile( new File( filePath ) );
+	}
+
+	public static String getStringFromFile( File file ) throws IOException
+	{
+		return getStringFromFile( file, null );
+	}
+
+	public static String getStringFromFile( File file, String def ) throws IOException
+	{
+		try
+		{
+			FileInputStream fin = new FileInputStream( file );
+			String ret = inputStream2String( fin );
+			fin.close();
+			return ret;
+		}
+		catch ( FileNotFoundException e )
+		{
+			if ( def == null )
+				throw e;
+			return def;
+		}
 	}
 
 	public static void gzFile( File source ) throws IOException
@@ -254,9 +382,48 @@ public class LibIO
 		return dir.startsWith( "/" ) || dir.startsWith( ":\\", 1 );
 	}
 
+	public static boolean isDirectoryEmpty( File file )
+	{
+		Objs.notNull( file, "file is null" );
+
+		return file.exists() && file.isDirectory() && file.list().length == 0;
+	}
+
 	public static String md5( File file )
 	{
 		return LibEncrypt.md5( file );
+	}
+
+	public static boolean putStringToFile( File file, String str ) throws IOException
+	{
+		return putStringToFile( file, str, false );
+	}
+
+	public static boolean putStringToFile( File file, String str, boolean append ) throws IOException
+	{
+		FileOutputStream fos = null;
+		try
+		{
+			if ( !append && file.exists() )
+				file.delete();
+
+			fos = new FileOutputStream( file );
+			fos.write( str.getBytes() );
+		}
+		finally
+		{
+			try
+			{
+				if ( fos != null )
+					fos.close();
+			}
+			catch ( IOException ignore )
+			{
+
+			}
+		}
+
+		return true;
 	}
 
 	public static String readFileToString( File file ) throws IOException
@@ -410,153 +577,6 @@ public class LibIO
 		}
 	}
 
-	public static boolean isDirectoryEmpty( File file )
-	{
-		Objs.notNull( file, "file is null" );
-
-		return file.exists() && file.isDirectory() && file.list().length == 0;
-	}
-
-	/**
-	 * List directory contents for a resource folder. Not recursive.
-	 * This is basically a brute-force implementation.
-	 * Works for regular files and also JARs.
-	 *
-	 * @param clazz Any java class that lives in the same place as the resources you want.
-	 * @param path  Should end with "/", but not start with one.
-	 * @return Just the name of each member item, not the full paths.
-	 * @throws URISyntaxException
-	 * @throws IOException
-	 * @author Greg Briggs
-	 */
-	public static String[] getResourceListing( Class<?> clazz, String path ) throws URISyntaxException, IOException
-	{
-		URL dirURL = clazz.getClassLoader().getResource( path );
-
-		if ( dirURL == null )
-		{
-			/*
-			 * In case of a jar file, we can't actually find a directory.
-			 * Have to assume the same jar as clazz.
-			 */
-			String me = clazz.getName().replace( ".", "/" ) + ".class";
-			dirURL = clazz.getClassLoader().getResource( me );
-		}
-
-		if ( dirURL.getProtocol().equals( "file" ) )
-			/* A file path: easy enough */
-			return new File( dirURL.toURI() ).list();
-
-		if ( dirURL.getProtocol().equals( "jar" ) )
-		{
-			/* A JAR path */
-			String jarPath = dirURL.getPath().substring( 5, dirURL.getPath().indexOf( "!" ) ); // strip out only the JAR file
-			JarFile jar = new JarFile( URLDecoder.decode( jarPath, "UTF-8" ) );
-			Enumeration<JarEntry> entries = jar.entries(); // gives ALL entries in jar
-			Set<String> result = new HashSet<String>(); // avoid duplicates in case it is a subdirectory
-			while ( entries.hasMoreElements() )
-			{
-				String name = entries.nextElement().getName();
-				if ( name.startsWith( path ) )
-				{ // filter according to the path
-					String entry = name.substring( path.length() );
-					int checkSubdir = entry.indexOf( "/" );
-					if ( checkSubdir >= 0 )
-						// if it is a subdirectory, we just return the directory name
-						entry = entry.substring( 0, checkSubdir );
-					result.add( entry );
-				}
-			}
-			jar.close();
-			return result.toArray( new String[result.size()] );
-		}
-
-		if ( dirURL.getProtocol().equals( "zip" ) )
-		{
-			/* A ZIP path */
-			String zipPath = dirURL.getPath().substring( 5, dirURL.getPath().indexOf( "!" ) ); // strip out only the JAR file
-			ZipFile zip = new ZipFile( URLDecoder.decode( zipPath, "UTF-8" ) );
-			Enumeration<? extends ZipEntry> entries = zip.entries(); // gives ALL entries in jar
-			Set<String> result = new HashSet<String>(); // avoid duplicates in case it is a subdirectory
-			while ( entries.hasMoreElements() )
-			{
-				String name = entries.nextElement().getName();
-				if ( name.startsWith( path ) )
-				{ // filter according to the path
-					String entry = name.substring( path.length() );
-					int checkSubdir = entry.indexOf( "/" );
-					if ( checkSubdir >= 0 )
-						// if it is a subdirectory, we just return the directory name
-						entry = entry.substring( 0, checkSubdir );
-					result.add( entry );
-				}
-			}
-			zip.close();
-			return result.toArray( new String[result.size()] );
-		}
-
-		throw new UnsupportedOperationException( "Cannot list files for URL " + dirURL );
-	}
-
-	public static String getStringFromFile( String filePath ) throws IOException
-	{
-		return getStringFromFile( new File( filePath ) );
-	}
-
-	public static String getStringFromFile( File file ) throws IOException
-	{
-		return getStringFromFile( file, null );
-	}
-
-	public static String getStringFromFile( File file, String def ) throws IOException
-	{
-		try
-		{
-			FileInputStream fin = new FileInputStream( file );
-			String ret = inputStream2String( fin );
-			fin.close();
-			return ret;
-		}
-		catch ( FileNotFoundException e )
-		{
-			if ( def == null )
-				throw e;
-			return def;
-		}
-	}
-
-	public static boolean putStringToFile( File file, String str ) throws IOException
-	{
-		return putStringToFile( file, str, false );
-	}
-
-	public static boolean putStringToFile( File file, String str, boolean append ) throws IOException
-	{
-		FileOutputStream fos = null;
-		try
-		{
-			if ( !append && file.exists() )
-				file.delete();
-
-			fos = new FileOutputStream( file );
-			fos.write( str.getBytes() );
-		}
-		finally
-		{
-			try
-			{
-				if ( fos != null )
-					fos.close();
-			}
-			catch ( IOException ignore )
-			{
-
-			}
-		}
-
-		return true;
-	}
-
 	private LibIO()
 	{
 
@@ -593,8 +613,8 @@ public class LibIO
 
 	public static class SortableFile implements Comparable<SortableFile>
 	{
-		public long t;
 		public File f;
+		public long t;
 
 		public SortableFile( File file )
 		{

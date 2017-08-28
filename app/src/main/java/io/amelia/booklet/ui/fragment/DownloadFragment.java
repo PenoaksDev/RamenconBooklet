@@ -5,13 +5,19 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
 import android.widget.ExpandableListView;
+import android.widget.ImageView;
+import android.widget.Toast;
 
 import java.util.Map;
 import java.util.NavigableMap;
@@ -68,6 +74,14 @@ public class DownloadFragment extends Fragment
 	public void onCreate( Bundle savedInstanceState )
 	{
 		super.onCreate( savedInstanceState );
+
+		setHasOptionsMenu( true );
+	}
+
+	@Override
+	public void onCreateOptionsMenu( Menu menu, MenuInflater inflater )
+	{
+		inflater.inflate( R.menu.default_options_menu, menu );
 	}
 
 	@Override
@@ -79,7 +93,7 @@ public class DownloadFragment extends Fragment
 
 		getActivity().setTitle( "Ramencon Booklet" );
 
-		FloatingActionButton settingsFab = ( FloatingActionButton ) root.findViewById( R.id.settings_fab );
+		/* FloatingActionButton settingsFab = ( FloatingActionButton ) root.findViewById( R.id.settings_fab );
 		settingsFab.setOnClickListener( new View.OnClickListener()
 		{
 			@Override
@@ -87,7 +101,7 @@ public class DownloadFragment extends Fragment
 			{
 				( ( BootActivity ) getActivity() ).stacker.setFragment( SettingsFragment.class, true );
 			}
-		} );
+		} ); */
 
 		refreshLayout = ( SwipeRefreshLayout ) root.findViewById( R.id.booklet_refresher );
 		refreshLayout.setOnRefreshListener( new SwipeRefreshLayout.OnRefreshListener()
@@ -110,6 +124,71 @@ public class DownloadFragment extends Fragment
 	public void onListItemClick( Booklet booklet )
 	{
 		// ( ( ContentActivity ) getActivity() ).stacker.setFragment( BookletFragment.instance( booklet.bookletId ), true );
+	}
+
+	@Override
+	public boolean onOptionsItemSelected( MenuItem item )
+	{
+		PLog.i( "Option Item Click: " + item.getTitle() + " // " + item.getItemId() );
+
+		switch ( item.getItemId() )
+		{
+			case R.id.options_settings:
+				( ( BootActivity ) getActivity() ).stacker.setFragment( SettingsFragment.class, true );
+				return true;
+			case R.id.options_refresh:
+
+				ContentManager.refreshBooklets();
+
+				Animation animation = new RotateAnimation( 0.0f, 360.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f );
+				animation.setDuration( 1000 );
+				animation.setRepeatCount( Animation.INFINITE );
+				animation.setAnimationListener( new Animation.AnimationListener()
+				{
+					@Override
+					public void onAnimationEnd( Animation animation )
+					{
+
+					}
+
+					@Override
+					public void onAnimationRepeat( Animation animation )
+					{
+						if ( !ContentManager.isBookletsRefreshing() )
+						{
+							item.getActionView().clearAnimation();
+							item.setActionView( null );
+						}
+					}
+
+					@Override
+					public void onAnimationStart( Animation animation )
+					{
+
+					}
+				} );
+
+				ImageView iv = new ImageView( getContext(), null, R.style.Widget_AppCompat_ActionButton );
+				iv.setImageResource( R.drawable.ic_options_refresh );
+				iv.setLayoutParams( new ViewGroup.LayoutParams( ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT ) );
+				float dpScale = getResources().getDisplayMetrics().density;
+				iv.setPadding( ( int ) ( 14 * dpScale * 0.5f ), 0, ( int ) ( 14 * dpScale * 0.5f ), 0 );
+
+				iv.setOnClickListener( new View.OnClickListener()
+				{
+					@Override
+					public void onClick( View view )
+					{
+						Toast.makeText( getContext(), "Hold Your Horses!", Toast.LENGTH_SHORT ).show();
+					}
+				} );
+
+				iv.startAnimation( animation );
+				item.setActionView( iv );
+
+				return true;
+		}
+		return super.onOptionsItemSelected( item );
 	}
 
 	@Override
@@ -226,7 +305,7 @@ public class DownloadFragment extends Fragment
 				{
 					String message = bundle.getString( "message", "Encountered an internal error." );
 
-					new AlertDialog.Builder( getActivity() ).setTitle( "Error" ).setIcon( R.drawable.errored ).setNeutralButton( "OK :(", new DialogInterface.OnClickListener()
+					new AlertDialog.Builder( getContext() ).setTitle( "Error" ).setIcon( R.drawable.errored ).setNeutralButton( "BUMMER! :(", new DialogInterface.OnClickListener()
 					{
 						@Override
 						public void onClick( DialogInterface dialog, int which )

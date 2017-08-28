@@ -4,17 +4,20 @@ import android.os.AsyncTask;
 import android.support.design.widget.Snackbar;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import io.amelia.R;
 import io.amelia.android.data.BoundData;
 import io.amelia.android.data.OkHttpProgress;
 import io.amelia.android.log.PLog;
 import io.amelia.android.support.LibAndroid;
+import io.amelia.android.support.LibIO;
 import io.amelia.android.support.Objs;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -45,14 +48,14 @@ class BookletDownloadTask
 				throw new IllegalStateException( "Booklet is already updating!" );
 			else
 			{
-				Snackbar.make( view, "Booklet is already updating... Please Wait!", Snackbar.LENGTH_LONG ).show();
+				Snackbar.make( view, "Booklet is already updating... Please Wait!", Snackbar.LENGTH_SHORT ).show();
 				throw new UpdateAbortException();
 			}
 
 		booklet.setInUse( true );
 
 		if ( view != null )
-			Snackbar.make( view, "Updating Booklet " + bookletId + " // " + bookletState, Snackbar.LENGTH_LONG ).show();
+			Snackbar.make( view, "Updating Booklet " + bookletId + " // " + bookletState, Snackbar.LENGTH_SHORT ).show();
 
 		progressBar = view == null ? null : ( ProgressBar ) view.findViewById( R.id.booklet_progress );
 		if ( progressBar != null )
@@ -97,12 +100,7 @@ class BookletDownloadTask
 				synchronized ( pendingFiles )
 				{
 					for ( String file : files )
-					{
-						File localFile = new File( booklet.getDataDirectory(), file + ".json" );
-						String remoteFile = ContentManager.REMOTE_DATA_URL + bookletId + "/" + file + ".json";
-
-						pendingFiles.add( new FileDownload( bookletId + "-" + file, remoteFile, localFile ) );
-					}
+						pendingFiles.add( new FileDownload( file, "json" ) );
 				}
 
 				internalDownloadTask = new InternalDownloadTask();
@@ -121,16 +119,27 @@ class BookletDownloadTask
 		long bytesRead = 0;
 		long contentLength = 0;
 		boolean done = false;
-		boolean error = false;
+		String fileName;
+		boolean finished = false;
 		String id;
+		Exception lastException = null;
 		File localFile;
 		String remoteFile;
 
-		FileDownload( String id, String remoteFile, File localFile )
+		FileDownload( String fileName, String ext )
 		{
-			this.id = id;
-			this.remoteFile = remoteFile;
-			this.localFile = localFile;
+			this.fileName = fileName;
+			id = BookletDownloadTask.this.booklet.getId() + "-" + fileName;
+			localFile = new File( booklet.getDataDirectory(), fileName + "." + ext );
+			remoteFile = ContentManager.REMOTE_DATA_URL + BookletDownloadTask.this.booklet.getId() + "/" + fileName + "." + ext;
+		}
+
+		public FileDownload( String fileName, String ext, String remoteFileNameWithExtension )
+		{
+			this.fileName = fileName;
+			id = BookletDownloadTask.this.booklet.getId() + "-" + fileName;
+			localFile = new File( booklet.getDataDirectory(), fileName + "." + ext );
+			remoteFile = ContentManager.REMOTE_DATA_URL + BookletDownloadTask.this.booklet.getId() + "/" + remoteFileNameWithExtension;
 		}
 	}
 
@@ -159,8 +168,7 @@ class BookletDownloadTask
 					@Override
 					public void onFailure( Call call, IOException exception )
 					{
-						booklet.handleException( exception );
-						fileDownload.error = true;
+						fileDownload.lastException = exception;
 					}
 
 					@Override
@@ -168,8 +176,7 @@ class BookletDownloadTask
 					{
 						if ( response.code() != 200 )
 						{
-							booklet.handleException( new RuntimeException( "The URL " + fileDownload.remoteFile + " returned code " + response.code() + ", failure." ) );
-							fileDownload.error = true;
+							fileDownload.lastException = new RuntimeException( "The URL " + fileDownload.remoteFile + " returned code " + response.code() + ", failure." );
 							return;
 						}
 
@@ -178,11 +185,20 @@ class BookletDownloadTask
 
 						if ( data.getBoundData( "details" ).getInt( "code" ) == 0 )
 						{
-							booklet.handleException( new RuntimeException( "The URL " + fileDownload.remoteFile + " returned code 0, failure." ) );
+							fileDownload.lastException = new RuntimeException( "The URL " + fileDownload.remoteFile + " returned code 0, failure." );
 							return;
 						}
 
-						LibAndroid.writeBoundDataToJsonFile( data, fileDownload.localFile );
+						if ( ContentManager.downloadImages() && data.hasBoundData( "files" ) )
+						{
+							BoundData files = data.getBoundData( "files" );
+							for ( Map.Entry<String, String> entry : files.getStringEntrySet() )
+								pendingFiles.add( new FileDownload( fileDownload.fileName + "/" + entry.getKey(), LibIO.fileExtension( entry.getValue() ), entry.getValue() ) );
+						}
+
+						LibAndroid.writeBoundDataToJsonFile( data.hasBoundData( "data" ) ? data.getBoundData( "data" ) : data, fileDownload.localFile );
+
+						fileDownload.finished = true;
 					}
 				} );
 
@@ -195,9 +211,15 @@ class BookletDownloadTask
 				boolean allDone = true;
 
 				for ( final FileDownload fileDownload : pendingFiles )
-					if ( !fileDownload.done && !fileDownload.error )
+					if ( !fileDownload.finished )
 					{
 						allDone = false;
+						break;
+					}
+					else if ( fileDownload.lastException != null )
+					{
+						Toast.makeText( ContentManager.getDownloadFragment().getActivity(), lastException.getMessage(), Toast.LENGTH_LONG ).show();
+						allDone = true;
 						break;
 					}
 
@@ -239,24 +261,20 @@ class BookletDownloadTask
 
 			if ( progressBar != null )
 			{
-				int average = 0;
+				int percentDone = 0;
 				boolean isDone = true;
 
 				for ( FileDownload fileDownload : pendingFiles )
 				{
 					if ( fileDownload.contentLength > 0 )
-					{
-						int percent = ( int ) ( 100 * ( fileDownload.bytesRead / fileDownload.contentLength ) );
-						average = average + percent;
-					}
+						percentDone = percentDone + ( int ) ( 100 * ( fileDownload.bytesRead / fileDownload.contentLength ) );
 
 					if ( !fileDownload.done )
 						isDone = false;
 				}
 
-				average = average / pendingFiles.size();
-
-				progressBar.setProgress( average );
+				progressBar.setProgress( percentDone );
+				progressBar.setMax( pendingFiles.size() * 100 );
 				progressBar.setIndeterminate( isDone );
 			}
 		}

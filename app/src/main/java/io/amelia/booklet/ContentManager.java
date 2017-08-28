@@ -24,6 +24,12 @@ public class ContentManager
 	private static Context context;
 	private static DownloadFragment downloadFragment;
 
+	public static boolean downloadImages()
+	{
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences( ContentManager.getApplicationContext() );
+		return prefs.getBoolean( "download_images", true );
+	}
+
 	public static Booklet getActiveBooklet()
 	{
 		if ( activeBooklet == null )
@@ -68,6 +74,14 @@ public class ContentManager
 	public static ExecutorService getExecutorThreadPool()
 	{
 		return threadPool;
+	}
+
+	public static boolean isBookletsRefreshing()
+	{
+		for ( Booklet booklet : Booklet.getBooklets() )
+			if ( booklet.isInUse() )
+				return true;
+		return false;
 	}
 
 	public static boolean isContentManagerReady()

@@ -1,19 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
+
     <item
             android:id="@+id/options_settings"
+            android:icon="@drawable/ic_options_settings"
+            android:title="App Settings"
+            android:orderInCategory="100"
+            app:showAsAction="always"
             android:checkable="false"
             android:checked="false"
             android:enabled="true"
-            android:icon="@drawable/ic_menu_settings"
-            android:title="Settings"
             android:visible="true"/>
+
+    <item
+            android:id="@+id/options_refresh"
+            android:icon="@drawable/ic_options_refresh"
+            android:title="Refresh Booklets"
+            android:orderInCategory="200"
+            app:showAsAction="always"
+            android:checkable="false"
+            android:checked="false"
+            android:enabled="true"
+            android:visible="true"/>
+
     <item
             android:id="@+id/options_add"
+            android:icon="@android:drawable/ic_input_add"
+            android:title="Add Booklet"
             android:checkable="false"
             android:checked="false"
             android:enabled="true"
-            android:icon="@android:drawable/ic_input_add"
-            android:title="Add Booklet"
-            android:visible="true"/>
+            android:visible="false"/>
+
 </menu>

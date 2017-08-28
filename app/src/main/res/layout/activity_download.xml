@@ -10,7 +10,7 @@
         android:layout_height="match_parent"
         tools:context="io.amelia.booklet.ui.activity.SigninActivity">
 
-    <android.support.design.widget.FloatingActionButton
+    <!-- <android.support.design.widget.FloatingActionButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:clickable="true"
@@ -18,7 +18,7 @@
             android:id="@+id/settings_fab"
             android:layout_margin="16dp"
             android:layout_gravity="bottom|end"
-            app:backgroundTint="@color/colorAccent"/>
+            app:backgroundTint="@color/colorAccent"/> -->
 
     <android.support.v4.widget.SwipeRefreshLayout
             android:id="@+id/booklet_refresher"

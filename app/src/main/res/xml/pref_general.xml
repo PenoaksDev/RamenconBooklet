@@ -13,6 +13,11 @@
             android:summary="Vibrate for event reminders"
             android:title="Vibrate on Reminder"/>
 
+    <SwitchPreference
+            android:defaultValue="true"
+            android:title="Download Booklet Images"
+            android:key="download_images"
+            android:summary="Turn on to save bandwidth. Turn off to save disk space."/>
     <ListPreference
             android:defaultValue="10"
             android:key="pref_reminder_delays"
