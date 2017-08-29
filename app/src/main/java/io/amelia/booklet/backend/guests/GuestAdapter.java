@@ -14,8 +14,6 @@ import java.util.List;
 import io.amelia.R;
 import io.amelia.android.data.ImageCache;
 import io.amelia.android.support.ACRAHelper;
-import io.amelia.booklet.data.models.ModelGroup;
-import io.amelia.booklet.data.models.ModelGuest;
 import io.amelia.booklet.ui.activity.ContentActivity;
 import io.amelia.booklet.ui.fragment.GuestViewFragment;
 

@@ -4,9 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.amelia.android.configuration.ConfigurationSection;
+import io.amelia.android.data.BoundData;
 import io.amelia.android.data.DataReceiver;
-import io.amelia.booklet.data.models.ModelGroup;
-import io.amelia.booklet.data.models.ModelGuest;
 
 public class GuestDataReceiver extends DataReceiver
 {
@@ -29,17 +28,17 @@ public class GuestDataReceiver extends DataReceiver
 	@Override
 	public String getReferenceUri()
 	{
-		return "booklet-data/guests";
+		return "guests";
 	}
 
 	@Override
-	protected void onDataUpdate( ConfigurationSection data )
+	protected void onDataUpdate( BoundData data )
 	{
 
 	}
 
 	@Override
-	public void onDataArrived( ConfigurationSection data, boolean isRefresh )
+	public void onDataArrived( BoundData data, boolean isRefresh )
 	{
 		guests = new ArrayList<>();
 		for ( ConfigurationSection section : data.getConfigurationSections() )

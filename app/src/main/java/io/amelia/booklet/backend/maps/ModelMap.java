@@ -1,4 +1,4 @@
-package io.amelia.booklet.data.models;
+package io.amelia.booklet.data.maps;
 
 public class ModelMap
 {

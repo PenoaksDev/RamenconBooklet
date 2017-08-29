@@ -9,14 +9,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import io.amelia.R;
 import io.amelia.android.data.BoundData;
 import io.amelia.android.data.OkHttpProgress;
 import io.amelia.android.log.PLog;
 import io.amelia.android.support.LibAndroid;
-import io.amelia.android.support.LibIO;
 import io.amelia.android.support.Objs;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -94,11 +92,11 @@ class BookletDownloadTask
 
 				updatedData = data.getBoundData( "data" );
 
-				List<String> files = updatedData.getStringList( Booklet.KEY_FILES );
+				List<String> sections = updatedData.getStringList( Booklet.KEY_SECTIONS );
 
 				synchronized ( pendingFiles )
 				{
-					for ( String file : files )
+					for ( String file : sections )
 						pendingFiles.add( new FileDownload( file, "json" ) );
 				}
 
@@ -188,12 +186,12 @@ class BookletDownloadTask
 							return;
 						}
 
-						if ( ContentManager.downloadImages() && data.hasBoundData( "files" ) )
+						/* if ( ContentManager.downloadImages() && data.hasBoundData( "files" ) )
 						{
 							BoundData files = data.getBoundData( "files" );
 							for ( Map.Entry<String, String> entry : files.getStringEntrySet() )
 								pendingFiles.add( new FileDownload( fileDownload.fileName + "/" + entry.getKey(), LibIO.fileExtension( entry.getValue() ), entry.getValue() ) );
-						}
+						} */
 
 						LibAndroid.writeBoundDataToJsonFile( data.hasBoundData( "data" ) ? data.getBoundData( "data" ) : data, fileDownload.localFile );
 

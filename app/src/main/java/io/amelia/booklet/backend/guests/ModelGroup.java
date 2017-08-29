@@ -1,8 +1,10 @@
-package io.amelia.booklet.data.models;
+package io.amelia.booklet.data.guests;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import io.amelia.booklet.data.guests.ModelGuest;
 
 public class ModelGroup
 {

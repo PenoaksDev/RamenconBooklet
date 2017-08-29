@@ -22,8 +22,7 @@ import java.util.List;
 
 import io.amelia.R;
 import io.amelia.android.log.PLog;
-import io.amelia.booklet.data.models.ModelEvent;
-import io.amelia.booklet.data.models.ModelLocation;
+import io.amelia.booklet.data.maps.ModelLocation;
 import io.amelia.booklet.ui.fragment.ScheduleViewFragment;
 
 public class ScheduleAdapter extends BaseExpandableListAdapter

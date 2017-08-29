@@ -1,4 +1,4 @@
-package io.amelia.booklet.data.models;
+package io.amelia.booklet.data.guests;
 
 import io.amelia.android.support.Strs;
 

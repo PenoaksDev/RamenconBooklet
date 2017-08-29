@@ -5,7 +5,6 @@ import java.util.List;
 
 import io.amelia.android.configuration.ConfigurationSection;
 import io.amelia.android.data.DataReceiver;
-import io.amelia.booklet.data.models.ModelMap;
 
 public class MapsDataReceiver extends DataReceiver
 {

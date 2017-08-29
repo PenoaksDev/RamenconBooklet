@@ -5,7 +5,7 @@ import com.squareup.moshi.Moshi;
 
 import java.util.TreeSet;
 
-import io.amelia.booklet.data.models.ModelEvent;
+import io.amelia.booklet.data.schedule.ModelEvent;
 
 public class DefaultScheduleFilter implements ScheduleFilter
 {

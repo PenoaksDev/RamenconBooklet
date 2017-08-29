@@ -1,4 +1,4 @@
-package io.amelia.booklet.data.models;
+package io.amelia.booklet.data.schedule;
 
 import android.app.Notification;
 
@@ -10,7 +10,7 @@ import io.amelia.android.log.PLog;
 import io.amelia.android.support.DateAndTime;
 import io.amelia.android.support.Strs;
 import io.amelia.booklet.AppService;
-import io.amelia.booklet.data.schedule.ScheduleDataReceiver;
+import io.amelia.booklet.data.maps.ModelLocation;
 import io.amelia.booklet.ui.activity.ContentActivity;
 import io.amelia.booklet.ui.fragment.ScheduleFragment;
 

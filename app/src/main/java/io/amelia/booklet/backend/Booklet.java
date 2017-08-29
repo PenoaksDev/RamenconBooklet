@@ -31,7 +31,7 @@ public class Booklet
 	public static final String KEY_WHEN_TO = "whenTo";
 	public static final String KEY_WHERE = "where";
 	public static final String KEY_DESCRIPTION = "description";
-	public static final String KEY_FILES = "files"; // String Array
+	public static final String KEY_SECTIONS = "sections"; // String Array
 
 	static final List<Booklet> booklets = new ArrayList<>();
 
@@ -196,6 +196,21 @@ public class Booklet
 	}
 
 	/**
+	 * Loads the requested section data from file
+	 *
+	 * @param section Section id
+	 * @return The BoundData on file
+	 */
+	public BoundData getSectionData( String section ) throws IOException
+	{
+		File localFile = new File( getDataDirectory(), section + ".json" );
+		BoundData[] result = LibAndroid.readJsonToBoundData( localFile );
+		if ( result == null || result.length == 0 )
+			throw new IllegalStateException( "The booklet section " + section + " does not exist for booklet " + getId() + "!" );
+		return result[0];
+	}
+
+	/**
 	 * Determines an organic booklet state based on a number of queries.
 	 */
 	public BookletState getState()
@@ -307,15 +322,9 @@ public class Booklet
 
 	/**
 	 * Does a booklet file check, looks for specified JSON and Image files.
-	 * If cached images are turned off, that part is skip'd.
 	 */
 	public boolean isDownloaded()
 	{
-		if ( ContentManager.downloadImages() )
-		{
-
-		}
-
 		// TODO
 
 		return data.getLong( KEY_LAST_UPDATED, 0L ) > 0;

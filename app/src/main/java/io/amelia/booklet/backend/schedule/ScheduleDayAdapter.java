@@ -19,7 +19,6 @@ import java.util.List;
 import io.amelia.R;
 import io.amelia.android.support.DateAndTime;
 import io.amelia.booklet.ContentManager;
-import io.amelia.booklet.data.models.ModelEvent;
 import io.amelia.booklet.data.schedule.filters.DefaultScheduleFilter;
 import io.amelia.booklet.ui.fragment.ScheduleFragment;
 
