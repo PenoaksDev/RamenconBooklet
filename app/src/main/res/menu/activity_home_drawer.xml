@@ -2,40 +2,40 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <group
-        android:id="@+id/menu_group_general"
-        android:checkableBehavior="single">
+            android:id="@+id/menu_group_general"
+            android:checkableBehavior="single">
         <item
-            android:id="@+id/nav_welcome"
-            android:checkable="false"
-            android:checked="false"
-            android:enabled="true"
-            android:icon="@drawable/ic_menu_welcome"
-            android:title="About the Convention"
-            android:visible="true"/>
+                android:id="@+id/nav_welcome"
+                android:checkable="false"
+                android:checked="false"
+                android:enabled="true"
+                android:icon="@drawable/ic_menu_welcome"
+                android:title="About the Convention"
+                android:visible="true"/>
         <item
-            android:id="@+id/nav_schedule"
-            android:checkable="false"
-            android:checked="false"
-            android:enabled="true"
-            android:icon="@drawable/ic_menu_schedule"
-            android:title="Schedule"
-            android:visible="true"/>
+                android:id="@+id/nav_schedule"
+                android:checkable="false"
+                android:checked="false"
+                android:enabled="true"
+                android:icon="@drawable/ic_menu_schedule"
+                android:title="Schedule"
+                android:visible="true"/>
         <item
-            android:id="@+id/nav_guests_vendors"
-            android:checkable="false"
-            android:checked="false"
-            android:enabled="true"
-            android:icon="@drawable/ic_menu_friends"
-            android:title="Guests and Vendors"
-            android:visible="true"/>
+                android:id="@+id/nav_guests_vendors"
+                android:checkable="false"
+                android:checked="false"
+                android:enabled="true"
+                android:icon="@drawable/ic_menu_friends"
+                android:title="Guests and Vendors"
+                android:visible="true"/>
         <item
-            android:id="@+id/nav_maps"
-            android:checkable="false"
-            android:checked="false"
-            android:enabled="true"
-            android:icon="@drawable/ic_menu_map"
-            android:title="Maps and Locations"
-            android:visible="true"/>
+                android:id="@+id/nav_maps"
+                android:checkable="false"
+                android:checked="false"
+                android:enabled="true"
+                android:icon="@drawable/ic_menu_map"
+                android:title="Maps and Locations"
+                android:visible="true"/>
         <!-- <item
             android:id="@+id/nav_friends"
             android:icon="@drawable/ic_menu_friends"
@@ -43,10 +43,10 @@
     </group>
 
     <group
-        android:id="@+id/menu_group_social"
-        android:checkableBehavior="single">
+            android:id="@+id/menu_group_social"
+            android:checkableBehavior="single">
 
-        <item
+        <!-- <item
             android:id="@+id/nav_login_with_google"
             android:checkable="false"
             android:checked="false"
@@ -62,16 +62,16 @@
             android:enabled="true"
             android:icon="@drawable/ic_menu_signout"
             android:title="Unlink with Google"
-            android:visible="true"/>
+            android:visible="true"/> -->
 
         <item
-            android:id="@+id/nav_settings"
-            android:checkable="false"
-            android:checked="false"
-            android:enabled="true"
-            android:icon="@drawable/ic_menu_settings"
-            android:title="Settings"
-            android:visible="true"/>
+                android:id="@+id/nav_booklets"
+                android:checkable="false"
+                android:checked="false"
+                android:enabled="true"
+                android:icon="@drawable/ic_menu_booklets"
+                android:title="Back to Booklet Selection"
+                android:visible="true"/>
 
         <!-- <item
             android:id="@+id/nav_share"

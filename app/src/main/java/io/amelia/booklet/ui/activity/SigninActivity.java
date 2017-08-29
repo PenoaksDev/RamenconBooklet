@@ -1,6 +1,5 @@
 package io.amelia.booklet.ui.activity;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
@@ -35,8 +34,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import io.amelia.R;
+import io.amelia.android.data.BoundData;
+import io.amelia.booklet.ContentManager;
 
-public class SigninActivity extends Activity implements GoogleApiClient.OnConnectionFailedListener, FirebaseAuth.AuthStateListener
+public class SigninActivity extends BaseActivity implements GoogleApiClient.OnConnectionFailedListener, FirebaseAuth.AuthStateListener
 {
 	public static final int GOOGLE_SIGNIN = 360;
 
@@ -253,6 +254,8 @@ public class SigninActivity extends Activity implements GoogleApiClient.OnConnec
 	{
 		super.onStart();
 
+		ContentManager.onStartActivity( this );
+
 		mAuth = FirebaseAuth.getInstance();
 		mAuth.addAuthStateListener( this );
 	}
@@ -263,6 +266,12 @@ public class SigninActivity extends Activity implements GoogleApiClient.OnConnec
 		super.onStop();
 
 		mAuth.removeAuthStateListener( this );
+	}
+
+	@Override
+	protected void processUpdate0( int type, BoundData data )
+	{
+
 	}
 
 	public void showProgressDialog()

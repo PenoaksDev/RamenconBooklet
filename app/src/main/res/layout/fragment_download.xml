@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         android:fitsSystemWindows="true"
         android:focusable="false"
@@ -34,7 +33,7 @@
                 android:divider="@color/lighter_gray"
                 android:footerDividersEnabled="true"
                 android:dividerHeight="1dp"
-                tools:listitem="@layout/activity_download_listitem"/>
+                tools:listitem="@layout/fragment_download_listitem"/>
 
     </android.support.v4.widget.SwipeRefreshLayout>
 

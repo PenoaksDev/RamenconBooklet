@@ -16,6 +16,7 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 
 import io.amelia.android.log.PLog;
+import io.amelia.android.support.ACRAHelper;
 import io.amelia.booklet.ContentManager;
 
 public class ImageCache
@@ -49,18 +50,16 @@ public class ImageCache
 	public static class ImageResolveTask extends AsyncTask<Void, Void, Void>
 	{
 		Context context;
-		String id;
-		String remoteUrl;
 		boolean forceUpdate;
 		ImageFoundListener foundListener;
-		ImageProgressListener progressListener;
-
-		boolean waiting = false;
-
+		String id;
 		long progressBytesTransferred = 0;
+		ImageProgressListener progressListener;
 		long progressTotalByteCount = 0;
+		String remoteUrl;
 		Bitmap resultBitmap;
 		Exception resultError;
+		boolean waiting = false;
 
 		ImageResolveTask( Context context, String id, String remoteUrl, boolean forceUpdate, ImageFoundListener foundListener, ImageProgressListener progressListener )
 		{
@@ -73,49 +72,15 @@ public class ImageCache
 		}
 
 		@Override
-		protected void onPreExecute()
-		{
-			super.onPreExecute();
-
-			if ( progressListener != null )
-				progressListener.start();
-		}
-
-		@Override
-		protected void onPostExecute( Void aVoid )
-		{
-			super.onPostExecute( aVoid );
-
-			if ( progressListener != null )
-				progressListener.finish();
-		}
-
-		@Override
-		protected void onProgressUpdate( Void... values )
-		{
-			super.onProgressUpdate( values );
-
-			if ( resultBitmap != null )
-			{
-				foundListener.update( resultBitmap );
-				resultBitmap = null;
-			}
-
-			if ( resultError != null )
-			{
-				foundListener.error( resultError );
-				resultError = null;
-			}
-
-			if ( progressListener != null )
-				progressListener.progress( progressBytesTransferred, progressTotalByteCount );
-		}
-
-		@Override
 		protected Void doInBackground( Void... params )
 		{
+			boolean downloadImages = ContentManager.downloadImages();
+
 			final File dest = new File( cacheDirectory, id + ".png" );
 			boolean update = false;
+
+			if ( !downloadImages )
+				dest.delete();
 
 			if ( dest.exists() )
 			{
@@ -166,24 +131,25 @@ public class ImageCache
 
 						if ( bitmap != null )
 						{
-							try
-							{
-								OutputStream out = null;
+							if ( downloadImages )
 								try
 								{
-									out = new FileOutputStream( dest );
-									bitmap.compress( Bitmap.CompressFormat.PNG, 100, out );
+									OutputStream out = null;
+									try
+									{
+										out = new FileOutputStream( dest );
+										bitmap.compress( Bitmap.CompressFormat.PNG, 100, out );
+									}
+									finally
+									{
+										if ( out != null )
+											out.close();
+									}
 								}
-								finally
+								catch ( Exception exception )
 								{
-									if ( out != null )
-										out.close();
+									ACRAHelper.handleExceptionOnce( "IMAGE_CACHE_" + id, new RuntimeException( "Recoverable Exception", exception ) );
 								}
-							}
-							catch ( Exception exception )
-							{
-								ACRA.getErrorReporter().handleException( new RuntimeException( "Recoverable Exception", exception ) );
-							}
 
 							resultBitmap = bitmap;
 							publishProgress();
@@ -210,20 +176,59 @@ public class ImageCache
 			return null;
 		}
 
-		public interface ImageProgressListener
+		@Override
+		protected void onPostExecute( Void aVoid )
 		{
-			void start();
+			super.onPostExecute( aVoid );
 
-			void progress( long bytesTransferred, long totalByteCount );
+			if ( progressListener != null )
+				progressListener.finish();
+		}
 
-			void finish();
+		@Override
+		protected void onPreExecute()
+		{
+			super.onPreExecute();
+
+			if ( progressListener != null )
+				progressListener.start();
+		}
+
+		@Override
+		protected void onProgressUpdate( Void... values )
+		{
+			super.onProgressUpdate( values );
+
+			if ( resultBitmap != null )
+			{
+				foundListener.update( resultBitmap );
+				resultBitmap = null;
+			}
+
+			if ( resultError != null )
+			{
+				foundListener.error( resultError );
+				resultError = null;
+			}
+
+			if ( progressListener != null )
+				progressListener.progress( progressBytesTransferred, progressTotalByteCount );
 		}
 
 		public interface ImageFoundListener
 		{
-			void update( Bitmap bitmap );
-
 			void error( Exception exception );
+
+			void update( Bitmap bitmap );
+		}
+
+		public interface ImageProgressListener
+		{
+			void finish();
+
+			void progress( long bytesTransferred, long totalByteCount );
+
+			void start();
 		}
 	}
 }

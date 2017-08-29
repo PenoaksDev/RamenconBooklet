@@ -37,7 +37,7 @@ import io.amelia.booklet.data.schedule.filters.DefaultScheduleFilter;
 
 public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> implements PersistentFragment, SwipeRefreshLayout.OnRefreshListener
 {
-	public static final long ONEDAY = 1440 * 60 * 1000;
+	public static final long ONE_DAY = 1440 * 60 * 1000;
 
 	private static ScheduleFragment instance = null;
 
@@ -98,13 +98,13 @@ public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> im
 
 
 					// Show earliest event one day ahead of time
-					if ( days.first().getTime() - ONEDAY > nowTime )
+					if ( days.first().getTime() - ONE_DAY > nowTime )
 					{
 						Toast.makeText( getContext(), "Sorry, Ramencon has not started yet... err, hurray... Ramencon is starting soon!", Toast.LENGTH_LONG ).show();
 						return true;
 					}
 
-					if ( days.last().getTime() + ONEDAY < nowTime )
+					if ( days.last().getTime() + ONE_DAY < nowTime )
 					{
 						Toast.makeText( getContext(), "Sorry, Ramencon is over. :( We hope you had a great year!", Toast.LENGTH_LONG ).show();
 						return true;
@@ -130,7 +130,7 @@ public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> im
 					if ( nowMatch != null )
 					{
 						currentFilter.setMin( nowMatch.getTime() );
-						currentFilter.setMax( nowMatch.getTime() + ONEDAY );
+						currentFilter.setMax( nowMatch.getTime() + ONE_DAY );
 					}
 
 					TreeSet<ModelEvent> data = receiver.filterRange( currentFilter );
@@ -225,7 +225,7 @@ public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> im
 				if ( nowMatch != null )
 				{
 					currentFilter.setMin( nowMatch.getTime() );
-					currentFilter.setMax( nowMatch.getTime() + ONEDAY );
+					currentFilter.setMax( nowMatch.getTime() + ONE_DAY );
 					selectedPosition = dayPosition;
 				}
 				else if ( receiver.hasHeartedEvents() )
@@ -236,7 +236,7 @@ public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> im
 				else if ( days.size() > 0 )
 				{
 					currentFilter.setMin( days.first().getTime() );
-					currentFilter.setMax( days.first().getTime() + ONEDAY );
+					currentFilter.setMax( days.first().getTime() + ONE_DAY );
 					selectedPosition = 1;
 				}
 

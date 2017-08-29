@@ -12,7 +12,8 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import io.amelia.R;
-import io.amelia.booklet.ui.activity.ContentActivity;
+import io.amelia.booklet.ContentManager;
+import io.amelia.booklet.ui.activity.BootActivity;
 
 public class SettingsFragment extends PreferenceFragment
 {
@@ -35,7 +36,7 @@ public class SettingsFragment extends PreferenceFragment
 		// SharedPreferences prefs = getPreferenceManager().getSharedPreferences();
 		// if ( prefs.getString("pref_reminder_delays", null) == null)
 
-		ListPreference mReminderDelays = ( ListPreference ) findPreference( "pref_reminder_delays" );
+		/* ListPreference mReminderDelays = ( ListPreference ) findPreference( "pref_reminder_delays" );
 
 		CharSequence[] entitiesValues = new String[] {"1", "5", "10", "15", "30"};
 		CharSequence[] entitiesTitle = new String[] {"1 Minute", "5 Minutes", "10 Minutes", "15 Minutes", "30 Minutes"};
@@ -51,7 +52,15 @@ public class SettingsFragment extends PreferenceFragment
 				// HomeActivity.instance.service.restartAllNotifications( Long.parseLong( ( String ) newValue ) * 60 * 1000 );
 				return true;
 			}
-		} );
+		} ); */
+
+		ListPreference mImageCache = ( ListPreference ) findPreference( "pref_image_cache" );
+
+		CharSequence[] imageCacheEntitiesValues = new String[] {"0", "15", "30", "60", "120", "240", "360", "720", "1440"};
+		CharSequence[] imageCacheEntitiesTitle = new String[] {"No Cache", "15 Minutes", "30 Minutes", "1 Hour", "2 Hours", "4 Hours", "6 Hours", "12 Hours", "1 Day"};
+
+		mImageCache.setEntryValues( imageCacheEntitiesValues );
+		mImageCache.setEntries( imageCacheEntitiesTitle );
 
 		Preference mForceReset = findPreference( "pref_force_reset" );
 		mForceReset.setOnPreferenceClickListener( new Preference.OnPreferenceClickListener()
@@ -65,15 +74,13 @@ public class SettingsFragment extends PreferenceFragment
 					@Override
 					public void onClick( DialogInterface dialog, int which )
 					{
-
-						( ( ContentActivity ) getActivity() ).factoryReset();
-
-						/* HomeActivity.instance.signOut();
-						HomeActivity.instance.stacker.clearFragments();
-						DataPersistence.getInstance().factoryReset(); */
+						getPreferenceManager().getSharedPreferences().edit().clear().apply();
+						ContentManager.factoryReset();
+						/* HomeActivity.instance.signOut(); */
 
 						Toast.makeText( getContext(), "App Successfully Factory Reset", Toast.LENGTH_LONG ).show();
-						// HomeActivity.instance.finish();
+
+						( ( BootActivity ) getActivity() ).stacker.popBackstack();
 					}
 				} ).setNegativeButton( "Opps, wrong button", new DialogInterface.OnClickListener()
 				{

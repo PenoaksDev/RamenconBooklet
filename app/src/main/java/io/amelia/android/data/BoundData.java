@@ -38,6 +38,33 @@ public class BoundData extends AbstractMap<String, Object>
 
 	private Set<Entry<String, Object>> values = new HashSet<>();
 
+	private Object collectionToValue( Collection value )
+	{
+		if ( value.size() == 0 )
+			return new BoundData();
+
+		// Check if the entire list contains the same class type
+		Object first = Lists.first( value );
+		if ( Lists.isOfType( value, first.getClass() ) )
+		{
+			if ( first instanceof Pair ) // Pair.class.isAssignableFrom( first.getClass() ) )
+				return toBoundData( value );
+			else if ( first instanceof Collection )
+			{
+				List<Object> list = new ArrayList<>();
+				for ( Object obj : value )
+					list.add( collectionToValue( ( Collection ) obj ) );
+				return list;
+			}
+			else
+				for ( Class<?> bClass : allowableTypes )
+					if ( bClass.isAssignableFrom( first.getClass() ) )
+						return value;
+		}
+
+		throw new IllegalArgumentException( "Unparcelable list type: " + value.getClass().getSimpleName() + " {" + TextUtils.join( ", ", Lists.listClasses( ( Collection ) value ) ) + "}" );
+	}
+
 	@Override
 	public Set<Entry<String, Object>> entrySet()
 	{
@@ -63,6 +90,14 @@ public class BoundData extends AbstractMap<String, Object>
 	{
 		Object result = get( keyId );
 		return result == null || !( result instanceof BoundData ) ? def : ( BoundData ) result;
+	}
+
+	public List<BoundData> getBoundDataList( String keyId )
+	{
+		List<?> list = getList( keyId, null );
+		if ( list == null )
+			return null;
+		return Objs.castList( list, BoundData.class );
 	}
 
 	public Double getDouble( String keyId )
@@ -182,25 +217,7 @@ public class BoundData extends AbstractMap<String, Object>
 
 		if ( !assignable )
 			if ( value instanceof Collection )
-			{
-				// Check if the entire list contains the same class type
-				Object first = Lists.first( ( Collection ) value );
-				if ( Lists.isOfType( ( Collection ) value, first.getClass() ) )
-				{
-					if ( Pair.class.isAssignableFrom( first.getClass() ) )
-					{
-						value = toBoundData( ( Collection ) value );
-						assignable = true;
-					}
-					else
-						for ( Class<?> bClass : allowableTypes )
-							if ( bClass.isAssignableFrom( first.getClass() ) )
-								assignable = true;
-				}
-
-				if ( !assignable )
-					throw new IllegalArgumentException( "Unparcelable list type: " + value.getClass().getSimpleName() + " {" + TextUtils.join( ", ", Lists.listClasses( ( Collection ) value ) ) + "}" );
-			}
+				value = collectionToValue( ( Collection ) value );
 			/* else if ( value instanceof Map )
 			{
 

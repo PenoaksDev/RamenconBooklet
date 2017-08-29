@@ -21,19 +21,16 @@ import io.amelia.android.data.ImageCache;
 import io.amelia.android.support.ACRAHelper;
 import io.amelia.android.support.DateAndTime;
 import io.amelia.booklet.Booklet;
-import io.amelia.booklet.ui.fragment.DownloadFragment;
+import io.amelia.booklet.ContentManager;
 
 public class BookletAdapter extends BaseExpandableListAdapter
 {
 	public List<Booklet> booklets;
-	private Context context;
 	private LayoutInflater inflater = null;
 
-	public BookletAdapter( Context context, List<Booklet> booklets )
+	public BookletAdapter( List<Booklet> booklets )
 	{
-		this.inflater = ( LayoutInflater ) context.getSystemService( Context.LAYOUT_INFLATER_SERVICE );
-		this.context = context;
-
+		this.inflater = ( LayoutInflater ) ContentManager.getActivity().getSystemService( Context.LAYOUT_INFLATER_SERVICE );
 		this.booklets = booklets;
 	}
 
@@ -60,13 +57,13 @@ public class BookletAdapter extends BaseExpandableListAdapter
 	{
 		try
 		{
-			View childView = convertView == null ? inflater.inflate( R.layout.activity_download_listitem_child, null ) : convertView;
+			View childView = convertView == null ? inflater.inflate( R.layout.fragment_download_listitem_child, null ) : convertView;
 
 			final Booklet booklet = booklets.get( groupPosition );
 
-			TextView booklet_date = ( TextView ) childView.findViewById( R.id.booklet_date );
-			TextView booklet_location = ( TextView ) childView.findViewById( R.id.booklet_location );
-			TextView booklet_description = ( TextView ) childView.findViewById( R.id.booklet_description );
+			TextView booklet_date = childView.findViewById( R.id.booklet_date );
+			TextView booklet_location = childView.findViewById( R.id.booklet_location );
+			TextView booklet_description = childView.findViewById( R.id.booklet_description );
 
 			SimpleDateFormat date = new SimpleDateFormat( "yyyy-MM-dd" );
 			booklet_date.setText( DateAndTime.formatDateRange( date.parse( booklet.getData().getString( Booklet.KEY_WHEN_FROM ) ), date.parse( booklet.getData().getString( Booklet.KEY_WHEN_TO ) ) ) );
@@ -79,7 +76,7 @@ public class BookletAdapter extends BaseExpandableListAdapter
 		{
 			e.printStackTrace();
 			Snackbar.make( parent, "There was a problem displaying this booklet. The problem was reported to the developer.", Snackbar.LENGTH_LONG ).show();
-			return new View( context );
+			return new View( ContentManager.getActivity() );
 		}
 	}
 
@@ -122,16 +119,16 @@ public class BookletAdapter extends BaseExpandableListAdapter
 	@Override
 	public View getGroupView( final int position, boolean isExpanded, View convertView, final ViewGroup parent )
 	{
-		View rowView = convertView == null ? inflater.inflate( R.layout.activity_download_listitem, null ) : convertView;
+		View rowView = convertView == null ? inflater.inflate( R.layout.fragment_download_listitem, null ) : convertView;
 
 		final Booklet booklet = booklets.get( position );
 
 		try
 		{
-			final ImageView booklet_header = ( ImageView ) rowView.findViewById( R.id.booklet_header );
-			TextView booklet_title = ( TextView ) rowView.findViewById( R.id.booklet_title );
-			Button booket_info = ( Button ) rowView.findViewById( R.id.booklet_info );
-			FrameLayout booklet_view = ( FrameLayout ) rowView.findViewById( R.id.booklet_view );
+			final ImageView booklet_header = rowView.findViewById( R.id.booklet_header );
+			TextView booklet_title = rowView.findViewById( R.id.booklet_title );
+			Button booket_info = rowView.findViewById( R.id.booklet_info );
+			FrameLayout booklet_view = rowView.findViewById( R.id.booklet_view );
 
 			if ( booklet.getDataImage() == null )
 				booklet_header.setImageResource( R.drawable.noimagefound );
@@ -184,6 +181,7 @@ public class BookletAdapter extends BaseExpandableListAdapter
 				@Override
 				public void onClick( View v )
 				{
+					ContentManager.onBookletClick( booklet, v );
 					// context.onListItemClick( booklet );
 					// booklet.updateAndOpen( v, false, postTask );
 				}

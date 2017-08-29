@@ -3,16 +3,16 @@ package io.amelia.booklet.ui.activity;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.widget.TextView;
 
 import io.amelia.R;
+import io.amelia.android.data.BoundData;
 import io.amelia.android.support.WaitFor;
 import io.amelia.booklet.Booklet;
 import io.amelia.booklet.BookletState;
 import io.amelia.booklet.ContentManager;
 
-public class LoadActivity extends AppCompatActivity
+public class LoadActivity extends BaseActivity
 {
 	@Override
 	protected void onCreate( Bundle savedInstanceState )
@@ -63,4 +63,17 @@ public class LoadActivity extends AppCompatActivity
 		} );
 	}
 
+	@Override
+	protected void onStart()
+	{
+		super.onStart();
+
+		ContentManager.onStartActivity( this );
+	}
+
+	@Override
+	protected void processUpdate0( int type, BoundData data )
+	{
+
+	}
 }

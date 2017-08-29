@@ -156,7 +156,7 @@ public class ScheduleDayAdapter extends BaseAdapter
 
 		ScheduleDayAdapter.this.selectedPosition = position;
 
-		mListView.setAdapter( new ScheduleAdapter( ContentManager.getDownloadFragment().getActivity(), mScheduleDataReceiver.simpleDateFormat(), mScheduleDataReceiver.simpleTimeFormat(), mScheduleDataReceiver.locations, data ) );
+		mListView.setAdapter( new ScheduleAdapter( ContentManager.getActivity(), mScheduleDataReceiver.simpleDateFormat(), mScheduleDataReceiver.simpleTimeFormat(), mScheduleDataReceiver.locations, data ) );
 
 		for ( int i = 0; i < mDayView.getChildCount(); i++ )
 			if ( i != position )

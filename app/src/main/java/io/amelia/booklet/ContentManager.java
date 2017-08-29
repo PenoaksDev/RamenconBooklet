@@ -1,15 +1,18 @@
 package io.amelia.booklet;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.view.View;
 
 import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import io.amelia.android.support.LibAndroid;
-import io.amelia.booklet.ui.fragment.DownloadFragment;
+import io.amelia.booklet.ui.activity.BaseActivity;
+import io.amelia.booklet.ui.activity.ContentActivity;
 
 public class ContentManager
 {
@@ -19,15 +22,22 @@ public class ContentManager
 
 	static final ExecutorService threadPool = Executors.newCachedThreadPool();
 	private static Booklet activeBooklet;
+	private static BaseActivity activity;
 	private static File cacheDir;
 	private static boolean contentManagerReady = false;
 	private static Context context;
-	private static DownloadFragment downloadFragment;
 
-	public static boolean downloadImages()
+	public static void factoryReset()
 	{
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences( ContentManager.getApplicationContext() );
-		return prefs.getBoolean( "download_images", true );
+		for ( File file : getCacheDir().listFiles() )
+			file.delete();
+
+		activeBooklet = null;
+
+		Booklet.setup();
+
+		Booklet.addBooklet( "ramencon2016" );
+		Booklet.addBooklet( "ramencon2017" );
 	}
 
 	public static Booklet getActiveBooklet()
@@ -49,6 +59,13 @@ public class ContentManager
 		pref.edit().putString( "activeBookletId", bookletId ).commit();
 	}
 
+	public static BaseActivity getActivity()
+	{
+		if ( activity == null )
+			throw new IllegalStateException( "The active activity is null." );
+		return activity;
+	}
+
 	public static Context getApplicationContext()
 	{
 		return context;
@@ -59,21 +76,15 @@ public class ContentManager
 		return cacheDir;
 	}
 
-	public static DownloadFragment getDownloadFragment()
-	{
-		return downloadFragment;
-	}
-
-	public static void setDownloadFragment( DownloadFragment downloadFragment )
-	{
-		ContentManager.downloadFragment = downloadFragment;
-
-		refreshBooklets();
-	}
-
 	public static ExecutorService getExecutorThreadPool()
 	{
 		return threadPool;
+	}
+
+	public static int getImageCacheTimeout()
+	{
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences( ContentManager.getApplicationContext() );
+		return prefs.getInt( "pref_image_cache", 360 );
 	}
 
 	public static boolean isBookletsRefreshing()
@@ -89,11 +100,31 @@ public class ContentManager
 		return contentManagerReady;
 	}
 
+	public static void onBookletClick( Booklet booklet, View view )
+	{
+		BookletState state = booklet.getState();
+
+		if ( state == BookletState.AVAILABLE || state == BookletState.OUTDATED )
+			booklet.goDownload( view );
+		else
+		{
+			setActiveBooklet( booklet.getId() );
+			getActivity().startActivity( new Intent( getActivity(), ContentActivity.class ) );
+		}
+	}
+
+	public static void onStartActivity( BaseActivity activity )
+	{
+		ContentManager.activity = activity;
+	}
+
 	public static void refreshBooklets()
 	{
 		if ( !LibAndroid.haveNetworkConnection() )
 		{
-			downloadFragment.showErrorDialog( "We could not find an active internet connection. Please turn on data or connect to WiFi." );
+			if ( activity == null )
+				throw new IllegalStateException( "We could not find an active internet connection. Please turn on data or connect to WiFi." );
+			activity.uiShowErrorDialog( "We could not find an active internet connection. Please turn on data or connect to WiFi." );
 			return;
 		}
 

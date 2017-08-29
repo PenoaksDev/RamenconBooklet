@@ -19,14 +19,12 @@ import io.amelia.android.support.Objs;
 
 public class FragmentStack
 {
+	private List<FragmentSaveState> backstack = new ArrayList<>();
+	private List<OnBackStackChangedListener> backstackListeners = new ArrayList<>();
+	private int containerId;
+	private FragmentManager mgr;
 	private Map<Integer, Class<? extends Fragment>> registeredFragments = new HashMap<>();
 	private Map<String, FragmentSaveState> states = new HashMap<>();
-
-	private List<OnBackStackChangedListener> backstackListeners = new ArrayList<>();
-	private List<FragmentSaveState> backstack = new ArrayList<>();
-
-	private FragmentManager mgr;
-	private int containerId;
 
 	public FragmentStack( FragmentManager mgr, int containerId )
 	{
@@ -34,22 +32,51 @@ public class FragmentStack
 		this.containerId = containerId;
 	}
 
-	public void registerFragment( Integer id, Class<? extends Fragment> classFrag )
+	public void addOnBackStackChangedListener( OnBackStackChangedListener listener )
 	{
-		registeredFragments.put( id, classFrag );
+		backstackListeners.add( listener );
+	}
+
+	public void clearFragments()
+	{
+		backstack.clear();
+		states.clear();
+	}
+
+	public Fragment getCurrentFragment()
+	{
+		for ( Fragment fragment : mgr.getFragments() )
+			if ( fragment.isVisible() )
+				return fragment;
+		return null;
+	}
+
+	public boolean hasBackstack()
+	{
+		return backstack.size() > 0;
 	}
 
 	/**
-	 * Save the FragmentStack state
+	 * Loads a fragment
 	 *
-	 * @param state The Bundle to save to
+	 * @param classFrag The fragment class to be loaded
+	 * @return The fragment save state
 	 */
-	public void saveInstanceState( Bundle state )
+	public FragmentSaveState loadFragment( Class<? extends Fragment> classFrag )
 	{
-		Bundle savedStates = new Bundle();
-		for ( Map.Entry<String, FragmentSaveState> es : states.entrySet() )
-			savedStates.putBundle( es.getKey(), es.getValue().saveState() );
-		state.putBundle( "savedStates", savedStates );
+		FragmentSaveState state = loadFragment( classFrag.getSimpleName() );
+		if ( state == null )
+		{
+			state = new FragmentSaveState( classFrag );
+			states.put( classFrag.getSimpleName(), state );
+			state.init();
+		}
+		return state;
+	}
+
+	public FragmentSaveState loadFragment( String fragKey )
+	{
+		return states.containsKey( fragKey ) ? states.get( fragKey ) : null;
 	}
 
 	public void loadInstanceState( Bundle state )
@@ -79,43 +106,46 @@ public class FragmentStack
 		}
 	}
 
+	public void popBackstack()
+	{
+		if ( backstack.size() == 0 )
+			return;
+
+		FragmentSaveState state = backstack.remove( 0 );
+		state.show( false );
+
+		for ( OnBackStackChangedListener listener : backstackListeners )
+			listener.onBackStackChanged();
+	}
+
+	public void refreshFragment()
+	{
+		for ( FragmentSaveState state : states.values() )
+			if ( state.isVisible() && state.fragment instanceof PersistentFragment )
+				( ( PersistentFragment ) state.fragment ).refreshState();
+	}
+
+	public void registerFragment( Integer id, Class<? extends Fragment> classFrag )
+	{
+		registeredFragments.put( id, classFrag );
+	}
+
+	public void removeOnBackStackChangedListener( OnBackStackChangedListener listener )
+	{
+		backstackListeners.remove( listener );
+	}
+
 	/**
-	 * Loads a fragment
+	 * Save the FragmentStack state
 	 *
-	 * @param classFrag The fragment class to be loaded
-	 * @return The fragment save state
+	 * @param state The Bundle to save to
 	 */
-	public FragmentSaveState loadFragment( Class<? extends Fragment> classFrag )
+	public void saveInstanceState( Bundle state )
 	{
-		FragmentSaveState state = loadFragment( classFrag.getSimpleName() );
-		if ( state == null )
-		{
-			state = new FragmentSaveState( classFrag );
-			states.put( classFrag.getSimpleName(), state );
-			state.init();
-		}
-		return state;
-	}
-
-	public FragmentSaveState loadFragment( String fragKey )
-	{
-		return states.containsKey( fragKey ) ? states.get( fragKey ) : null;
-	}
-
-	public boolean setFragmentById( int id )
-	{
-		return setFragmentById( id, false );
-	}
-
-	public boolean setFragmentById( int id, boolean withBack )
-	{
-		if ( registeredFragments.containsKey( id ) )
-		{
-			setFragment( registeredFragments.get( id ), withBack );
-			return true;
-		}
-
-		return false;
+		Bundle savedStates = new Bundle();
+		for ( Map.Entry<String, FragmentSaveState> es : states.entrySet() )
+			savedStates.putBundle( es.getKey(), es.getValue().saveState() );
+		state.putBundle( "savedStates", savedStates );
 	}
 
 	public void setFragment( Class<? extends Fragment> classFrag )
@@ -163,44 +193,20 @@ public class FragmentStack
 		state.show( withBack );
 	}
 
-	public boolean hasBackstack()
+	public boolean setFragmentById( int id )
 	{
-		return backstack.size() > 0;
+		return setFragmentById( id, false );
 	}
 
-	public void popBackstack()
+	public boolean setFragmentById( int id, boolean withBack )
 	{
-		if ( backstack.size() == 0 )
-			return;
+		if ( registeredFragments.containsKey( id ) )
+		{
+			setFragment( registeredFragments.get( id ), withBack );
+			return true;
+		}
 
-		FragmentSaveState state = backstack.remove( 0 );
-		state.show( false );
-
-		for ( OnBackStackChangedListener listener : backstackListeners )
-			listener.onBackStackChanged();
-	}
-
-	public void addOnBackStackChangedListener( OnBackStackChangedListener listener )
-	{
-		backstackListeners.add( listener );
-	}
-
-	public void removeOnBackStackChangedListener( OnBackStackChangedListener listener )
-	{
-		backstackListeners.remove( listener );
-	}
-
-	public void refreshFragment()
-	{
-		for ( FragmentSaveState state : states.values() )
-			if ( state.isVisible() && state.fragment instanceof PersistentFragment )
-				( ( PersistentFragment ) state.fragment ).refreshState();
-	}
-
-	public void clearFragments()
-	{
-		backstack.clear();
-		states.clear();
+		return false;
 	}
 
 	public interface OnBackStackChangedListener
@@ -214,8 +220,8 @@ public class FragmentStack
 	public class FragmentSaveState
 	{
 		Class<? extends Fragment> clz;
-		Bundle state = new Bundle();
 		Fragment fragment;
+		Bundle state = new Bundle();
 
 		public FragmentSaveState( Class<? extends Fragment> clz )
 		{
@@ -228,67 +234,6 @@ public class FragmentStack
 			this.fragment = fragment;
 		}
 
-		public boolean isVisible()
-		{
-			Fragment frag = mgr.findFragmentByTag( clz.getSimpleName() );
-			return frag != null && frag.isVisible();
-		}
-
-		public void show( boolean withBack )
-		{
-			if ( fragment == null )
-				init();
-			if ( fragment.isVisible() )
-				return;
-
-			// Move visible fragments to save state
-			for ( FragmentSaveState state : states.values() )
-				if ( state.fragment != null && state.fragment.isVisible() )
-				{
-					if ( withBack )
-					{
-						backstack.add( state );
-						for ( OnBackStackChangedListener listener : backstackListeners )
-							listener.onBackStackChanged();
-					}
-
-					state.saveState();
-					break;
-				}
-
-			if ( state != null && !state.isEmpty() )
-				loadState();
-
-			FragmentTransaction trans = mgr.beginTransaction();
-			trans.replace( containerId, fragment, fragment.getClass().getSimpleName() );
-			// if (withBack)
-			// trans.addToBackStack(fragment.getClass().getSimpleName());
-			trans.commit();
-		}
-
-		public Bundle saveState()
-		{
-			if ( fragment != null && fragment instanceof PersistentFragment )
-				( ( PersistentFragment ) fragment ).saveState( state );
-			// TODO Make other ways to save a fragment state
-
-			state.putSerializable( "fragmentClass", clz );
-			state.putString( "visible", isVisible() ? "true" : "false" );
-
-			Log.i( "APP", "Storing " + fragment.getClass().getSimpleName() + " -> " + state );
-
-			return state;
-		}
-
-		public void loadState()
-		{
-			Log.i( "APP", "Loading " + fragment.getClass().getSimpleName() + " -> " + state );
-
-			if ( state != null && fragment != null && fragment instanceof PersistentFragment )
-				( ( PersistentFragment ) fragment ).loadState( state );
-			// TODO Make other ways to load a fragment state
-		}
-
 		private Fragment init()
 		{
 			return init( false );
@@ -296,7 +241,7 @@ public class FragmentStack
 
 		private Fragment init( boolean force )
 		{
-			PLog.i( "Init " + clz.getSimpleName() );
+			PLog.i( "Init Fragment " + clz.getSimpleName() );
 
 			if ( fragment != null && !force )
 				return fragment;
@@ -350,6 +295,67 @@ public class FragmentStack
 
 			this.fragment = instance;
 			return instance;
+		}
+
+		public boolean isVisible()
+		{
+			Fragment frag = mgr.findFragmentByTag( clz.getSimpleName() );
+			return frag != null && frag.isVisible();
+		}
+
+		public void loadState()
+		{
+			Log.i( "APP", "Loading " + fragment.getClass().getSimpleName() + " -> " + state );
+
+			if ( state != null && fragment != null && fragment instanceof PersistentFragment )
+				( ( PersistentFragment ) fragment ).loadState( state );
+			// TODO Make other ways to load a fragment state
+		}
+
+		public Bundle saveState()
+		{
+			if ( fragment != null && fragment instanceof PersistentFragment )
+				( ( PersistentFragment ) fragment ).saveState( state );
+			// TODO Make other ways to save a fragment state
+
+			state.putSerializable( "fragmentClass", clz );
+			state.putString( "visible", isVisible() ? "true" : "false" );
+
+			Log.i( "APP", "Storing " + fragment.getClass().getSimpleName() + " -> " + state );
+
+			return state;
+		}
+
+		public void show( boolean withBack )
+		{
+			if ( fragment == null )
+				init();
+			if ( fragment.isVisible() )
+				return;
+
+			// Move visible fragments to save state
+			for ( FragmentSaveState state : states.values() )
+				if ( state.fragment != null && state.fragment.isVisible() )
+				{
+					if ( withBack )
+					{
+						backstack.add( state );
+						for ( OnBackStackChangedListener listener : backstackListeners )
+							listener.onBackStackChanged();
+					}
+
+					state.saveState();
+					break;
+				}
+
+			if ( state != null && !state.isEmpty() )
+				loadState();
+
+			FragmentTransaction trans = mgr.beginTransaction();
+			trans.replace( containerId, fragment, fragment.getClass().getSimpleName() );
+			// if (withBack)
+			// trans.addToBackStack(fragment.getClass().getSimpleName());
+			trans.commit();
 		}
 	}
 }

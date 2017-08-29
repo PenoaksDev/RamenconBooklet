@@ -4,7 +4,6 @@ import android.os.AsyncTask;
 import android.support.design.widget.Snackbar;
 import android.view.View;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
@@ -55,7 +54,7 @@ class BookletDownloadTask
 		booklet.setInUse( true );
 
 		if ( view != null )
-			Snackbar.make( view, "Updating Booklet " + bookletId + " // " + bookletState, Snackbar.LENGTH_SHORT ).show();
+			Snackbar.make( view, "Downloading Booklet " + booklet.getDataTitle() + ", Please Wait...", Snackbar.LENGTH_SHORT ).show();
 
 		progressBar = view == null ? null : ( ProgressBar ) view.findViewById( R.id.booklet_progress );
 		if ( progressBar != null )
@@ -211,15 +210,17 @@ class BookletDownloadTask
 				boolean allDone = true;
 
 				for ( final FileDownload fileDownload : pendingFiles )
-					if ( !fileDownload.finished )
+					if ( fileDownload.lastException != null )
 					{
-						allDone = false;
+						fileDownload.lastException.printStackTrace();
+						// Toast.makeText( ContentManager.getDownloadFragment().getActivity(), fileDownload.lastException.getMessage(), Toast.LENGTH_LONG ).show();
+						allDone = true;
 						break;
 					}
-					else if ( fileDownload.lastException != null )
+					else if ( !fileDownload.finished )
 					{
-						Toast.makeText( ContentManager.getDownloadFragment().getActivity(), lastException.getMessage(), Toast.LENGTH_LONG ).show();
-						allDone = true;
+						PLog.i( "File " + fileDownload.remoteFile + " not finished!" );
+						allDone = false;
 						break;
 					}
 

@@ -7,22 +7,23 @@
             android:summary="Display event time in 24 hour format"
             android:title="Use Military Time"/>
 
-    <SwitchPreference
+    <ListPreference
+            android:defaultValue="360"
+            android:key="pref_image_cache"
+            android:summary="How long should the app keep images cached"
+            android:title="Image Cache Timeout"/>
+
+    <!-- <SwitchPreference
             android:defaultValue="true"
             android:key="pref_reminder_vibrate"
             android:summary="Vibrate for event reminders"
-            android:title="Vibrate on Reminder"/>
+            android:title="Vibrate on Reminder"/> -->
 
-    <SwitchPreference
-            android:defaultValue="true"
-            android:title="Download Booklet Images"
-            android:key="download_images"
-            android:summary="Turn on to save bandwidth. Turn off to save disk space."/>
-    <ListPreference
+    <!-- <ListPreference
             android:defaultValue="10"
             android:key="pref_reminder_delays"
             android:summary="When would you like a reminder before an event?"
-            android:title="Event Reminder Delay"/>
+            android:title="Event Reminder Delay"/> -->
 
     <Preference
             android:key="pref_force_reset"
