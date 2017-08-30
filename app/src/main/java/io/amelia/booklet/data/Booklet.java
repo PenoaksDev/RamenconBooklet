@@ -15,6 +15,7 @@ import io.amelia.android.data.BoundData;
 import io.amelia.android.log.PLog;
 import io.amelia.android.support.ACRAHelper;
 import io.amelia.android.support.LibAndroid;
+import io.amelia.android.support.Objs;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -90,11 +91,11 @@ public class Booklet
 		}
 	}
 
-	private final Map<String, ContentHandler> sectionHandlerList = new HashMap<>();
-	BoundData data;
+	volatile BoundData data;
 	Exception lastException = null;
 	private String id;
 	private boolean inUse = false;
+	private volatile Map<String, ContentHandler> sectionHandlerList = new HashMap<>();
 
 	Booklet( String id )
 	{
@@ -160,7 +161,9 @@ public class Booklet
 
 	public List<String> getDataSections()
 	{
-		return data.getStringList( KEY_SECTIONS );
+		List<String> list = new ArrayList<>( data.getStringList( KEY_SECTIONS ) );
+		list.add( "welcome" );
+		return list;
 	}
 
 	public String getDataTitle()
@@ -206,12 +209,13 @@ public class Booklet
 			updateSectionHandlers();
 
 		for ( ContentHandler contentHandler : sectionHandlerList.values() )
-			if ( sectionClass.isAssignableFrom( contentHandler.getClass() ) && getDataSections().contains( contentHandler.getSectionKey() ) )
+			if ( sectionClass.isAssignableFrom( contentHandler.getClass() ) && ( Objs.isEmpty( contentHandler.getSectionKey() ) || getDataSections().contains( contentHandler.getSectionKey() ) ) )
 			{
 				if ( contentHandler.getLastUpdated() != getDataLastUpdated() )
 					updateSectionHandler( contentHandler );
 				return ( T ) contentHandler;
 			}
+
 		throw new IllegalStateException( "The section handler for key " + sectionClass.getSimpleName() + " does not exist! Does it exist in the Booklet manifest?" );
 
 		// TODO Init new section handler classes
@@ -395,38 +399,45 @@ public class Booklet
 
 	protected void updateSectionHandler( ContentHandler contentHandler )
 	{
-		contentHandler.sectionHandle( getSectionData( contentHandler.getSectionKey() ), getDataLastUpdated() );
+		// Empty/null section key returns the Booklet Data instead
+		String sectionKey = contentHandler.getSectionKey();
+		contentHandler.sectionHandle( Objs.isEmpty( sectionKey ) ? data : getSectionData( contentHandler.getSectionKey() ), getDataLastUpdated() );
 	}
 
 	protected void updateSectionHandlers()
 	{
-		for ( String handler : getDataSections() )
+		synchronized ( sectionHandlerList )
 		{
-			if ( !sectionHandlerList.containsKey( handler ) )
-				switch ( handler )
-				{
-					case "guests":
-						sectionHandlerList.put( "guests", new GuestsHandler().setBooklet( this ) );
-						break;
-					case "maps":
-						sectionHandlerList.put( "maps", new MapsHandler().setBooklet( this ) );
-						break;
-					case "schedule":
-						sectionHandlerList.put( "schedule", new ScheduleHandler().setBooklet( this ) );
-						break;
-					case "guide":
-						return;
-						// sectionHandlerList.put( "guide", new GuideSectionHandler().setBooklet( this ) );
-						// break;
-					default:
-						throw new IllegalArgumentException( "App does not implement the SectionHandler named " + handler + ", might need coding!" );
-				}
+			for ( String handler : getDataSections() )
+			{
+				if ( !sectionHandlerList.containsKey( handler ) )
+					switch ( handler )
+					{
+						case "welcome":
+							sectionHandlerList.put( "welcome", new WelcomeHandler().setBooklet( this ) );
+							break;
+						case "guests":
+							sectionHandlerList.put( "guests", new GuestsHandler().setBooklet( this ) );
+							break;
+						case "maps":
+							sectionHandlerList.put( "maps", new MapsHandler().setBooklet( this ) );
+							break;
+						case "schedule":
+							sectionHandlerList.put( "schedule", new ScheduleHandler().setBooklet( this ) );
+							break;
+						case "guide":
+							// sectionHandlerList.put( "guide", new GuideSectionHandler().setBooklet( this ) );
+							break;
+						default:
+							throw new IllegalArgumentException( "App does not implement the SectionHandler named " + handler + ", might need coding!" );
+					}
 
-			ContentHandler contentHandler = sectionHandlerList.get( handler );
+				ContentHandler contentHandler = sectionHandlerList.get( handler );
 
-			// Check if SectionHandler is deserving an update
-			if ( contentHandler.getLastUpdated() != getDataLastUpdated() )
-				updateSectionHandler( contentHandler );
+				// Check if SectionHandler is deserving an update
+				if ( contentHandler != null && contentHandler.getLastUpdated() != getDataLastUpdated() )
+					updateSectionHandler( contentHandler );
+			}
 		}
 	}
 }

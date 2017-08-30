@@ -1,56 +1,67 @@
 <ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".ui.WelcomeFragment">
-
-    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="24dp"
-        android:weightSum="1">
+        tools:context="io.amelia.booklet.ui.fragment.WelcomeFragment">
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:weightSum="1">
 
         <ImageView
-            android:id="@+id/imageView"
-            android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:layout_gravity="center_horizontal"
-            android:src="@drawable/logo"/>
+                android:id="@+id/welcome_header"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:layout_gravity="center_horizontal"
+                android:src="@drawable/logo"/>
+
+        <TextView
+                android:id="@+id/welcome_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Booklet Title"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:layout_gravity="center_horizontal"
+                android:paddingBottom="5dp"
+                android:textStyle="bold"
+                android:textSize="18sp"/>
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:paddingBottom="5dp">
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingBottom="5dp">
 
             <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:scaleType="fitXY"
-                android:src="@drawable/ic_list_time"/>
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/ic_list_time"/>
 
             <TextView
-                android:id="@+id/welcome_date"
-                android:layout_width="wrap_content"
-                android:layout_height="20dp"
-                android:clickable="true"
-                android:gravity="left|center_vertical"
-                android:text="September 23-25, 2016"
-                android:textAppearance="?android:attr/textAppearanceSmall"/>
+                    android:id="@+id/welcome_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="20dp"
+                    android:clickable="true"
+                    android:gravity="left|center_vertical"
+                    android:text="September 23-25, 2016"
+                    android:textAppearance="?android:attr/textAppearanceSmall"/>
 
         </LinearLayout>
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:paddingBottom="10dp">
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingBottom="10dp">
 
             <ImageView
                     android:layout_width="20dp"
@@ -59,21 +70,35 @@
                     android:src="@drawable/ic_list_pin"/>
 
             <TextView
-                android:id="@+id/welcome_location"
-                android:layout_width="wrap_content"
-                android:layout_height="20dp"
-                android:clickable="true"
-                android:gravity="left|center_vertical"
-                android:text="800 E 81st Ave Merrillville, IN 46410"
-                android:textAppearance="?android:attr/textAppearanceSmall"/>
+                    android:id="@+id/welcome_where"
+                    android:layout_width="wrap_content"
+                    android:layout_height="20dp"
+                    android:clickable="true"
+                    android:gravity="left|center_vertical"
+                    android:text="800 E 81st Ave Merrillville, IN 46410"
+                    android:textAppearance="?android:attr/textAppearanceSmall"/>
 
         </LinearLayout>
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:text="Ramencon is an anime convention in Northwest Indiana, built by anime fans, for anime fans. Much of what you experience at the con has been suggested by all of you! We want everyone to have the best time possible and be comfortable enough to do everything you want in one weekend."
-            android:textSize="16dp"/>
+                android:id="@+id/welcome_description"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="Ramencon is an anime convention in Northwest Indiana, built by anime fans, for anime fans. Much of what you experience at the con has been suggested by all of you! We want everyone to have the best time possible and be comfortable enough to do everything you want in one weekend."
+                android:textSize="16dp"
+                android:paddingBottom="10dp"
+                android:textAlignment="center"/>
+
+        <TextView
+                android:id="@+id/welcome_blurb"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:textAlignment="center"
+                android:textSize="16dp"
+                android:text="Hurray, we look forward to seeing you soon!"
+                android:textColor="@color/colorPurple"
+                android:paddingBottom="10dp"/>
     </LinearLayout>
 </ScrollView>

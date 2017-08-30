@@ -93,13 +93,13 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 					TreeSet<Date> days = handler.sampleDays();
 					long nowTime = new Date().getTime();
 
-					assert days.size() > 0;
-
+					if ( days.size() == 0 )
+						return true;
 
 					// Show earliest event one day ahead of time
 					if ( days.first().getTime() - ONE_DAY > nowTime )
 					{
-						Toast.makeText( getContext(), "Sorry, Ramencon has not started yet... err, hurray... Ramencon is starting soon!", Toast.LENGTH_LONG ).show();
+						Toast.makeText( getContext(), "Ramencon has not started yet... err, hurray... Ramencon is starting soon!", Toast.LENGTH_LONG ).show();
 						return true;
 					}
 
@@ -185,7 +185,7 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 		if ( getView() == null )
 			return;
 
-		ExpandableListView lv = ( ExpandableListView ) getView().findViewById( R.id.schedule_listview );
+		ExpandableListView lv = getView().findViewById( R.id.schedule_listview );
 
 		bundle.putString( "filter", DefaultScheduleFilter.getAdapter().toJson( currentFilter ) );
 
@@ -210,14 +210,14 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 
 			final TreeSet<Date> days = handler.sampleDays();
 
-			TwoWayView mDayView = ( TwoWayView ) root.findViewById( R.id.daylist );
-			TextView mDateDisplay = ( TextView ) root.findViewById( R.id.date_display );
+			TwoWayView mDayView = root.findViewById( R.id.daylist );
+			TextView mDateDisplay = root.findViewById( R.id.date_display );
 
 			assert mDayView != null;
 			assert mDateDisplay != null;
 			assert days.size() > 0;
 
-			mListView = ( ExpandableListView ) root.findViewById( R.id.schedule_listview );
+			mListView = root.findViewById( R.id.schedule_listview );
 
 			int selectedPosition = 1;
 			TreeSet<ScheduleEventModel> data;

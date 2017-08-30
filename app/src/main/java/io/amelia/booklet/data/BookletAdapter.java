@@ -59,14 +59,14 @@ public class BookletAdapter extends BaseExpandableListAdapter
 
 			final Booklet booklet = booklets.get( groupPosition );
 
-			TextView booklet_date = childView.findViewById( R.id.booklet_date );
-			TextView booklet_location = childView.findViewById( R.id.booklet_location );
-			TextView booklet_description = childView.findViewById( R.id.booklet_description );
+			TextView bookletDate = childView.findViewById( R.id.booklet_date );
+			TextView bookletLocation = childView.findViewById( R.id.booklet_where );
+			TextView bookletDescription = childView.findViewById( R.id.booklet_description );
 
 			SimpleDateFormat date = new SimpleDateFormat( "yyyy-MM-dd" );
-			booklet_date.setText( DateAndTime.formatDateRange( date.parse( booklet.getData().getString( Booklet.KEY_WHEN_FROM ) ), date.parse( booklet.getData().getString( Booklet.KEY_WHEN_TO ) ) ) );
-			booklet_location.setText( booklet.getData().getString( Booklet.KEY_WHERE ) );
-			booklet_description.setText( booklet.getDataDescription() );
+			bookletDate.setText( DateAndTime.formatDateRange( date.parse( booklet.getData().getString( Booklet.KEY_WHEN_FROM ) ), date.parse( booklet.getData().getString( Booklet.KEY_WHEN_TO ) ) ) );
+			bookletLocation.setText( booklet.getData().getString( Booklet.KEY_WHERE ) );
+			bookletDescription.setText( booklet.getDataDescription() );
 
 			return childView;
 		}
@@ -123,29 +123,29 @@ public class BookletAdapter extends BaseExpandableListAdapter
 
 		try
 		{
-			final ImageView booklet_header = rowView.findViewById( R.id.booklet_header );
+			final ImageView bookletHeader = rowView.findViewById( R.id.booklet_header );
 			TextView booklet_title = rowView.findViewById( R.id.booklet_title );
 			Button booket_info = rowView.findViewById( R.id.booklet_info );
 			FrameLayout booklet_view = rowView.findViewById( R.id.booklet_view );
 
 			if ( booklet.getDataImage() == null )
-				booklet_header.setImageResource( R.drawable.noimagefound );
+				bookletHeader.setImageResource( R.drawable.noimagefound );
 			else
 			{
-				booklet_header.setImageResource( R.drawable.loading_image );
+				bookletHeader.setImageResource( R.drawable.loading_image );
 				ImageCache.cacheRemoteImage( parent.getContext(), "booklet-" + booklet.getId(), ImageCache.REMOTE_IMAGES_URL + "booklet-headers/" + booklet.getDataImage(), false, new ImageCache.ImageResolveTask.ImageFoundListener()
 				{
 					@Override
 					public void error( Exception exception )
 					{
 						ACRAHelper.handleExceptionOnce( "loading_failure_" + booklet.getId() + "_" + booklet.getDataImage(), new RuntimeException( "Failed to load image from server [images/booklet-headers/" + booklet.getDataImage() + "]", exception ) );
-						booklet_header.setImageResource( R.drawable.error );
+						bookletHeader.setImageResource( R.drawable.error );
 					}
 
 					@Override
 					public void update( Bitmap bitmap )
 					{
-						booklet_header.setImageBitmap( bitmap );
+						bookletHeader.setImageBitmap( bitmap );
 					}
 				}, null );
 			}

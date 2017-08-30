@@ -17,6 +17,9 @@ public abstract class ContentHandler
 	protected final void attachListener( String key, ContentListener listener )
 	{
 		listeners.put( key.toLowerCase(), listener );
+
+		if ( data != null )
+			listener.sectionHandle( data, false );
 	}
 
 	protected final void detachListener( String key )

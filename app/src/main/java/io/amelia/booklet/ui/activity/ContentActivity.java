@@ -11,6 +11,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.Toolbar;
 import android.view.Gravity;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
@@ -24,7 +25,6 @@ import io.amelia.android.data.BoundData;
 import io.amelia.android.fragments.FragmentStack;
 import io.amelia.android.log.PLog;
 import io.amelia.android.support.UIUpdater;
-import io.amelia.booklet.data.Booklet;
 import io.amelia.booklet.data.ContentManager;
 import io.amelia.booklet.ui.fragment.GuestFragment;
 import io.amelia.booklet.ui.fragment.MapsFragment;
@@ -36,7 +36,6 @@ public class ContentActivity extends BaseActivity implements NavigationView.OnNa
 	private static final int UPDATE_GOOGLE_PLAY = 24;
 	public static ContentActivity instance;
 	public FragmentStack stacker;
-	private Booklet activeBooklet;
 	private Bundle savedInstanceState;
 
 	public ContentActivity()
@@ -93,9 +92,7 @@ public class ContentActivity extends BaseActivity implements NavigationView.OnNa
 
 		super.onCreate( savedInstanceState );
 
-		activeBooklet = ContentManager.getActiveBooklet();
-
-		if ( activeBooklet == null )
+		if ( ContentManager.getActiveBooklet() == null )
 		{
 			startActivity( new Intent( this, BootActivity.class ) );
 			return;
@@ -116,7 +113,9 @@ public class ContentActivity extends BaseActivity implements NavigationView.OnNa
 
 		final DrawerLayout drawer = findViewById( R.id.drawer_layout );
 		assert drawer != null;
+
 		final ActionBarDrawerToggle toggle = new ActionBarDrawerToggle( this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close );
+		toggle.getDrawerArrowDrawable().setColor( android.graphics.Color.argb( 0xFF, 0xA6, 0x00, 0xFF ) );
 		drawer.setDrawerListener( toggle );
 		toggle.syncState();
 
@@ -178,6 +177,13 @@ public class ContentActivity extends BaseActivity implements NavigationView.OnNa
 	}
 
 	@Override
+	public boolean onCreateOptionsMenu( Menu menu )
+	{
+		getMenuInflater().inflate( R.menu.content_options_menu, menu );
+		return super.onCreateOptionsMenu( menu );
+	}
+
+	@Override
 	public boolean onNavigationItemSelected( @NonNull MenuItem item )
 	{
 		/* if (item.getItemId() == R.id.nav_signout)
@@ -186,16 +192,28 @@ public class ContentActivity extends BaseActivity implements NavigationView.OnNa
 		if ( item.getItemId() == R.id.nav_login_with_google )
 			signinWorker.signinWithGoogle();
 		else */
-		if ( item.getItemId() == R.id.nav_booklets )
+		/* if ( item.getItemId() == R.id.nav_booklets )
 			startActivity( new Intent( this, BootActivity.class ) );
-		else
-			stacker.setFragmentById( item.getItemId() );
+		else */
+		stacker.setFragmentById( item.getItemId() );
 
 		DrawerLayout drawer = findViewById( R.id.drawer_layout );
 		assert drawer != null;
 		drawer.closeDrawer( GravityCompat.START );
 
 		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected( MenuItem item )
+	{
+		switch ( item.getItemId() )
+		{
+			case R.id.options_booklets:
+				startActivity( new Intent( this, BootActivity.class ) );
+				return true;
+		}
+		return super.onOptionsItemSelected( item );
 	}
 
 	@Override

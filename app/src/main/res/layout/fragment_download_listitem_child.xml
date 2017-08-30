@@ -59,7 +59,7 @@
                     android:src="@drawable/ic_list_pin"/>
 
             <TextView
-                    android:id="@+id/booklet_location"
+                    android:id="@+id/booklet_where"
                     android:layout_width="wrap_content"
                     android:layout_height="20dp"
                     android:clickable="true"
@@ -75,7 +75,8 @@
                 android:layout_gravity="center_horizontal"
                 android:text="Ramencon is an anime convention in Northwest Indiana, built by anime fans, for anime fans. Much of what you experience at the con has been suggested by all of you! We want everyone to have the best time possible and be comfortable enough to do everything you want in one weekend."
                 android:textSize="16dp"
-                android:id="@+id/booklet_description"/>
+                android:id="@+id/booklet_description"
+                android:textAlignment="center"/>
 
     </LinearLayout>
 </LinearLayout>
