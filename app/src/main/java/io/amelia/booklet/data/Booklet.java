@@ -28,7 +28,6 @@ public class Booklet
 	public static final String KEY_PUBLISHED = "published";
 	public static final String KEY_LAST_UPDATED = "lastUpdated"; // long
 	public static final String KEY_OUTDATED = "outdated"; // boolean
-	public static final String KEY_IMAGE = "image";
 	public static final String KEY_TITLE = "title";
 	public static final String KEY_WHEN_FROM = "whenFrom";
 	public static final String KEY_WHEN_TO = "whenTo";
@@ -149,11 +148,6 @@ public class Booklet
 		return new File( getDataDirectory(), "data.json" );
 	}
 
-	public String getDataImage()
-	{
-		return data.getString( KEY_IMAGE );
-	}
-
 	public long getDataLastUpdated()
 	{
 		return data.getLong( KEY_LAST_UPDATED );
@@ -193,7 +187,7 @@ public class Booklet
 		try
 		{
 			BoundData[] result = LibAndroid.readJsonToBoundData( localFile );
-			if ( result == null || result.length == 0 )
+			if ( result == null || result.length == 0 || result[0] == null )
 				throw new IllegalStateException( "The booklet section " + section + " does not exist for booklet " + getId() + "!" );
 			return result[0];
 		}
@@ -401,7 +395,14 @@ public class Booklet
 	{
 		// Empty/null section key returns the Booklet Data instead
 		String sectionKey = contentHandler.getSectionKey();
-		contentHandler.sectionHandle( Objs.isEmpty( sectionKey ) ? data : getSectionData( contentHandler.getSectionKey() ), getDataLastUpdated() );
+		try
+		{
+			contentHandler.sectionHandle( Objs.isEmpty( sectionKey ) ? data : getSectionData( contentHandler.getSectionKey() ), getDataLastUpdated() );
+		}
+		catch ( Exception e )
+		{
+			throw new RuntimeException( "Handler threw exception:", e );
+		}
 	}
 
 	protected void updateSectionHandlers()
@@ -426,7 +427,7 @@ public class Booklet
 							sectionHandlerList.put( "schedule", new ScheduleHandler().setBooklet( this ) );
 							break;
 						case "guide":
-							// sectionHandlerList.put( "guide", new GuideSectionHandler().setBooklet( this ) );
+							sectionHandlerList.put( "guide", new GuideHandler().setBooklet( this ) );
 							break;
 						default:
 							throw new IllegalArgumentException( "App does not implement the SectionHandler named " + handler + ", might need coding!" );

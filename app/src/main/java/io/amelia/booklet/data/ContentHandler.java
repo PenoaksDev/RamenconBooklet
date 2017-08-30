@@ -66,15 +66,18 @@ public abstract class ContentHandler
 	 * @param data      The section data
 	 * @param isRefresh Was this appended update
 	 */
-	protected abstract void onSectionHandle( BoundData data, boolean isRefresh );
+	protected abstract void onSectionHandle( BoundData data, boolean isRefresh ) throws Exception;
 
 	/**
 	 * Called after data has been altered
 	 *
 	 * @param data The Data snapshot
 	 */
-	protected final void sectionHandle( BoundData data, long lastUpdated )
+	protected final void sectionHandle( BoundData data, long lastUpdated ) throws Exception
 	{
+		if ( data == null )
+			throw new RuntimeException( "Data was null for handler " + getClass().getSimpleName() );
+
 		this.lastUpdated = lastUpdated;
 		this.data = data;
 

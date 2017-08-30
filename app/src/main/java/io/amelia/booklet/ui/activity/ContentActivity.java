@@ -27,6 +27,7 @@ import io.amelia.android.log.PLog;
 import io.amelia.android.support.UIUpdater;
 import io.amelia.booklet.data.ContentManager;
 import io.amelia.booklet.ui.fragment.GuestFragment;
+import io.amelia.booklet.ui.fragment.GuideFragment;
 import io.amelia.booklet.ui.fragment.MapsFragment;
 import io.amelia.booklet.ui.fragment.ScheduleFragment;
 import io.amelia.booklet.ui.fragment.WelcomeFragment;
@@ -48,7 +49,7 @@ public class ContentActivity extends BaseActivity implements NavigationView.OnNa
 		stacker.registerFragment( R.id.nav_schedule, ScheduleFragment.class );
 		stacker.registerFragment( R.id.nav_guests_vendors, GuestFragment.class );
 		stacker.registerFragment( R.id.nav_maps, MapsFragment.class );
-		// stacker.registerFragment( R.id.nav_guide, GuideFragment.class );
+		stacker.registerFragment( R.id.nav_guide, GuideFragment.class );
 		// stacker.registerFragment( R.id.nav_friends, FriendsFragment.class );
 		// stacker.registerFragment( R.id.nav_share, .class );
 	}
@@ -115,7 +116,7 @@ public class ContentActivity extends BaseActivity implements NavigationView.OnNa
 		assert drawer != null;
 
 		final ActionBarDrawerToggle toggle = new ActionBarDrawerToggle( this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close );
-		toggle.getDrawerArrowDrawable().setColor( android.graphics.Color.argb( 0xFF, 0xA6, 0x00, 0xFF ) );
+		// toggle.getDrawerArrowDrawable().setColor( android.graphics.Color.argb( 0xFF, 0xA6, 0x00, 0xFF ) );
 		drawer.setDrawerListener( toggle );
 		toggle.syncState();
 

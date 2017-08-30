@@ -128,27 +128,22 @@ public class BookletAdapter extends BaseExpandableListAdapter
 			Button booket_info = rowView.findViewById( R.id.booklet_info );
 			FrameLayout booklet_view = rowView.findViewById( R.id.booklet_view );
 
-			if ( booklet.getDataImage() == null )
-				bookletHeader.setImageResource( R.drawable.noimagefound );
-			else
+			bookletHeader.setImageResource( R.drawable.loading_image );
+			ImageCache.cacheRemoteImage( parent.getContext(), "welcome-header-" + booklet.getId(), ImageCache.REMOTE_IMAGES_URL + booklet.getId() + "/header.png", false, new ImageCache.ImageResolveTask.ImageFoundListener()
 			{
-				bookletHeader.setImageResource( R.drawable.loading_image );
-				ImageCache.cacheRemoteImage( parent.getContext(), "booklet-" + booklet.getId(), ImageCache.REMOTE_IMAGES_URL + "booklet-headers/" + booklet.getDataImage(), false, new ImageCache.ImageResolveTask.ImageFoundListener()
+				@Override
+				public void error( Exception exception )
 				{
-					@Override
-					public void error( Exception exception )
-					{
-						ACRAHelper.handleExceptionOnce( "loading_failure_" + booklet.getId() + "_" + booklet.getDataImage(), new RuntimeException( "Failed to load image from server [images/booklet-headers/" + booklet.getDataImage() + "]", exception ) );
-						bookletHeader.setImageResource( R.drawable.error );
-					}
+					ACRAHelper.handleExceptionOnce( "welcome-header-" + booklet.getId(), new RuntimeException( "Failed to load image from server [images/" + booklet.getId() + "/header.png]", exception ) );
+					bookletHeader.setImageResource( R.drawable.error );
+				}
 
-					@Override
-					public void update( Bitmap bitmap )
-					{
-						bookletHeader.setImageBitmap( bitmap );
-					}
-				}, null );
-			}
+				@Override
+				public void update( Bitmap bitmap )
+				{
+					bookletHeader.setImageBitmap( bitmap );
+				}
+			}, null );
 
 			booklet_title.setText( booklet.getDataTitle() );
 

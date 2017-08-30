@@ -21,7 +21,7 @@ import io.amelia.booklet.data.ContentManager;
 
 public class ImageCache
 {
-	public static final String REMOTE_IMAGES_URL = "http://booklet.dev.penoaks.com/images/ramencon/";
+	public static final String REMOTE_IMAGES_URL = "http://booklet.dev.penoaks.com/images/";
 
 	private static File cacheDirectory = new File( ContentManager.getCacheDir(), "imageCache" );
 	private static BitmapFactory.Options options = new BitmapFactory.Options();
