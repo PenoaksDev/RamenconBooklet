@@ -1,4 +1,4 @@
-package io.amelia.booklet.data.schedule;
+package io.amelia.booklet.data;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -10,24 +10,14 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import io.amelia.android.data.BoundData;
-import io.amelia.android.data.DataReceiver;
 import io.amelia.android.log.PLog;
-import io.amelia.booklet.data.maps.ModelLocation;
-import io.amelia.booklet.data.schedule.filters.ScheduleFilter;
+import io.amelia.booklet.data.filters.ScheduleFilter;
 
-public class ScheduleDataReceiver extends DataReceiver
+public class ScheduleHandler extends ContentHandler
 {
-	private static ScheduleDataReceiver instance = null;
 	private static SimpleDateFormat simpleCombinedFormat = null;
 	private static SimpleDateFormat simpleDateFormat = null;
 	private static SimpleDateFormat simpleTimeFormat = null;
-
-	public static ScheduleDataReceiver getInstance()
-	{
-		if ( instance == null )
-			instance = new ScheduleDataReceiver();
-		return instance;
-	}
 
 	public static SimpleDateFormat simpleCombinedFormat()
 	{
@@ -44,52 +34,47 @@ public class ScheduleDataReceiver extends DataReceiver
 		return simpleTimeFormat;
 	}
 
-	public List<ModelLocation> locations;
-	public TreeSet<ModelEvent> schedule;
+	public List<MapsLocationModel> locations;
+	public TreeSet<ScheduleEventModel> schedule;
 
-	private ScheduleDataReceiver()
-	{
-		super( true );
-	}
-
-	public Set<ModelEvent> eventList()
+	public Set<ScheduleEventModel> eventList()
 	{
 		return Collections.unmodifiableSet( schedule );
 	}
 
-	public TreeSet<ModelEvent> filterRange( ScheduleFilter filter )
+	public TreeSet<ScheduleEventModel> filterRange( ScheduleFilter filter )
 	{
-		TreeSet<ModelEvent> events = new TreeSet<>( new ModelEventComparator() );
+		TreeSet<ScheduleEventModel> events = new TreeSet<>( new ScheduleEventModelComparator() );
 
-		for ( ModelEvent event : schedule )
+		for ( ScheduleEventModel event : schedule )
 			if ( filter.filter( events, event ) )
 				events.add( event );
 
 		return events;
 	}
 
-	public List<ModelEvent> filterRangeList( ScheduleFilter filter )
+	public List<ScheduleEventModel> filterRangeList( ScheduleFilter filter )
 	{
 		return new ArrayList<>( filterRange( filter ) );
 	}
 
-	public ModelEvent getEvent( String id )
+	public ScheduleEventModel getEvent( String id )
 	{
-		for ( ModelEvent event : schedule )
+		for ( ScheduleEventModel event : schedule )
 			if ( id.equals( event.id ) )
 				return event;
 		return null;
 	}
 
 	@Override
-	public String getReferenceUri()
+	public String getSectionKey()
 	{
-		return "booklet-data";
+		return "schedule";
 	}
 
 	public boolean hasEvent( String id )
 	{
-		for ( ModelEvent event : schedule )
+		for ( ScheduleEventModel event : schedule )
 			if ( id.equals( event.id ) )
 				return true;
 		return false;
@@ -97,7 +82,7 @@ public class ScheduleDataReceiver extends DataReceiver
 
 	public boolean hasHeartedEvents()
 	{
-		for ( ModelEvent event : schedule )
+		for ( ScheduleEventModel event : schedule )
 			if ( event.isHearted() )
 				return true;
 		return false;
@@ -105,14 +90,14 @@ public class ScheduleDataReceiver extends DataReceiver
 
 	public boolean hasTimerEvents()
 	{
-		for ( ModelEvent event : schedule )
+		for ( ScheduleEventModel event : schedule )
 			if ( event.hasTimer() )
 				return true;
 		return false;
 	}
 
 	@Override
-	public void onDataArrived( BoundData data, boolean isRefresh )
+	public void onSectionHandle( BoundData data, boolean isRefresh )
 	{
 		PLog.i( "Schedule data " + getClass().getSimpleName() + " // " + data.keySet() );
 
@@ -145,32 +130,26 @@ public class ScheduleDataReceiver extends DataReceiver
 		if ( data.hasBoundData( "locations" ) )
 			for ( BoundData section : data.getBoundDataList( "locations" ) )
 			{
-				ModelLocation modelLocation = new ModelLocation();
-				modelLocation.id = section.getString( "id" );
-				modelLocation.title = section.getString( "title" );
-				locations.add( modelLocation );
+				MapsLocationModel mapsLocationModel = new MapsLocationModel();
+				mapsLocationModel.id = section.getString( "id" );
+				mapsLocationModel.title = section.getString( "title" );
+				locations.add( mapsLocationModel );
 			}
 
-		schedule = new TreeSet<>( new ModelEventComparator() );
+		schedule = new TreeSet<>( new ScheduleEventModelComparator() );
 		if ( data.hasBoundData( "schedule" ) )
 			for ( BoundData section : data.getBoundDataList( "schedule" ) )
 			{
-				ModelEvent modelEvent = new ModelEvent();
-				modelEvent.date = section.getString( "date" );
-				modelEvent.description = section.getString( "description" );
-				modelEvent.duration = section.getString( "duration" );
-				modelEvent.id = section.getString( "id" );
-				modelEvent.location = section.getString( "location" );
-				modelEvent.time = section.getString( "time" );
-				modelEvent.title = section.getString( "title" );
-				schedule.add( modelEvent );
+				ScheduleEventModel scheduleEventModel = new ScheduleEventModel();
+				scheduleEventModel.date = section.getString( "date" );
+				scheduleEventModel.description = section.getString( "description" );
+				scheduleEventModel.duration = section.getString( "duration" );
+				scheduleEventModel.id = section.getString( "id" );
+				scheduleEventModel.location = section.getString( "location" );
+				scheduleEventModel.time = section.getString( "time" );
+				scheduleEventModel.title = section.getString( "title" );
+				schedule.add( scheduleEventModel );
 			}
-
-	}
-
-	@Override
-	protected void onDataUpdate( BoundData data )
-	{
 
 	}
 
@@ -180,7 +159,7 @@ public class ScheduleDataReceiver extends DataReceiver
 
 		return new TreeSet<Date>()
 		{{
-			for ( ModelEvent event : schedule )
+			for ( ScheduleEventModel event : schedule )
 			{
 				try
 				{
@@ -207,13 +186,13 @@ public class ScheduleDataReceiver extends DataReceiver
 	 * @return List of events within range
 	 * @throws ParseException
 	 */
-	public List<ModelEvent> scheduleRange( long from, long duration ) throws ParseException
+	public List<ScheduleEventModel> scheduleRange( long from, long duration ) throws ParseException
 	{
-		List<ModelEvent> results = new ArrayList<>();
+		List<ScheduleEventModel> results = new ArrayList<>();
 
 		long to = from + ( duration * 60 * 1000 );
 
-		for ( ModelEvent event : schedule )
+		for ( ScheduleEventModel event : schedule )
 		{
 			long start = event.getStartTime();
 			long end = event.getEndTime();

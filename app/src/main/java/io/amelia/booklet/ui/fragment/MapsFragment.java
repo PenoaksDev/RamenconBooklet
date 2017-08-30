@@ -16,35 +16,35 @@ import android.widget.Toast;
 
 import org.lucasr.twowayview.TwoWayView;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import io.amelia.R;
-import io.amelia.android.configuration.ConfigurationSection;
-import io.amelia.android.data.DataAwareFragment;
+import io.amelia.android.data.BoundData;
 import io.amelia.android.fragments.PersistentFragment;
 import io.amelia.android.ui.widget.TouchImageView;
-import io.amelia.booklet.data.maps.MapsDataReceiver;
+import io.amelia.booklet.data.ContentFragment;
+import io.amelia.booklet.data.MapsHandler;
 
-public class MapsFragment extends DataAwareFragment<MapsDataReceiver> implements PersistentFragment
+public class MapsFragment extends ContentFragment<MapsHandler> implements PersistentFragment
 {
 	private static MapsFragment instance = null;
 
 	public static MapsFragment instance()
 	{
-		if ( instance == null )
-			instance = new MapsFragment();
 		return instance;
 	}
+
 	private TwoWayView mTwoWayView;
 	private ViewPager mViewPager;
 	private Bundle savedState = null;
 	private int selectedPosition = 0;
 
-	public MapsFragment()
+	public MapsFragment() throws IOException
 	{
+		super( MapsHandler.class );
 		instance = this;
-		setReceiver( new MapsDataReceiver() );
 	}
 
 	@Override
@@ -68,17 +68,33 @@ public class MapsFragment extends DataAwareFragment<MapsDataReceiver> implements
 	}
 
 	@Override
-	public void onDataArrived( ConfigurationSection data, boolean isRefresh )
+	public void refreshState()
+	{
+		savedState = new Bundle();
+		saveState( savedState );
+	}
+
+	@Override
+	public void saveState( Bundle bundle )
+	{
+		if ( getView() == null )
+			return;
+
+		bundle.putInt( "selectedPosition", mViewPager == null ? 0 : mViewPager.getCurrentItem() );
+	}
+
+	@Override
+	public void sectionHandle( BoundData data, boolean isRefresh )
 	{
 		View root = getView();
 
 		if ( savedState != null )
 			selectedPosition = savedState.getInt( "selectedPosition", 0 );
 
-		mTwoWayView = ( TwoWayView ) root.findViewById( R.id.maps_listview );
+		mTwoWayView = root.findViewById( R.id.maps_listview );
 		mTwoWayView.setAdapter( new PagedListAdapater() );
 
-		mViewPager = ( ViewPager ) root.findViewById( R.id.maps_pager );
+		mViewPager = root.findViewById( R.id.maps_pager );
 		mViewPager.setAdapter( new ViewPagerAdapter( getFragmentManager(), isRefresh ) );
 		mViewPager.setCurrentItem( selectedPosition );
 		mViewPager.addOnPageChangeListener( new ViewPager.OnPageChangeListener()
@@ -108,36 +124,12 @@ public class MapsFragment extends DataAwareFragment<MapsDataReceiver> implements
 		} );
 	}
 
-	@Override
-	protected void onDataUpdate( ConfigurationSection data )
-	{
-
-	}
-
-	@Override
-	public void refreshState()
-	{
-		savedState = new Bundle();
-		saveState( savedState );
-
-		refreshData();
-	}
-
-	@Override
-	public void saveState( Bundle bundle )
-	{
-		if ( getView() == null )
-			return;
-
-		bundle.putInt( "selectedPosition", mViewPager.getCurrentItem() );
-	}
-
 	public class PagedListAdapater extends BaseAdapter
 	{
 		@Override
 		public int getCount()
 		{
-			return receiver.maps.size();
+			return handler.maps.size();
 		}
 
 		@Override
@@ -156,7 +148,7 @@ public class MapsFragment extends DataAwareFragment<MapsDataReceiver> implements
 		public View getView( final int position, View convertView, ViewGroup parent )
 		{
 			TextView tv = new TextView( getContext() );
-			tv.setText( receiver.maps.get( position ).title );
+			tv.setText( handler.maps.get( position ).title );
 			tv.setPadding( 12, 6, 12, 6 );
 			tv.setTextColor( 0xffffffff );
 			tv.setGravity( Gravity.CENTER );
@@ -215,13 +207,13 @@ public class MapsFragment extends DataAwareFragment<MapsDataReceiver> implements
 		@Override
 		public int getCount()
 		{
-			return receiver.maps.size();
+			return handler.maps.size();
 		}
 
 		@Override
 		public Fragment getItem( int position )
 		{
-			MapsChildFragment.maps = receiver.maps;
+			MapsChildFragment.maps = handler.maps;
 
 			Bundle bundle = new Bundle();
 			bundle.putInt( "index", position );

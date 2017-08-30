@@ -17,14 +17,14 @@ import java.util.List;
 import io.amelia.R;
 import io.amelia.android.data.ImageCache;
 import io.amelia.android.ui.widget.TouchImageView;
-import io.amelia.booklet.data.models.ModelMap;
+import io.amelia.booklet.data.MapsMapModel;
 
 public class MapsChildFragment extends Fragment implements ImageCache.ImageResolveTask.ImageFoundListener, ImageCache.ImageResolveTask.ImageProgressListener
 {
-	public static List<ModelMap> maps;
+	public static List<MapsMapModel> maps;
 	private TouchImageView image;
 	private boolean isRefresh;
-	private ModelMap map;
+	private MapsMapModel map;
 	private ProgressBar progressBar = null;
 
 	@Override

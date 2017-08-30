@@ -8,7 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import io.amelia.R;
 import io.amelia.android.data.BoundData;
 import io.amelia.android.support.UIUpdater;
-import io.amelia.booklet.ContentManager;
+import io.amelia.booklet.data.ContentManager;
 
 public abstract class BaseActivity extends AppCompatActivity implements UIUpdater.Receiver
 {

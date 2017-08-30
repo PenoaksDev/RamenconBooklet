@@ -1,4 +1,4 @@
-package io.amelia.booklet;
+package io.amelia.booklet.data;
 
 import android.support.design.widget.Snackbar;
 import android.view.View;
@@ -7,7 +7,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import io.amelia.android.data.BoundData;
 import io.amelia.android.log.PLog;
@@ -88,33 +90,9 @@ public class Booklet
 		}
 	}
 
+	private final Map<String, ContentHandler> sectionHandlerList = new HashMap<>();
 	BoundData data;
-	/*
-	static Booklet updateOrCreate( Bundle bundle )
-	{
-		String bookletId = bundle.getString( KEY_ID );
-
-		Booklet booklet = getBooklet( bookletId );
-
-		try
-		{
-			if ( booklet == null )
-			{
-				booklet = new Booklet( bookletId );
-				booklets.add( booklet );
-			}
-
-			booklet.processData( bundle );
-		}
-		catch ( Exception e )
-		{
-			e.printStackTrace();
-			ACRAHelper.handleExceptionOnce( "booklet-failure-" + bookletId, new RuntimeException( "Failed to update booklet: " + bookletId, e ) );
-		}
-
-		return booklet;
-	}
-	*/ Exception lastException = null;
+	Exception lastException = null;
 	private String id;
 	private boolean inUse = false;
 
@@ -180,6 +158,11 @@ public class Booklet
 		return data.getLong( KEY_LAST_UPDATED );
 	}
 
+	public List<String> getDataSections()
+	{
+		return data.getStringList( KEY_SECTIONS );
+	}
+
 	public String getDataTitle()
 	{
 		return data.getString( KEY_TITLE );
@@ -201,13 +184,68 @@ public class Booklet
 	 * @param section Section id
 	 * @return The BoundData on file
 	 */
-	public BoundData getSectionData( String section ) throws IOException
+	public BoundData getSectionData( String section )
 	{
 		File localFile = new File( getDataDirectory(), section + ".json" );
-		BoundData[] result = LibAndroid.readJsonToBoundData( localFile );
-		if ( result == null || result.length == 0 )
-			throw new IllegalStateException( "The booklet section " + section + " does not exist for booklet " + getId() + "!" );
-		return result[0];
+		try
+		{
+			BoundData[] result = LibAndroid.readJsonToBoundData( localFile );
+			if ( result == null || result.length == 0 )
+				throw new IllegalStateException( "The booklet section " + section + " does not exist for booklet " + getId() + "!" );
+			return result[0];
+		}
+		catch ( IOException e )
+		{
+			throw new RuntimeException( "We had a problem loading the section " + section + " from " + localFile.getAbsolutePath(), e );
+		}
+	}
+
+	public <T extends ContentHandler> T getSectionHandler( Class<T> sectionClass )
+	{
+		if ( sectionHandlerList.size() == 0 )
+			updateSectionHandlers();
+
+		for ( ContentHandler contentHandler : sectionHandlerList.values() )
+			if ( sectionClass.isAssignableFrom( contentHandler.getClass() ) && getDataSections().contains( contentHandler.getSectionKey() ) )
+			{
+				if ( contentHandler.getLastUpdated() != getDataLastUpdated() )
+					updateSectionHandler( contentHandler );
+				return ( T ) contentHandler;
+			}
+		throw new IllegalStateException( "The section handler for key " + sectionClass.getSimpleName() + " does not exist! Does it exist in the Booklet manifest?" );
+
+		// TODO Init new section handler classes
+	}
+
+	private ContentHandler getSectionHandlerInternal( String key )
+	{
+		if ( !sectionHandlerList.containsKey( key ) )
+			switch ( key )
+			{
+				case "guests":
+					sectionHandlerList.put( "guests", new GuestsHandler().setBooklet( this ) );
+					break;
+				case "maps":
+					sectionHandlerList.put( "maps", new MapsHandler().setBooklet( this ) );
+					break;
+				case "schedule":
+					sectionHandlerList.put( "schedule", new ScheduleHandler().setBooklet( this ) );
+					break;
+				case "guide":
+					throw new IllegalArgumentException( "Not Implemented!" );
+					// sectionHandlerList.put( "guide", new GuideSectionHandler().setBooklet( this ) );
+					// break;
+				default:
+					throw new IllegalArgumentException( "App does not implement the SectionHandler named " + key + ", might need coding!" );
+			}
+
+		return sectionHandlerList.get( key );
+	}
+
+	public List<ContentHandler> getSectionHandlers() throws IOException
+	{
+		updateSectionHandlers();
+		return new ArrayList<>( sectionHandlerList.values() );
 	}
 
 	/**
@@ -352,6 +390,43 @@ public class Booklet
 		catch ( IOException e )
 		{
 			handleException( e );
+		}
+	}
+
+	protected void updateSectionHandler( ContentHandler contentHandler )
+	{
+		contentHandler.sectionHandle( getSectionData( contentHandler.getSectionKey() ), getDataLastUpdated() );
+	}
+
+	protected void updateSectionHandlers()
+	{
+		for ( String handler : getDataSections() )
+		{
+			if ( !sectionHandlerList.containsKey( handler ) )
+				switch ( handler )
+				{
+					case "guests":
+						sectionHandlerList.put( "guests", new GuestsHandler().setBooklet( this ) );
+						break;
+					case "maps":
+						sectionHandlerList.put( "maps", new MapsHandler().setBooklet( this ) );
+						break;
+					case "schedule":
+						sectionHandlerList.put( "schedule", new ScheduleHandler().setBooklet( this ) );
+						break;
+					case "guide":
+						return;
+						// sectionHandlerList.put( "guide", new GuideSectionHandler().setBooklet( this ) );
+						// break;
+					default:
+						throw new IllegalArgumentException( "App does not implement the SectionHandler named " + handler + ", might need coding!" );
+				}
+
+			ContentHandler contentHandler = sectionHandlerList.get( handler );
+
+			// Check if SectionHandler is deserving an update
+			if ( contentHandler.getLastUpdated() != getDataLastUpdated() )
+				updateSectionHandler( contentHandler );
 		}
 	}
 }

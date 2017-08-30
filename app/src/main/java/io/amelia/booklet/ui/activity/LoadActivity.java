@@ -8,9 +8,9 @@ import android.widget.TextView;
 import io.amelia.R;
 import io.amelia.android.data.BoundData;
 import io.amelia.android.support.WaitFor;
-import io.amelia.booklet.Booklet;
-import io.amelia.booklet.BookletState;
-import io.amelia.booklet.ContentManager;
+import io.amelia.booklet.data.Booklet;
+import io.amelia.booklet.data.BookletState;
+import io.amelia.booklet.data.ContentManager;
 
 public class LoadActivity extends BaseActivity
 {

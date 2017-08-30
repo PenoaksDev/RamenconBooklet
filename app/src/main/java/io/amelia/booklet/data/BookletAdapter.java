@@ -20,8 +20,6 @@ import io.amelia.R;
 import io.amelia.android.data.ImageCache;
 import io.amelia.android.support.ACRAHelper;
 import io.amelia.android.support.DateAndTime;
-import io.amelia.booklet.Booklet;
-import io.amelia.booklet.ContentManager;
 
 public class BookletAdapter extends BaseExpandableListAdapter
 {

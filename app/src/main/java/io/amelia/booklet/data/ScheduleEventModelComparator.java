@@ -1,11 +1,11 @@
-package io.amelia.booklet.data.schedule;
+package io.amelia.booklet.data;
 
 import java.util.Comparator;
 
-public class ModelEventComparator implements Comparator<ModelEvent>
+public class ScheduleEventModelComparator implements Comparator<ScheduleEventModel>
 {
 	@Override
-	public int compare( ModelEvent lhs, ModelEvent rhs )
+	public int compare( ScheduleEventModel lhs, ScheduleEventModel rhs )
 	{
 		int pos = ( int ) ( lhs.getStartTime() - rhs.getStartTime() );
 		if ( pos == 0 )

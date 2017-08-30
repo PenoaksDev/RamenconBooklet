@@ -1,4 +1,4 @@
-package io.amelia.booklet;
+package io.amelia.booklet.data;
 
 import android.content.Context;
 import android.content.Intent;
@@ -84,7 +84,7 @@ public class ContentManager
 	public static int getImageCacheTimeout()
 	{
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences( ContentManager.getApplicationContext() );
-		return prefs.getInt( "pref_image_cache", 360 );
+		return Integer.parseInt( prefs.getString( "pref_image_cache", "360" ) );
 	}
 
 	public static boolean isBookletsRefreshing()
@@ -175,7 +175,7 @@ public class ContentManager
 		*/
 	}
 
-	static void setupContentManager( File cacheDir, Context context )
+	public static void setupContentManager( File cacheDir, Context context )
 	{
 		// Existing context, reload ContentManager
 		if ( ContentManager.context != null )

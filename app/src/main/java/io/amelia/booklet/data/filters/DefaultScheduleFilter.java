@@ -1,11 +1,11 @@
-package io.amelia.booklet.data.schedule.filters;
+package io.amelia.booklet.data.filters;
 
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 
 import java.util.TreeSet;
 
-import io.amelia.booklet.data.schedule.ModelEvent;
+import io.amelia.booklet.data.ScheduleEventModel;
 
 public class DefaultScheduleFilter implements ScheduleFilter
 {
@@ -25,7 +25,7 @@ public class DefaultScheduleFilter implements ScheduleFilter
 	}
 
 	@Override
-	public boolean filter( TreeSet<ModelEvent> events, ModelEvent event )
+	public boolean filter( TreeSet<ScheduleEventModel> events, ScheduleEventModel event )
 	{
 		long epoch = event.getStartTime();
 

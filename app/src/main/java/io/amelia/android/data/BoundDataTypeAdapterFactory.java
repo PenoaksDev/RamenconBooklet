@@ -15,8 +15,6 @@
  */
 package io.amelia.android.data;
 
-import android.util.Pair;
-
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
 import com.google.gson.TypeAdapterFactory;
@@ -29,11 +27,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Type adapter for Android Bundle. It only stores the actual properties set in the bundle
- *
- * @author Inderjeet Singh
- */
 public class BoundDataTypeAdapterFactory implements TypeAdapterFactory
 {
 	@SuppressWarnings( "unchecked" )
@@ -54,7 +47,7 @@ public class BoundDataTypeAdapterFactory implements TypeAdapterFactory
 						in.nextNull();
 						return null;
 					case BEGIN_OBJECT:
-						return toBoundData( readObject( in ) );
+						return readObject( in );
 					default:
 						throw new IOException( "expecting object: " + in.getPath() );
 				}
@@ -89,9 +82,9 @@ public class BoundDataTypeAdapterFactory implements TypeAdapterFactory
 				return doubleValue;
 			}
 
-			private List<Pair<String, Object>> readObject( JsonReader in ) throws IOException
+			private BoundData readObject( JsonReader in ) throws IOException
 			{
-				List<Pair<String, Object>> object = new ArrayList<>();
+				BoundData object = new BoundData();
 				in.beginObject();
 				while ( in.peek() != JsonToken.END_OBJECT )
 				{
@@ -100,7 +93,7 @@ public class BoundDataTypeAdapterFactory implements TypeAdapterFactory
 						case NAME:
 							String name = in.nextName();
 							Object value = readValue( in );
-							object.add( new Pair<>( name, value ) );
+							object.put( name, value );
 							break;
 						case END_OBJECT:
 							break;
@@ -132,14 +125,6 @@ public class BoundDataTypeAdapterFactory implements TypeAdapterFactory
 					default:
 						throw new IOException( "expecting value: " + in.getPath() );
 				}
-			}
-
-			private BoundData toBoundData( List<Pair<String, Object>> values ) throws IOException
-			{
-				BoundData boundData = new BoundData();
-				for ( Pair<String, Object> entry : values )
-					boundData.put( entry.first, entry.second );
-				return boundData;
 			}
 
 			@Override

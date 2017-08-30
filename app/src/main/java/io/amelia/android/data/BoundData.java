@@ -2,7 +2,6 @@ package io.amelia.android.data;
 
 import android.os.Parcelable;
 import android.text.TextUtils;
-import android.util.Pair;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -26,14 +25,7 @@ public class BoundData extends AbstractMap<String, Object>
 		allowableTypes.add( Long.class );
 		allowableTypes.add( Double.class );
 		allowableTypes.add( Parcelable.class );
-	}
-
-	public static BoundData toBoundData( Collection<Pair<String, Object>> values )
-	{
-		BoundData boundData = new BoundData();
-		for ( Pair<String, Object> entry : values )
-			boundData.put( entry.first, entry.second );
-		return boundData;
+		allowableTypes.add( BoundData.class );
 	}
 
 	private Set<Entry<String, Object>> values = new HashSet<>();
@@ -41,28 +33,31 @@ public class BoundData extends AbstractMap<String, Object>
 	private Object collectionToValue( Collection value )
 	{
 		if ( value.size() == 0 )
-			return new BoundData();
+			return new ArrayList<>();
 
 		// Check if the entire list contains the same class type
 		Object first = Lists.first( value );
 		if ( Lists.isOfType( value, first.getClass() ) )
 		{
-			if ( first instanceof Pair ) // Pair.class.isAssignableFrom( first.getClass() ) )
-				return toBoundData( value );
-			else if ( first instanceof Collection )
+			if ( first instanceof Collection )
 			{
 				List<Object> list = new ArrayList<>();
 				for ( Object obj : value )
 					list.add( collectionToValue( ( Collection ) obj ) );
 				return list;
 			}
-			else
-				for ( Class<?> bClass : allowableTypes )
-					if ( bClass.isAssignableFrom( first.getClass() ) )
-						return value;
+
+			for ( Class<?> bClass : allowableTypes )
+				if ( bClass.isAssignableFrom( first.getClass() ) )
+					return value;
 		}
 
 		throw new IllegalArgumentException( "Unparcelable list type: " + value.getClass().getSimpleName() + " {" + TextUtils.join( ", ", Lists.listClasses( ( Collection ) value ) ) + "}" );
+	}
+
+	public String dump()
+	{
+		return Objs.dumpObject( this );
 	}
 
 	@Override

@@ -35,7 +35,7 @@ import java.util.List;
 
 import io.amelia.R;
 import io.amelia.android.data.BoundData;
-import io.amelia.booklet.ContentManager;
+import io.amelia.booklet.data.ContentManager;
 
 public class SigninActivity extends BaseActivity implements GoogleApiClient.OnConnectionFailedListener, FirebaseAuth.AuthStateListener
 {

@@ -1,4 +1,4 @@
-package io.amelia.booklet;
+package io.amelia.booklet.data;
 
 import android.os.AsyncTask;
 import android.support.design.widget.Snackbar;

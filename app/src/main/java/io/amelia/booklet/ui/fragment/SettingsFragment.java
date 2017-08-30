@@ -12,7 +12,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import io.amelia.R;
-import io.amelia.booklet.ContentManager;
+import io.amelia.booklet.data.ContentManager;
 import io.amelia.booklet.ui.activity.BootActivity;
 
 public class SettingsFragment extends PreferenceFragment

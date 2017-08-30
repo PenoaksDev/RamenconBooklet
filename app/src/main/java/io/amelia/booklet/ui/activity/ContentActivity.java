@@ -24,7 +24,8 @@ import io.amelia.android.data.BoundData;
 import io.amelia.android.fragments.FragmentStack;
 import io.amelia.android.log.PLog;
 import io.amelia.android.support.UIUpdater;
-import io.amelia.booklet.ContentManager;
+import io.amelia.booklet.data.Booklet;
+import io.amelia.booklet.data.ContentManager;
 import io.amelia.booklet.ui.fragment.GuestFragment;
 import io.amelia.booklet.ui.fragment.MapsFragment;
 import io.amelia.booklet.ui.fragment.ScheduleFragment;
@@ -35,6 +36,7 @@ public class ContentActivity extends BaseActivity implements NavigationView.OnNa
 	private static final int UPDATE_GOOGLE_PLAY = 24;
 	public static ContentActivity instance;
 	public FragmentStack stacker;
+	private Booklet activeBooklet;
 	private Bundle savedInstanceState;
 
 	public ContentActivity()
@@ -90,6 +92,14 @@ public class ContentActivity extends BaseActivity implements NavigationView.OnNa
 		this.savedInstanceState = savedInstanceState;
 
 		super.onCreate( savedInstanceState );
+
+		activeBooklet = ContentManager.getActiveBooklet();
+
+		if ( activeBooklet == null )
+		{
+			startActivity( new Intent( this, BootActivity.class ) );
+			return;
+		}
 
 		int error = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable( this );
 		if ( error != ConnectionResult.SUCCESS )

@@ -18,9 +18,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.amelia.android.log.PLog;
-import io.amelia.booklet.data.models.ModelEvent;
-import io.amelia.booklet.data.schedule.ScheduleDataReceiver;
-import io.amelia.booklet.data.schedule.filters.DefaultScheduleFilter;
+import io.amelia.booklet.data.ScheduleEventModel;
+import io.amelia.booklet.data.ScheduleHandler;
+import io.amelia.booklet.data.filters.DefaultScheduleFilter;
 import io.amelia.booklet.ui.activity.ContentActivity;
 
 public class AppService extends Service
@@ -45,7 +45,7 @@ public class AppService extends Service
 
 	private final IBinder mBinder = new ServiceBinder();
 	private final Map<String, PendingIntent> pendingNotices = new ConcurrentHashMap<>();
-	public ScheduleDataReceiver scheduleData;
+	public ScheduleHandler scheduleData;
 
 	public void cancelAllNotifications()
 	{
@@ -108,19 +108,19 @@ public class AppService extends Service
 	{
 		cancelAllNotifications();
 
-		Set<ModelEvent> events = scheduleData.filterRange( new DefaultScheduleFilter().setHasTimer( DefaultScheduleFilter.TriStateList.SHOW ) );
-		for ( ModelEvent event : events )
+		Set<ScheduleEventModel> events = scheduleData.filterRange( new DefaultScheduleFilter().setHasTimer( DefaultScheduleFilter.TriStateList.SHOW ) );
+		for ( ScheduleEventModel event : events )
 			if ( !hasPushNotificationPending( event.id ) )
 				if ( !schedulePushNotification( event, event.getStartTime() - reminderDelay, false ) )
 					event.setTimer( false );
 	}
 
-	public boolean schedulePushNotification( ModelEvent event, boolean makeToast )
+	public boolean schedulePushNotification( ScheduleEventModel event, boolean makeToast )
 	{
 		return schedulePushNotification( event, event.getStartTime() - getReminderDelay(), makeToast );
 	}
 
-	public boolean schedulePushNotification( ModelEvent event, long when, boolean makeToast )
+	public boolean schedulePushNotification( ScheduleEventModel event, long when, boolean makeToast )
 	{
 		Context context = ContentActivity.instance;
 

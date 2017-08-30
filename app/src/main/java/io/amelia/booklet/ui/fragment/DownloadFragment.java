@@ -20,9 +20,9 @@ import io.amelia.R;
 import io.amelia.android.data.BoundData;
 import io.amelia.android.log.PLog;
 import io.amelia.android.support.UIUpdater;
-import io.amelia.booklet.Booklet;
-import io.amelia.booklet.ContentManager;
+import io.amelia.booklet.data.Booklet;
 import io.amelia.booklet.data.BookletAdapter;
+import io.amelia.booklet.data.ContentManager;
 import io.amelia.booklet.ui.activity.BootActivity;
 
 public class DownloadFragment extends Fragment implements UIUpdater.Receiver
@@ -75,6 +75,8 @@ public class DownloadFragment extends Fragment implements UIUpdater.Receiver
 		} ); */
 
 		refreshLayout = root.findViewById( R.id.booklet_refresher );
+		refreshLayout.setColorSchemeColors( getResources().getColor( R.color.colorPrimary ), getResources().getColor( R.color.colorAccent ), getResources().getColor( R.color.lighter_gray ) );
+		refreshLayout.setRefreshing( false );
 		refreshLayout.setOnRefreshListener( new SwipeRefreshLayout.OnRefreshListener()
 		{
 			@Override

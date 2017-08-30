@@ -5,7 +5,7 @@ import android.os.AsyncTask;
 import java.util.concurrent.Callable;
 
 import io.amelia.android.log.PLog;
-import io.amelia.booklet.ContentManager;
+import io.amelia.booklet.data.ContentManager;
 
 public class PostTask extends AsyncTask<Void, Void, Void>
 {

@@ -1,8 +1,8 @@
-package io.amelia.booklet.data.schedule.filters;
+package io.amelia.booklet.data.filters;
 
 import java.util.TreeSet;
 
-import io.amelia.booklet.data.schedule.ModelEvent;
+import io.amelia.booklet.data.ScheduleEventModel;
 
 public interface ScheduleFilter
 {
@@ -13,5 +13,5 @@ public interface ScheduleFilter
 	 * @param event  The event being checked
 	 * @return should this event be included in results
 	 */
-	boolean filter( TreeSet<ModelEvent> events, ModelEvent event );
+	boolean filter( TreeSet<ScheduleEventModel> events, ScheduleEventModel event );
 }

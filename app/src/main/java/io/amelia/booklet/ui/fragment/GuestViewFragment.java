@@ -15,9 +15,10 @@ import org.acra.ACRA;
 
 import io.amelia.R;
 import io.amelia.android.data.ImageCache;
-import io.amelia.booklet.data.guests.GuestDataReceiver;
-import io.amelia.booklet.data.models.ModelGroup;
-import io.amelia.booklet.data.models.ModelGuest;
+import io.amelia.booklet.data.ContentManager;
+import io.amelia.booklet.data.GuestsGroupModel;
+import io.amelia.booklet.data.GuestsHandler;
+import io.amelia.booklet.data.GuestsModel;
 
 public class GuestViewFragment extends Fragment implements ImageCache.ImageResolveTask.ImageFoundListener
 {
@@ -55,13 +56,13 @@ public class GuestViewFragment extends Fragment implements ImageCache.ImageResol
 
 		assert bundle != null;
 
-		ModelGroup listGroup = GuestDataReceiver.getInstance().getModel( bundle.getString( "groupId" ) );
-		ModelGuest guest = listGroup.getModel( bundle.getString( "guestId" ) );
+		GuestsGroupModel listGroup = ContentManager.getActiveBooklet().getSectionHandler( GuestsHandler.class ).getModel( bundle.getString( "groupId" ) );
+		GuestsModel guest = listGroup.getModel( bundle.getString( "guestId" ) );
 
-		image = ( ImageView ) root.findViewById( R.id.guest_view_image );
-		TextView tv_title = ( TextView ) root.findViewById( R.id.guest_view_title );
-		// TextView tv_desc = (TextView) root.findViewById(R.id.guest_view_description);
-		WebView tv_desc = ( WebView ) root.findViewById( R.id.guest_view_description );
+		image = root.findViewById( R.id.guest_view_image );
+		TextView tv_title = root.findViewById( R.id.guest_view_title );
+		// TextView tv_desc =  root.findViewById(R.id.guest_view_description);
+		WebView tv_desc = root.findViewById( R.id.guest_view_description );
 
 		tv_title.setText( guest.getTitle() );
 		//tv_desc.setText(guest.getDescription());

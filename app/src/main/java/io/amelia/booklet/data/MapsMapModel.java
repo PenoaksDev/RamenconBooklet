@@ -1,6 +1,6 @@
-package io.amelia.booklet.data.maps;
+package io.amelia.booklet.data;
 
-public class ModelMap
+public class MapsMapModel
 {
 	public String id;
 	public String image;

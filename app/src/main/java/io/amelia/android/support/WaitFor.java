@@ -2,7 +2,7 @@ package io.amelia.android.support;
 
 import android.os.AsyncTask;
 
-import io.amelia.booklet.ContentManager;
+import io.amelia.booklet.data.ContentManager;
 
 public class WaitFor
 {

@@ -17,7 +17,7 @@ import java.io.OutputStream;
 
 import io.amelia.android.log.PLog;
 import io.amelia.android.support.ACRAHelper;
-import io.amelia.booklet.ContentManager;
+import io.amelia.booklet.data.ContentManager;
 
 public class ImageCache
 {
@@ -74,12 +74,12 @@ public class ImageCache
 		@Override
 		protected Void doInBackground( Void... params )
 		{
-			boolean downloadImages = ContentManager.downloadImages();
+			int imageCacheTimeout = ContentManager.getImageCacheTimeout() * 60 * 1000; // Minutes to Millis
 
 			final File dest = new File( cacheDirectory, id + ".png" );
 			boolean update = false;
 
-			if ( !downloadImages )
+			if ( imageCacheTimeout == 0 )
 				dest.delete();
 
 			if ( dest.exists() )
@@ -94,7 +94,7 @@ public class ImageCache
 					ACRA.getErrorReporter().handleException( new RuntimeException( "Recoverable Exception in Image Cache", e ) );
 				}
 
-				if ( System.currentTimeMillis() - dest.lastModified() > 3600000 ) // Redownload once the image is over a day old.
+				if ( System.currentTimeMillis() - dest.lastModified() > imageCacheTimeout )
 					update = true;
 			}
 			else
@@ -131,7 +131,7 @@ public class ImageCache
 
 						if ( bitmap != null )
 						{
-							if ( downloadImages )
+							if ( imageCacheTimeout > 0 )
 								try
 								{
 									OutputStream out = null;

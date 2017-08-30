@@ -15,7 +15,7 @@ import java.io.InputStream;
 import io.amelia.android.data.BoundData;
 import io.amelia.android.data.BoundDataTypeAdapterFactory;
 import io.amelia.android.data.BundleTypeAdapterFactory;
-import io.amelia.booklet.ContentManager;
+import io.amelia.booklet.data.ContentManager;
 
 public class LibAndroid
 {
@@ -45,7 +45,6 @@ public class LibAndroid
 	{
 		if ( json == null )
 			return null;
-
 		if ( json.trim().startsWith( "[" ) )
 			return getGson().fromJson( json, BoundData[].class );
 		else

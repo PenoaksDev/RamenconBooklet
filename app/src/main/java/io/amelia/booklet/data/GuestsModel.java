@@ -1,8 +1,8 @@
-package io.amelia.booklet.data.guests;
+package io.amelia.booklet.data;
 
 import io.amelia.android.support.Strs;
 
-public class ModelGuest
+public class GuestsModel
 {
 	public String id;
 	public String title;

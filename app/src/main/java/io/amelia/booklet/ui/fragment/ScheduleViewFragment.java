@@ -14,8 +14,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import io.amelia.R;
-import io.amelia.booklet.data.models.ModelEvent;
-import io.amelia.booklet.data.schedule.ScheduleAdapter;
+import io.amelia.booklet.data.ScheduleEventModel;
+import io.amelia.booklet.data.ScheduleAdapter;
 
 public class ScheduleViewFragment extends Fragment
 {
@@ -59,7 +59,7 @@ public class ScheduleViewFragment extends Fragment
 			tv_title.setText( "There was a problem! :(" );
 		else
 		{
-			ModelEvent event = adapter.events.get( getArguments().getInt( "event" ) );
+			ScheduleEventModel event = adapter.events.get( getArguments().getInt( "event" ) );
 
 			tv_title.setText( event.title );
 			tv_location.setText( event.location );

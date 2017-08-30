@@ -1,4 +1,4 @@
-package io.amelia.booklet.data.schedule;
+package io.amelia.booklet.data;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -22,7 +22,6 @@ import java.util.List;
 
 import io.amelia.R;
 import io.amelia.android.log.PLog;
-import io.amelia.booklet.data.maps.ModelLocation;
 import io.amelia.booklet.ui.fragment.ScheduleViewFragment;
 
 public class ScheduleAdapter extends BaseExpandableListAdapter
@@ -31,13 +30,13 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 	public static final SimpleDateFormat DISPLAY_FORMAT_TIME12 = new SimpleDateFormat( "hh:mm a" );
 	public static final SimpleDateFormat DISPLAY_FORMAT_TIME24 = new SimpleDateFormat( "HH:mm" );
 	public SimpleDateFormat dateFormat;
-	public List<ModelEvent> events;
-	public List<ModelLocation> locations;
+	public List<ScheduleEventModel> events;
+	public List<MapsLocationModel> locations;
 	public SimpleDateFormat timeFormat;
 	private Context context;
 	private LayoutInflater inflater = null;
 
-	public ScheduleAdapter( Context context, SimpleDateFormat dateFormat, SimpleDateFormat timeFormat, List<ModelLocation> locations, List<ModelEvent> events )
+	public ScheduleAdapter( Context context, SimpleDateFormat dateFormat, SimpleDateFormat timeFormat, List<MapsLocationModel> locations, List<ScheduleEventModel> events )
 	{
 		this.inflater = ( LayoutInflater ) context.getSystemService( Context.LAYOUT_INFLATER_SERVICE );
 		this.context = context;
@@ -76,7 +75,7 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 			TextView tv_description = ( TextView ) childView.findViewById( R.id.description );
 			// WebView tv_description = (WebView) childView.findViewById(R.id.description);
 
-			final ModelEvent event = events.get( groupPosition );
+			final ScheduleEventModel event = events.get( groupPosition );
 
 			final ImageView iv_heart = ( ImageView ) childView.findViewById( R.id.heart );
 
@@ -183,7 +182,7 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 	{
 		View rowView = convertView == null ? inflater.inflate( R.layout.fragment_schedule_listitem, null ) : convertView;
 
-		ModelEvent event = events.get( position );
+		ScheduleEventModel event = events.get( position );
 
 		try
 		{
@@ -191,7 +190,7 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 			TextView tv_time = ( TextView ) rowView.findViewById( R.id.time );
 			TextView tv_location = ( TextView ) rowView.findViewById( R.id.location );
 
-			for ( ModelLocation loc : locations )
+			for ( MapsLocationModel loc : locations )
 				if ( loc.id.equals( event.location ) )
 					event.location = loc.title;
 

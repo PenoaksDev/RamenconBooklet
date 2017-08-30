@@ -1,4 +1,4 @@
-package io.amelia.booklet.data.schedule;
+package io.amelia.booklet.data;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -18,8 +18,7 @@ import java.util.List;
 
 import io.amelia.R;
 import io.amelia.android.support.DateAndTime;
-import io.amelia.booklet.ContentManager;
-import io.amelia.booklet.data.schedule.filters.DefaultScheduleFilter;
+import io.amelia.booklet.data.filters.DefaultScheduleFilter;
 import io.amelia.booklet.ui.fragment.ScheduleFragment;
 
 public class ScheduleDayAdapter extends BaseAdapter
@@ -30,10 +29,10 @@ public class ScheduleDayAdapter extends BaseAdapter
 	private TextView mDateDisplay;
 	private TwoWayView mDayView;
 	private ExpandableListView mListView;
-	private ScheduleDataReceiver mScheduleDataReceiver;
+	private ScheduleHandler mScheduleDataReceiver;
 	private int selectedPosition;
 
-	public ScheduleDayAdapter( ScheduleFragment parent, List<Date> days, TextView mDateDisplay, ScheduleDataReceiver mScheduleDataReceiver, ExpandableListView mListView, TwoWayView mDayView, int selectedPosition )
+	public ScheduleDayAdapter( ScheduleFragment parent, List<Date> days, TextView mDateDisplay, ScheduleHandler mScheduleDataReceiver, ExpandableListView mListView, TwoWayView mDayView, int selectedPosition )
 	{
 		this.inflater = ( LayoutInflater ) parent.getActivity().getSystemService( Context.LAYOUT_INFLATER_SERVICE );
 		this.days = days;
@@ -148,7 +147,7 @@ public class ScheduleDayAdapter extends BaseAdapter
 		return view;
 	}
 
-	public void setSelectedPosition( int position, List<ModelEvent> data, String title ) throws ParseException
+	public void setSelectedPosition( int position, List<ScheduleEventModel> data, String title ) throws ParseException
 	{
 		if ( mDayView.getChildAt( position ) == null )
 			throw new IndexOutOfBoundsException();

@@ -1,4 +1,4 @@
-package io.amelia.booklet;
+package io.amelia.booklet.data;
 
 public enum BookletState
 {

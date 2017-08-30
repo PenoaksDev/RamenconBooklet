@@ -2,7 +2,6 @@ package io.amelia.booklet.ui.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -24,18 +23,18 @@ import java.util.Date;
 import java.util.TreeSet;
 
 import io.amelia.R;
-import io.amelia.android.configuration.ConfigurationSection;
-import io.amelia.android.data.DataAwareFragment;
+import io.amelia.android.data.BoundData;
 import io.amelia.android.fragments.PersistentFragment;
 import io.amelia.android.support.DateAndTime;
-import io.amelia.booklet.data.models.ModelEvent;
-import io.amelia.booklet.data.models.ModelLocation;
-import io.amelia.booklet.data.schedule.ScheduleAdapter;
-import io.amelia.booklet.data.schedule.ScheduleDataReceiver;
-import io.amelia.booklet.data.schedule.ScheduleDayAdapter;
-import io.amelia.booklet.data.schedule.filters.DefaultScheduleFilter;
+import io.amelia.booklet.data.ContentFragment;
+import io.amelia.booklet.data.MapsLocationModel;
+import io.amelia.booklet.data.ScheduleAdapter;
+import io.amelia.booklet.data.ScheduleDayAdapter;
+import io.amelia.booklet.data.ScheduleEventModel;
+import io.amelia.booklet.data.ScheduleHandler;
+import io.amelia.booklet.data.filters.DefaultScheduleFilter;
 
-public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> implements PersistentFragment, SwipeRefreshLayout.OnRefreshListener
+public class ScheduleFragment extends ContentFragment<ScheduleHandler> implements PersistentFragment
 {
 	public static final long ONE_DAY = 1440 * 60 * 1000;
 
@@ -52,15 +51,15 @@ public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> im
 	private ScheduleAdapter scheduleAdapter;
 	private ScheduleDayAdapter scheduleDayAdapter;
 
-	public ScheduleFragment()
+	public ScheduleFragment() throws IOException
 	{
+		super( ScheduleHandler.class );
 		instance = this;
-		setReceiver( ScheduleDataReceiver.getInstance() );
 	}
 
-	public ModelLocation getLocation( String locId )
+	public MapsLocationModel getLocation( String locId )
 	{
-		for ( ModelLocation location : receiver.locations )
+		for ( MapsLocationModel location : handler.locations )
 			if ( location.id.equals( locId ) )
 				return location;
 		return null;
@@ -91,7 +90,7 @@ public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> im
 			{
 				try
 				{
-					TreeSet<Date> days = receiver.sampleDays();
+					TreeSet<Date> days = handler.sampleDays();
 					long nowTime = new Date().getTime();
 
 					assert days.size() > 0;
@@ -133,12 +132,12 @@ public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> im
 						currentFilter.setMax( nowMatch.getTime() + ONE_DAY );
 					}
 
-					TreeSet<ModelEvent> data = receiver.filterRange( currentFilter );
+					TreeSet<ScheduleEventModel> data = handler.filterRange( currentFilter );
 
 					int positionVisible = -1;
 
 					long nowDate = new Date().getTime();
-					ModelEvent[] events = data.toArray( new ModelEvent[0] );
+					ScheduleEventModel[] events = data.toArray( new ScheduleEventModel[0] );
 					for ( int i = 0; i < events.length; i++ )
 					{
 						Long l = events[i].getEndTime();
@@ -174,20 +173,42 @@ public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> im
 	}
 
 	@Override
-	public void onDataArrived( ConfigurationSection section, boolean isRefresh )
+	public void refreshState()
+	{
+		savedState = new Bundle();
+		saveState( savedState );
+	}
+
+	@Override
+	public void saveState( Bundle bundle )
+	{
+		if ( getView() == null )
+			return;
+
+		ExpandableListView lv = ( ExpandableListView ) getView().findViewById( R.id.schedule_listview );
+
+		bundle.putString( "filter", DefaultScheduleFilter.getAdapter().toJson( currentFilter ) );
+
+		if ( lv != null )
+		{
+			bundle.putInt( "listViewPositionVisible", lv.getFirstVisiblePosition() );
+			bundle.putInt( "listViewPositionOffset", lv.getChildAt( 0 ) == null ? 0 : lv.getChildAt( 0 ).getTop() - lv.getPaddingTop() );
+		}
+
+		if ( scheduleDayAdapter != null )
+			bundle.putInt( "selectedPosition", scheduleDayAdapter.getSelectedPosition() );
+	}
+
+	@Override
+	public void sectionHandle( BoundData section, boolean isRefresh )
 	{
 		final View root = getView();
 
-		SwipeRefreshLayout refresher = ( SwipeRefreshLayout ) root.findViewById( R.id.schedule_refresher );
-		refresher.setOnRefreshListener( this );
-		refresher.setColorSchemeColors( getResources().getColor( R.color.colorPrimary ), getResources().getColor( R.color.colorAccent ), getResources().getColor( R.color.lighter_gray ) );
-		refresher.setRefreshing( false );
-
 		try
 		{
-			assert receiver.schedule.size() > 0;
+			assert handler.schedule.size() > 0;
 
-			final TreeSet<Date> days = receiver.sampleDays();
+			final TreeSet<Date> days = handler.sampleDays();
 
 			TwoWayView mDayView = ( TwoWayView ) root.findViewById( R.id.daylist );
 			TextView mDateDisplay = ( TextView ) root.findViewById( R.id.date_display );
@@ -199,7 +220,7 @@ public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> im
 			mListView = ( ExpandableListView ) root.findViewById( R.id.schedule_listview );
 
 			int selectedPosition = 1;
-			TreeSet<ModelEvent> data;
+			TreeSet<ScheduleEventModel> data;
 			int positionVisible = 0;
 			int positionOffset = 0;
 
@@ -228,7 +249,7 @@ public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> im
 					currentFilter.setMax( nowMatch.getTime() + ONE_DAY );
 					selectedPosition = dayPosition;
 				}
-				else if ( receiver.hasHeartedEvents() )
+				else if ( handler.hasHeartedEvents() )
 				{
 					currentFilter.setHearted( DefaultScheduleFilter.TriStateList.SHOW );
 					selectedPosition = 0;
@@ -240,13 +261,13 @@ public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> im
 					selectedPosition = 1;
 				}
 
-				data = receiver.filterRange( currentFilter );
+				data = handler.filterRange( currentFilter );
 
 				if ( nowMatch != null )
 				{
 					// Find the most recent event and set the scroll position
 					long nowDate = new Date().getTime();
-					ModelEvent[] events = data.toArray( new ModelEvent[0] );
+					ScheduleEventModel[] events = data.toArray( new ScheduleEventModel[0] );
 					for ( int i = 0; i < events.length; i++ )
 					{
 						Long l = events[i].getEndTime();
@@ -270,7 +291,7 @@ public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> im
 				}
 
 				selectedPosition = savedState.getInt( "selectedPosition", 0 );
-				data = receiver.filterRange( currentFilter );
+				data = handler.filterRange( currentFilter );
 
 				positionVisible = savedState.getInt( "listViewPositionVisible", 0 );
 				positionOffset = savedState.getInt( "listViewPositionOffset", 0 );
@@ -278,10 +299,10 @@ public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> im
 				savedState = null;
 			}
 
-			scheduleDayAdapter = new ScheduleDayAdapter( this, new ArrayList<>( days ), mDateDisplay, receiver, mListView, mDayView, selectedPosition );
+			scheduleDayAdapter = new ScheduleDayAdapter( this, new ArrayList<>( days ), mDateDisplay, handler, mListView, mDayView, selectedPosition );
 			mDayView.setAdapter( scheduleDayAdapter );
 
-			scheduleAdapter = new ScheduleAdapter( getActivity(), receiver.simpleDateFormat(), receiver.simpleTimeFormat(), receiver.locations, new ArrayList<>( data ) );
+			scheduleAdapter = new ScheduleAdapter( getActivity(), handler.simpleDateFormat(), handler.simpleTimeFormat(), handler.locations, new ArrayList<>( data ) );
 			mListView.setAdapter( scheduleAdapter );
 
 			if ( positionVisible > 0 )
@@ -293,46 +314,5 @@ public class ScheduleFragment extends DataAwareFragment<ScheduleDataReceiver> im
 
 			// Toast.makeText( HomeActivity.instance, "We had a problem loading the schedule. The error has been reported.", Toast.LENGTH_LONG ).show();
 		}
-	}
-
-	@Override
-	protected void onDataUpdate( ConfigurationSection data )
-	{
-
-	}
-
-	@Override
-	public void onRefresh()
-	{
-		savedState = new Bundle();
-		saveState( savedState );
-
-		super.refreshData();
-	}
-
-	@Override
-	public void refreshState()
-	{
-		onRefresh();
-	}
-
-	@Override
-	public void saveState( Bundle bundle )
-	{
-		if ( getView() == null )
-			return;
-
-		ExpandableListView lv = ( ExpandableListView ) getView().findViewById( R.id.schedule_listview );
-
-		bundle.putString( "filter", DefaultScheduleFilter.getAdapter().toJson( currentFilter ) );
-
-		if ( lv != null )
-		{
-			bundle.putInt( "listViewPositionVisible", lv.getFirstVisiblePosition() );
-			bundle.putInt( "listViewPositionOffset", lv.getChildAt( 0 ) == null ? 0 : lv.getChildAt( 0 ).getTop() - lv.getPaddingTop() );
-		}
-
-		if ( scheduleDayAdapter != null )
-			bundle.putInt( "selectedPosition", scheduleDayAdapter.getSelectedPosition() );
 	}
 }

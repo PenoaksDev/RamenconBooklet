@@ -40,12 +40,18 @@ public class Objs
 
 	public static <Type> List<Type> castList( List<?> list, Class<Type> typeClass )
 	{
+		return castList( list, typeClass, false );
+	}
+
+	public static <Type> List<Type> castList( List<?> list, Class<Type> typeClass, boolean allowNullElements )
+	{
 		Objs.notNull( list );
 
 		List<Type> newList = new ArrayList<>();
 
 		for ( Object o : list )
-			newList.add( castTo( o, typeClass ) );
+			if ( allowNullElements || o != null )
+				newList.add( castToWithException( o, typeClass ) );
 
 		return newList;
 	}
@@ -68,53 +74,31 @@ public class Objs
 		return newMap;
 	}
 
-	@SuppressWarnings( "unchecked" )
+	public static <O> O castTo( Object obj, Class<O> clz, O def )
+	{
+		if ( obj == null )
+			return def;
+
+		try
+		{
+			return castToWithException( obj, clz );
+		}
+		catch ( Exception e )
+		{
+			return def;
+		}
+	}
+
 	public static <O> O castTo( Object obj, Class<O> clz )
 	{
 		try
 		{
-			if ( clz == Integer.class )
-				return ( O ) castToIntWithException( obj );
-			if ( clz == Long.class )
-				return ( O ) castToLongWithException( obj );
-			if ( clz == Double.class )
-				return ( O ) castToDoubleWithException( obj );
-			if ( clz == Boolean.class )
-				return ( O ) castToBooleanWithException( obj );
-			if ( clz == String.class )
-				return ( O ) castToStringWithException( obj );
+			return castToWithException( obj, clz );
 		}
-		catch ( Exception e1 )
+		catch ( Exception e )
 		{
-			try
-			{
-				return ( O ) obj;
-			}
-			catch ( Exception e2 )
-			{
-				try
-				{
-					return ( O ) castToStringWithException( obj );
-				}
-				catch ( Exception e3 )
-				{
-					try
-					{
-						/*
-						 * Last and final attempt to get something out of this
-						 * object even if it results in the toString() method.
-						 */
-						return ( O ) ( "" + obj );
-					}
-					catch ( Exception e4 )
-					{
-						// Ignore
-					}
-				}
-			}
+			return null;
 		}
-
-		return null;
 	}
 
 	public static Boolean castToBoolean( Object value )
@@ -369,12 +353,97 @@ public class Objs
 		throw new ClassCastException( "Uncaught Conversion to String of Type: " + value.getClass().getName() );
 	}
 
+	public static <O> O castToWithException( Object obj, Class<O> clz )
+	{
+		try
+		{
+			if ( clz == Integer.class )
+				return ( O ) castToIntWithException( obj );
+			if ( clz == Long.class )
+				return ( O ) castToLongWithException( obj );
+			if ( clz == Double.class )
+				return ( O ) castToDoubleWithException( obj );
+			if ( clz == Boolean.class )
+				return ( O ) castToBooleanWithException( obj );
+			if ( clz == String.class )
+				return ( O ) castToStringWithException( obj );
+		}
+		catch ( Exception e1 )
+		{
+			// Ignore
+		}
+
+		return ( O ) obj;
+	}
+
 	public static boolean containsKeys( Map<String, ?> origMap, Collection<String> keys )
 	{
 		for ( String key : keys )
 			if ( origMap.containsKey( key ) )
 				return true;
 		return false;
+	}
+
+	public static String dumpObject( Object... objs )
+	{
+		StringBuilder sb = new StringBuilder();
+
+		if ( objs == null )
+			return "null";
+
+		for ( Object obj : objs )
+			if ( obj != null )
+			{
+				Map<String, Object> children = new LinkedHashMap<>();
+
+				if ( obj instanceof Map )
+					for ( Map.Entry<Object, Object> e : ( ( Map<Object, Object> ) obj ).entrySet() )
+					{
+						String key = Objs.castToString( e.getKey() );
+						if ( key == null )
+							key = e.getKey().toString();
+						children.put( key, e.getValue() );
+					}
+				else if ( obj instanceof Collection )
+				{
+					int i = 0;
+					for ( Object o : ( Collection<Object> ) obj )
+					{
+						children.put( Integer.toString( i ), o );
+						i++;
+					}
+				}
+				else if ( obj instanceof Object[] )
+					for ( int i = 0; i < ( ( Object[] ) obj ).length; i++ )
+						children.put( Integer.toString( i ), ( ( Object[] ) obj )[i] );
+
+				// boolean[], byte[], short[], char[], int[], long[], float[], double[], Object[]
+
+				Object value = Objs.castToString( obj );
+				if ( value == null )
+					value = obj.toString();
+
+				if ( !children.isEmpty() )
+					value = children.size();
+
+				sb.append( "\n" ).append( obj.getClass().getName() ).append( "(" ).append( value ).append( ")" );
+
+				if ( !children.isEmpty() )
+				{
+					sb.append( " {" );
+					for ( Map.Entry<String, Object> c : children.entrySet() )
+					{
+						sb.append( "\n\t[" ).append( c.getKey() ).append( "]=>" );
+						for ( String s : dumpObject( c.getValue() ).split( "\n" ) )
+							sb.append( "\n\t" + s );
+					}
+					sb.append( "\n}" );
+				}
+			}
+			else
+				sb.append( "\nnull" );
+
+		return sb.length() < 1 ? "" : sb.substring( 1 );
 	}
 
 	@SuppressWarnings( "unchecked" )

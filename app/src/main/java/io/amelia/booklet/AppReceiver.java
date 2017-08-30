@@ -11,8 +11,9 @@ import android.preference.PreferenceManager;
 
 import io.amelia.android.log.PLog;
 import io.amelia.android.support.Objs;
-import io.amelia.booklet.data.models.ModelEvent;
-import io.amelia.booklet.data.schedule.ScheduleDataReceiver;
+import io.amelia.booklet.data.ContentManager;
+import io.amelia.booklet.data.ScheduleEventModel;
+import io.amelia.booklet.data.ScheduleHandler;
 
 public class AppReceiver extends BroadcastReceiver
 {
@@ -53,8 +54,8 @@ public class AppReceiver extends BroadcastReceiver
 					v.vibrate( 300 );
 			}
 
-			ModelEvent event;
-			if ( ( event = ScheduleDataReceiver.getInstance().getEvent( id ) ) != null )
+			ScheduleEventModel event;
+			if ( ( event = ContentManager.getActiveBooklet().getSectionHandler( ScheduleHandler.class ).getEvent( id ) ) != null )
 				event.setTimer( false );
 
 			// if ( ContentActivity.instance != null && ContentActivity.instance.service != null )

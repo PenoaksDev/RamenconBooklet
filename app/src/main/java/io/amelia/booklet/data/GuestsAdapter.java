@@ -1,4 +1,4 @@
-package io.amelia.booklet.data.guests;
+package io.amelia.booklet.data;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -17,13 +17,13 @@ import io.amelia.android.support.ACRAHelper;
 import io.amelia.booklet.ui.activity.ContentActivity;
 import io.amelia.booklet.ui.fragment.GuestViewFragment;
 
-public class GuestAdapter extends BaseExpandableListAdapter
+public class GuestsAdapter extends BaseExpandableListAdapter
 {
 	private Context context;
 	private LayoutInflater inflater = null;
-	private List<ModelGroup> list;
+	private List<GuestsGroupModel> list;
 
-	public GuestAdapter( Context context, List<ModelGroup> list )
+	public GuestsAdapter( Context context, List<GuestsGroupModel> list )
 	{
 		this.inflater = ( LayoutInflater ) context.getSystemService( Context.LAYOUT_INFLATER_SERVICE );
 		this.context = context;
@@ -49,8 +49,8 @@ public class GuestAdapter extends BaseExpandableListAdapter
 	{
 		View listItemView = convertView == null ? inflater.inflate( R.layout.fragment_guest_listitem, null ) : convertView;
 
-		final ModelGroup group = list.get( groupPosition );
-		final ModelGuest guest = group.children.get( childPosition );
+		final GuestsGroupModel group = list.get( groupPosition );
+		final GuestsModel guest = group.children.get( childPosition );
 
 		// PLog.i("Group " + group.id + " // Guest " + guest.id);
 
@@ -96,7 +96,7 @@ public class GuestAdapter extends BaseExpandableListAdapter
 	@Override
 	public int getChildrenCount( int groupPosition )
 	{
-		List<ModelGuest> guests = list.get( groupPosition ).children;
+		List<GuestsModel> guests = list.get( groupPosition ).children;
 		return guests == null ? 0 : guests.size();
 	}
 
@@ -128,7 +128,7 @@ public class GuestAdapter extends BaseExpandableListAdapter
 		return group;
 	}
 
-	public ModelGroup getListGroup( int groupPosition )
+	public GuestsGroupModel getListGroup( int groupPosition )
 	{
 		return list.get( groupPosition );
 	}

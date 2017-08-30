@@ -1,4 +1,4 @@
-package io.amelia.booklet.data.schedule;
+package io.amelia.booklet.data;
 
 import android.app.Notification;
 
@@ -10,11 +10,10 @@ import io.amelia.android.log.PLog;
 import io.amelia.android.support.DateAndTime;
 import io.amelia.android.support.Strs;
 import io.amelia.booklet.AppService;
-import io.amelia.booklet.data.maps.ModelLocation;
 import io.amelia.booklet.ui.activity.ContentActivity;
 import io.amelia.booklet.ui.fragment.ScheduleFragment;
 
-public class ModelEvent
+public class ScheduleEventModel
 {
 	public String date;
 	public String description;
@@ -46,14 +45,14 @@ public class ModelEvent
 		return getStartTime() + ( getDuration() * 60 );
 	}
 
-	public ModelLocation getLocation()
+	public MapsLocationModel getLocation()
 	{
 		return ScheduleFragment.instance().getLocation( location );
 	}
 
 	public Notification getNotification()
 	{
-		ModelLocation mLocation = getLocation();
+		MapsLocationModel mLocation = getLocation();
 		return new Notification.Builder( ContentActivity.instance ).setWhen( getStartTime() ).setContentTitle( "You have an event starting soon!" ).setSmallIcon( R.mipmap.ic_app ).setContentText( title + " starts at " + DateAndTime.now( "h:mm a", getStartTime() ) + ( mLocation == null ? "" : " in " + mLocation.title ) ).build();
 	}
 
@@ -61,11 +60,11 @@ public class ModelEvent
 	{
 		try
 		{
-			return ScheduleDataReceiver.simpleCombinedFormat().parse( date + " " + time );
+			return ScheduleHandler.simpleCombinedFormat().parse( date + " " + time );
 		}
 		catch ( Exception e )
 		{
-			throw new RuntimeException( e.getMessage() + " Pattern: " + ScheduleDataReceiver.simpleCombinedFormat().toPattern(), e );
+			throw new RuntimeException( e.getMessage() + " Pattern: " + ScheduleHandler.simpleCombinedFormat().toPattern(), e );
 		}
 	}
 
@@ -73,11 +72,11 @@ public class ModelEvent
 	{
 		try
 		{
-			return ScheduleDataReceiver.simpleCombinedFormat().parse( date + " " + time ).getTime();
+			return ScheduleHandler.simpleCombinedFormat().parse( date + " " + time ).getTime();
 		}
 		catch ( Exception e )
 		{
-			throw new RuntimeException( e.getMessage() + " Pattern: " + ScheduleDataReceiver.simpleCombinedFormat().toPattern(), e );
+			throw new RuntimeException( e.getMessage() + " Pattern: " + ScheduleHandler.simpleCombinedFormat().toPattern(), e );
 		}
 	}
 
