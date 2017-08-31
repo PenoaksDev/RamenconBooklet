@@ -12,7 +12,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.lucasr.twowayview.TwoWayView;
 
@@ -58,13 +57,13 @@ public class GuideFragment extends ContentFragment<GuideHandler> implements Pers
 	{
 		super.onCreate( savedInstanceState );
 
-		getActivity().setTitle( "Maps and Locations" );
+		getActivity().setTitle( "Official Guide Booklet" );
 	}
 
 	@Override
 	public View onCreateView( LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState )
 	{
-		return inflater.inflate( R.layout.fragment_maps, container, false );
+		return inflater.inflate( R.layout.fragment_guide, container, false );
 	}
 
 	@Override
@@ -91,10 +90,10 @@ public class GuideFragment extends ContentFragment<GuideHandler> implements Pers
 		if ( savedState != null )
 			selectedPosition = savedState.getInt( "selectedPosition", 0 );
 
-		mTwoWayView = root.findViewById( R.id.maps_listview );
+		mTwoWayView = root.findViewById( R.id.guide_listview );
 		mTwoWayView.setAdapter( new PagedListAdapater() );
 
-		mViewPager = root.findViewById( R.id.maps_pager );
+		mViewPager = root.findViewById( R.id.guide_pager );
 		mViewPager.setAdapter( new ViewPagerAdapter( getFragmentManager(), isRefresh ) );
 		mViewPager.setCurrentItem( selectedPosition );
 		mViewPager.addOnPageChangeListener( new ViewPager.OnPageChangeListener()
@@ -119,7 +118,7 @@ public class GuideFragment extends ContentFragment<GuideHandler> implements Pers
 				if ( mTwoWayView.getChildAt( position ) != null )
 					mTwoWayView.getChildAt( position ).setBackgroundColor( 0xFFff4081 );
 				if ( mViewPager.getChildAt( position ) != null )
-					( ( TouchImageView ) mViewPager.getChildAt( position ).findViewById( R.id.maps_image ) ).resetZoom();
+					( ( TouchImageView ) mViewPager.getChildAt( position ).findViewById( R.id.guide_image ) ).resetZoom();
 			}
 		} );
 	}
@@ -129,7 +128,7 @@ public class GuideFragment extends ContentFragment<GuideHandler> implements Pers
 		@Override
 		public int getCount()
 		{
-			return handler.maps.size();
+			return handler.guidePageModels.size();
 		}
 
 		@Override
@@ -148,7 +147,7 @@ public class GuideFragment extends ContentFragment<GuideHandler> implements Pers
 		public View getView( final int position, View convertView, ViewGroup parent )
 		{
 			TextView tv = new TextView( getContext() );
-			tv.setText( handler.maps.get( position ).title );
+			tv.setText( handler.guidePageModels.get( position ).title );
 			tv.setPadding( 12, 6, 12, 6 );
 			tv.setTextColor( 0xffffffff );
 			tv.setGravity( Gravity.CENTER );
@@ -171,21 +170,7 @@ public class GuideFragment extends ContentFragment<GuideHandler> implements Pers
 					mViewPager.setCurrentItem( position );
 
 					if ( mViewPager.getChildAt( position ) != null )
-						( ( TouchImageView ) mViewPager.getChildAt( position ).findViewById( R.id.maps_image ) ).resetZoom();
-				}
-			} );
-
-			tv.setOnLongClickListener( new View.OnLongClickListener()
-			{
-				@Override
-				public boolean onLongClick( View v )
-				{
-
-					refreshState();
-
-					Toast.makeText( getContext(), "Maps Refreshed", Toast.LENGTH_LONG ).show();
-
-					return true;
+						( ( TouchImageView ) mViewPager.getChildAt( position ).findViewById( R.id.guide_image ) ).resetZoom();
 				}
 			} );
 
@@ -207,19 +192,19 @@ public class GuideFragment extends ContentFragment<GuideHandler> implements Pers
 		@Override
 		public int getCount()
 		{
-			return handler.maps.size();
+			return handler.guidePageModels.size();
 		}
 
 		@Override
 		public Fragment getItem( int position )
 		{
-			MapsChildFragment.maps = handler.maps;
+			GuideChildFragment.guideMapModels = handler.guidePageModels;
 
 			Bundle bundle = new Bundle();
 			bundle.putInt( "index", position );
 			bundle.putBoolean( "isRefresh", isRefresh( position ) );
 
-			MapsChildFragment frag = new MapsChildFragment();
+			GuideChildFragment frag = new GuideChildFragment();
 			frag.setArguments( bundle );
 			return frag;
 		}

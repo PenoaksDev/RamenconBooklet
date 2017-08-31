@@ -230,11 +230,10 @@ public class Booklet
 					sectionHandlerList.put( "schedule", new ScheduleHandler().setBooklet( this ) );
 					break;
 				case "guide":
-					throw new IllegalArgumentException( "Not Implemented!" );
-					// sectionHandlerList.put( "guide", new GuideSectionHandler().setBooklet( this ) );
-					// break;
+					sectionHandlerList.put( "guide", new GuideHandler().setBooklet( this ) );
+					break;
 				default:
-					throw new IllegalArgumentException( "App does not implement the SectionHandler named " + key + ", might need coding!" );
+					throw new IllegalArgumentException( "App does not implement the SectionHandler named " + key + "." );
 			}
 
 		return sectionHandlerList.get( key );

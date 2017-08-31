@@ -18,14 +18,14 @@ import io.amelia.R;
 import io.amelia.android.data.ImageCache;
 import io.amelia.android.ui.widget.TouchImageView;
 import io.amelia.booklet.data.ContentManager;
-import io.amelia.booklet.data.MapsMapModel;
+import io.amelia.booklet.data.GuidePageModel;
 
-public class MapsChildFragment extends Fragment implements ImageCache.ImageResolveTask.ImageFoundListener, ImageCache.ImageResolveTask.ImageProgressListener
+public class GuideChildFragment extends Fragment implements ImageCache.ImageResolveTask.ImageFoundListener, ImageCache.ImageResolveTask.ImageProgressListener
 {
-	public static List<MapsMapModel> maps;
+	public static List<GuidePageModel> guideMapModels;
+	private GuidePageModel guidePageModel;
 	private TouchImageView image;
 	private boolean isRefresh;
-	private MapsMapModel map;
 	private ProgressBar progressBar = null;
 
 	@Override
@@ -35,7 +35,7 @@ public class MapsChildFragment extends Fragment implements ImageCache.ImageResol
 			image.setImageResource( R.drawable.error );
 
 		ACRA.getErrorReporter().handleException( new RuntimeException( "Recoverable Exception", exception ) );
-		Toast.makeText( getContext(), "We had a problem loading the map. The problem was reported to the developer.", Toast.LENGTH_LONG ).show();
+		Toast.makeText( getContext(), "We had a problem loading the guide. The problem was reported to the developer.", Toast.LENGTH_LONG ).show();
 	}
 
 	@Override
@@ -51,17 +51,17 @@ public class MapsChildFragment extends Fragment implements ImageCache.ImageResol
 		super.onCreate( savedInstanceState );
 
 		assert getArguments() != null;
-		map = maps.get( getArguments().getInt( "index" ) );
+		guidePageModel = guideMapModels.get( getArguments().getInt( "index" ) );
 		isRefresh = getArguments().getBoolean( "isRefresh", false );
 	}
 
 	@Override
 	public View onCreateView( LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState )
 	{
-		View view = inflater.inflate( R.layout.fragment_maps_child, container, false );
+		View view = inflater.inflate( R.layout.fragment_guide_child, container, false );
 
-		image = view.findViewById( R.id.maps_image );
-		progressBar = view.findViewById( R.id.maps_progressbar );
+		image = view.findViewById( R.id.guide_image );
+		progressBar = view.findViewById( R.id.guide_progressbar );
 		progressBar.setVisibility( View.VISIBLE );
 
 		image.setMaxZoom( 4 );
@@ -75,12 +75,12 @@ public class MapsChildFragment extends Fragment implements ImageCache.ImageResol
 	{
 		super.onStart();
 
-		if ( map.image == null )
+		if ( guidePageModel.image == null )
 			image.setImageResource( R.drawable.noimagefound );
 		else
 		{
 			image.setImageResource( R.drawable.loading_image );
-			ImageCache.cacheRemoteImage( getActivity(), "map-" + map.id, ImageCache.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/maps/" + map.image, isRefresh, this, this );
+			ImageCache.cacheRemoteImage( getActivity(), "guide-" + guidePageModel.pageNo, ImageCache.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/guide/" + guidePageModel.image, isRefresh, this, this );
 		}
 	}
 

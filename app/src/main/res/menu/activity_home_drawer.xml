@@ -43,7 +43,7 @@
                 android:checked="false"
                 android:enabled="true"
                 android:icon="@drawable/ic_menu_guide"
-                android:title="Convention Booklet"
+                android:title="Official Guide Booklet"
                 android:visible="true"/>
         <!-- <item
             android:id="@+id/nav_friends"

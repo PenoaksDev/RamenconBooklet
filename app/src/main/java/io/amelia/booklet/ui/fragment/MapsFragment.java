@@ -175,20 +175,6 @@ public class MapsFragment extends ContentFragment<MapsHandler> implements Persis
 				}
 			} );
 
-			tv.setOnLongClickListener( new View.OnLongClickListener()
-			{
-				@Override
-				public boolean onLongClick( View v )
-				{
-
-					refreshState();
-
-					Toast.makeText( getContext(), "Maps Refreshed", Toast.LENGTH_LONG ).show();
-
-					return true;
-				}
-			} );
-
 			return tv;
 		}
 	}

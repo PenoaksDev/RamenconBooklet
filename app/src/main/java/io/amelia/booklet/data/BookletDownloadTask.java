@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.amelia.R;
 import io.amelia.android.data.BoundData;
@@ -113,6 +114,7 @@ class BookletDownloadTask
 
 	private class FileDownload
 	{
+		public Call call;
 		long bytesRead = 0;
 		long contentLength = 0;
 		boolean done = false;
@@ -142,6 +144,8 @@ class BookletDownloadTask
 
 	private class InternalDownloadTask extends AsyncTask<Void, FileDownload, Void>
 	{
+		AtomicInteger finishTimeout = new AtomicInteger( -1 );
+
 		@Override
 		protected Void doInBackground( Void... params )
 		{
@@ -160,7 +164,8 @@ class BookletDownloadTask
 					}
 				} ) ).build();
 				Request request = new Request.Builder().url( fileDownload.remoteFile ).build();
-				client.newCall( request ).enqueue( new Callback()
+				fileDownload.call = client.newCall( request );
+				fileDownload.call.enqueue( new Callback()
 				{
 					@Override
 					public void onFailure( Call call, IOException exception )
@@ -171,6 +176,8 @@ class BookletDownloadTask
 					@Override
 					public void onResponse( Call call, Response response ) throws IOException
 					{
+						PLog.i( "Pre-finished " + fileDownload.remoteFile );
+
 						if ( response.code() != 200 )
 						{
 							fileDownload.lastException = new RuntimeException( "The URL " + fileDownload.remoteFile + " returned code " + response.code() + ", failure." );
@@ -195,6 +202,8 @@ class BookletDownloadTask
 
 						LibAndroid.writeBoundDataToJsonFile( data.hasBoundData( "data" ) ? data.getBoundData( "data" ) : data, fileDownload.localFile );
 
+						PLog.i( "Finished Downloading " + fileDownload.remoteFile );
+
 						fileDownload.finished = true;
 					}
 				} );
@@ -203,7 +212,9 @@ class BookletDownloadTask
 
 			for ( ; ; )
 			{
-				PLog.i( "Waiting for files to finish!" );
+				int currentTimeout = finishTimeout.addAndGet( 1 );
+				if ( currentTimeout > 25 ) // 5 Seconds
+					PLog.i( "Waiting for files to finish!" );
 
 				boolean allDone = true;
 
@@ -217,13 +228,24 @@ class BookletDownloadTask
 					}
 					else if ( !fileDownload.finished )
 					{
-						PLog.i( "File " + fileDownload.remoteFile + " not finished!" );
+						if ( currentTimeout > 25 ) // 5 Seconds
+							PLog.i( "File " + fileDownload.remoteFile + " not finished!" );
 						allDone = false;
 						break;
 					}
 
 				if ( allDone )
 					break;
+
+				if ( currentTimeout > 120 ) // 30 Seconds
+					PLog.w( "Nearing File Download Termination in " + ( 60 - ( currentTimeout / 4 ) ) + " seconds." );
+
+				if ( currentTimeout > 240 ) // 60 Seconds
+				{
+					for ( final FileDownload fileDownload : pendingFiles )
+						fileDownload.call.cancel();
+					break;
+				}
 
 				try
 				{

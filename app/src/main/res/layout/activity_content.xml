@@ -11,7 +11,7 @@
     tools:openDrawer="start">
 
     <include
-        layout="@layout/activity_home_nav_bar"
+        layout="@layout/activity_content_nav_bar"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
@@ -21,7 +21,7 @@
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:fitsSystemWindows="true"
-        app:headerLayout="@layout/activity_home_nav_header"
+        app:headerLayout="@layout/activity_content_nav_header"
         app:menu="@menu/activity_home_drawer"
         app:itemIconTint="@color/menu_colors"
         app:itemTextColor="@color/menu_colors"

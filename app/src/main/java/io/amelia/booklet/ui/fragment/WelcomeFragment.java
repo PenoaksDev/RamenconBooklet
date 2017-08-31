@@ -77,7 +77,7 @@ public class WelcomeFragment extends ContentFragment<WelcomeHandler>
 
 		View root = inflater.inflate( R.layout.fragment_welcome, container, false );
 
-		TextView tv_date = getView().findViewById( R.id.welcome_date );
+		TextView tv_date = root.findViewById( R.id.welcome_date );
 		tv_date.setOnClickListener( new View.OnClickListener()
 		{
 			@Override

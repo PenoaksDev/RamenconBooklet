@@ -106,7 +106,7 @@ public class ContentActivity extends BaseActivity implements NavigationView.OnNa
 			return;
 		}
 
-		setContentView( R.layout.activity_home );
+		setContentView( R.layout.activity_content );
 
 		Toolbar toolbar = findViewById( R.id.home_toolbar );
 		assert toolbar != null;
@@ -150,6 +150,9 @@ public class ContentActivity extends BaseActivity implements NavigationView.OnNa
 					drawer.openDrawer( GravityCompat.START );
 			}
 		} );
+
+		// TODO Should this only open certain times?
+		drawer.openDrawer( Gravity.START );
 
 		final NavigationView navigationView = findViewById( R.id.nav_view );
 		assert navigationView != null;

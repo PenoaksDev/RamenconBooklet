@@ -50,7 +50,7 @@ public class GuestViewFragment extends Fragment implements ImageCache.ImageResol
 	{
 		getActivity().setTitle( "View Guest" );
 
-		View root = inflater.inflate( R.layout.fragment_guest_view, container, false );
+		View root = inflater.inflate( R.layout.fragment_guests_view, container, false );
 
 		Bundle bundle = getArguments();
 

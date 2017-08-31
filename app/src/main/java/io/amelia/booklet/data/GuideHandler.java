@@ -7,7 +7,7 @@ import io.amelia.android.data.BoundData;
 
 public class GuideHandler extends ContentHandler
 {
-	public List<MapsMapModel> maps;
+	public List<GuidePageModel> guidePageModels;
 
 	@Override
 	public String getSectionKey()
@@ -18,14 +18,13 @@ public class GuideHandler extends ContentHandler
 	@Override
 	public void onSectionHandle( BoundData data, boolean isRefresh )
 	{
-		maps = new ArrayList<>();
+		guidePageModels = new ArrayList<>();
 		for ( BoundData boundData : data.getBoundDataList( "guide" ) )
 		{
-			MapsMapModel mapsMapModel = new MapsMapModel();
-			mapsMapModel.id = boundData.getString( "id" );
-			mapsMapModel.image = boundData.getString( "image" );
-			mapsMapModel.title = boundData.getString( "title" );
-			maps.add( mapsMapModel );
+			GuidePageModel guidePageModel = new GuidePageModel();
+			guidePageModel.pageNo = boundData.getString( "pageNo" );
+			guidePageModel.image = boundData.getString( "image" );
+			guidePageModels.add( guidePageModel );
 		}
 	}
 }

@@ -5,12 +5,12 @@
     android:layout_height="match_parent">
 
     <io.amelia.android.ui.widget.TouchImageView
-        android:id="@+id/maps_image"
+        android:id="@+id/guide_image"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
     <ProgressBar
-        android:id="@+id/maps_progressbar"
+        android:id="@+id/guide_progressbar"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
         android:layout_height="20dp"

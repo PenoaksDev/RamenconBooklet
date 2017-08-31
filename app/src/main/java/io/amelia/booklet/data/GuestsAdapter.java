@@ -47,7 +47,7 @@ public class GuestsAdapter extends BaseExpandableListAdapter
 	@Override
 	public View getChildView( final int groupPosition, final int childPosition, boolean isLastChild, View convertView, ViewGroup parent )
 	{
-		View listItemView = convertView == null ? inflater.inflate( R.layout.fragment_guest_listitem, null ) : convertView;
+		View listItemView = convertView == null ? inflater.inflate( R.layout.fragment_guests_listitem, null ) : convertView;
 
 		final GuestsGroupModel group = list.get( groupPosition );
 		final GuestsModel guest = group.children.get( childPosition );
@@ -121,7 +121,7 @@ public class GuestsAdapter extends BaseExpandableListAdapter
 	@Override
 	public View getGroupView( int groupPosition, boolean isExpanded, View convertView, ViewGroup parent )
 	{
-		View group = convertView == null ? inflater.inflate( R.layout.fragment_guest_listheader, null ) : convertView;
+		View group = convertView == null ? inflater.inflate( R.layout.fragment_guests_listheader, null ) : convertView;
 
 		( ( TextView ) group.findViewById( R.id.group_title ) ).setText( list.get( groupPosition ).title );
 
