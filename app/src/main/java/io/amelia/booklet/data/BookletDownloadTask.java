@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.amelia.android.data.BoundData;
@@ -29,7 +30,7 @@ class BookletDownloadTask
 	private boolean postOpen;
 	private BoundData updatedData;
 
-	public BookletDownloadTask( final Booklet booklet, final boolean postOpen ) throws UpdateAbortException
+	public BookletDownloadTask( final Booklet booklet, final boolean postOpen )
 	{
 		Objs.notNull( booklet );
 
@@ -55,7 +56,7 @@ class BookletDownloadTask
 			@Override
 			public void onFailure( Call call, IOException exception )
 			{
-				booklet.handleException( exception );
+				booklet.addException( exception );
 			}
 
 			@Override
@@ -63,7 +64,7 @@ class BookletDownloadTask
 			{
 				if ( response.code() != 200 )
 				{
-					booklet.handleException( new RuntimeException( "The URL " + url + " returned HTTP code " + response.code() + ", failure." ) );
+					booklet.addException( new RuntimeException( "The URL " + url + " returned HTTP code " + response.code() + ", failure." ) );
 					return;
 				}
 
@@ -71,7 +72,7 @@ class BookletDownloadTask
 
 				if ( data.getBoundData( "details" ).getInt( "code" ) == 0 )
 				{
-					booklet.handleException( new RuntimeException( "The URL " + url + " returned code 0, failure." ) );
+					booklet.addException( new RuntimeException( "The URL " + url + " returned code 0, failure." ) );
 					return;
 				}
 
@@ -81,8 +82,11 @@ class BookletDownloadTask
 
 				synchronized ( pendingFiles )
 				{
-					for ( String file : sections )
-						pendingFiles.add( new FileDownload( file, "json" ) );
+					for ( Map.Entry<String, File> entry : booklet.getSectionFiles( "data.json" ).entrySet() )
+					{
+						String remoteFile = ContentManager.REMOTE_DATA_URL + booklet.getId() + "/" + entry.getKey() + ".json";
+						pendingFiles.add( new FileDownload( bookletId + "-" + entry.getKey(), remoteFile, entry.getValue() ) );
+					}
 				}
 
 				internalDownloadTask = new InternalDownloadTask();
@@ -102,27 +106,17 @@ class BookletDownloadTask
 		long bytesRead = 0;
 		long contentLength = 0;
 		boolean done = false;
-		String fileName;
 		boolean finished = false;
 		String id;
 		Exception lastException = null;
 		File localFile;
 		String remoteFile;
 
-		FileDownload( String fileName, String ext )
+		FileDownload( String id, String remoteFile, File localFile )
 		{
-			this.fileName = fileName;
-			id = BookletDownloadTask.this.booklet.getId() + "-" + fileName;
-			localFile = new File( booklet.getDataDirectory(), fileName + "." + ext );
-			remoteFile = ContentManager.REMOTE_DATA_URL + BookletDownloadTask.this.booklet.getId() + "/" + fileName + "." + ext;
-		}
-
-		public FileDownload( String fileName, String ext, String remoteFileNameWithExtension )
-		{
-			this.fileName = fileName;
-			id = BookletDownloadTask.this.booklet.getId() + "-" + fileName;
-			localFile = new File( booklet.getDataDirectory(), fileName + "." + ext );
-			remoteFile = ContentManager.REMOTE_DATA_URL + BookletDownloadTask.this.booklet.getId() + "/" + remoteFileNameWithExtension;
+			this.id = id;
+			this.remoteFile = remoteFile;
+			this.localFile = localFile;
 		}
 	}
 
@@ -164,7 +158,8 @@ class BookletDownloadTask
 
 						if ( response.code() != 200 )
 						{
-							fileDownload.lastException = new RuntimeException( "The URL " + fileDownload.remoteFile + " returned code " + response.code() + ", failure." );
+							//  URL " + fileDownload.remoteFile + "
+							fileDownload.lastException = new RuntimeException( "The remote booklet server returned code " + response.code() + ", failure." );
 							return;
 						}
 
@@ -173,7 +168,7 @@ class BookletDownloadTask
 
 						if ( data.getBoundData( "details" ).getInt( "code" ) == 0 )
 						{
-							fileDownload.lastException = new RuntimeException( "The URL " + fileDownload.remoteFile + " returned code 0, failure." );
+							fileDownload.lastException = new RuntimeException( "The remote booklet server returned code 0, failure." );
 							return;
 						}
 
@@ -184,6 +179,7 @@ class BookletDownloadTask
 								pendingFiles.add( new FileDownload( fileDownload.fileName + "/" + entry.getKey(), LibIO.fileExtension( entry.getValue() ), entry.getValue() ) );
 						} */
 
+						fileDownload.localFile.getParentFile().mkdirs();
 						LibAndroid.writeBoundDataToJsonFile( data.hasBoundData( "data" ) ? data.getBoundData( "data" ) : data, fileDownload.localFile );
 
 						PLog.i( "Finished Downloading " + fileDownload.remoteFile );
@@ -201,13 +197,14 @@ class BookletDownloadTask
 					PLog.i( "Waiting for files to finish!" );
 
 				boolean allDone = true;
+				boolean exception = false;
 
 				for ( final FileDownload fileDownload : pendingFiles )
 					if ( fileDownload.lastException != null )
 					{
 						fileDownload.lastException.printStackTrace();
 						// Toast.makeText( ContentManager.getDownloadFragment().getActivity(), fileDownload.lastException.getMessage(), Toast.LENGTH_LONG ).show();
-						allDone = true;
+						exception = true;
 						break;
 					}
 					else if ( !fileDownload.finished )
@@ -217,6 +214,14 @@ class BookletDownloadTask
 						allDone = false;
 						break;
 					}
+
+				if ( exception )
+				{
+					for ( final FileDownload fileDownload : pendingFiles )
+						if ( fileDownload.lastException != null )
+							booklet.addException( fileDownload.lastException );
+					break;
+				}
 
 				if ( allDone )
 					break;
@@ -247,12 +252,14 @@ class BookletDownloadTask
 		@Override
 		protected void onPostExecute( Void aVoid )
 		{
-			booklet.data = updatedData;
+			booklet.clearImageCache();
+
+			booklet.setData( updatedData );
 			booklet.saveData();
 
 			booklet.setInUse( false );
 
-			PLog.i( "Finished downloading booklet " + booklet.getId() );
+			ContentManager.getActivity().uiShowSnakeBar( "Booklet " + booklet.getDataTitle() + " has successfully been downloaded!", Snackbar.LENGTH_LONG );
 
 			if ( postOpen )
 				booklet.goOpen();
@@ -262,7 +269,7 @@ class BookletDownloadTask
 		protected void onProgressUpdate( FileDownload... values )
 		{
 			for ( FileDownload fileDownload : values )
-				PLog.i( "File " + fileDownload.remoteFile + " Progress: " + ( 100 * ( fileDownload.bytesRead / fileDownload.contentLength ) ) + " (" + fileDownload.bytesRead + " of " + fileDownload.contentLength + " bytes)" );
+				PLog.i( "File " + fileDownload.remoteFile + " progress: " + ( 100 * ( fileDownload.bytesRead / fileDownload.contentLength ) ) + " (" + fileDownload.bytesRead + " of " + fileDownload.contentLength + " bytes)" );
 
 			int percentDone = 0;
 			boolean isDone = true;
@@ -278,9 +285,5 @@ class BookletDownloadTask
 
 			DownloadFragment.instance().uiUpdateProgressBar( booklet.getId(), percentDone, pendingFiles.size() * 100, isDone );
 		}
-	}
-
-	protected class UpdateAbortException extends Exception
-	{
 	}
 }

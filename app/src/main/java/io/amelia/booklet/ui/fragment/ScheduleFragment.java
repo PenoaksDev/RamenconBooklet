@@ -12,7 +12,6 @@ import android.widget.ExpandableListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.acra.ACRA;
 import org.lucasr.twowayview.TwoWayView;
 
 import java.io.IOException;
@@ -25,14 +24,18 @@ import java.util.TreeSet;
 import io.amelia.R;
 import io.amelia.android.data.BoundData;
 import io.amelia.android.fragments.PersistentFragment;
+import io.amelia.android.support.ACRAHelper;
 import io.amelia.android.support.DateAndTime;
+import io.amelia.android.support.Objs;
 import io.amelia.booklet.data.ContentFragment;
+import io.amelia.booklet.data.ContentManager;
 import io.amelia.booklet.data.MapsLocationModel;
 import io.amelia.booklet.data.ScheduleAdapter;
 import io.amelia.booklet.data.ScheduleDayAdapter;
 import io.amelia.booklet.data.ScheduleEventModel;
 import io.amelia.booklet.data.ScheduleHandler;
 import io.amelia.booklet.data.filters.DefaultScheduleFilter;
+import io.amelia.booklet.ui.activity.BaseActivity;
 
 public class ScheduleFragment extends ContentFragment<ScheduleHandler> implements PersistentFragment
 {
@@ -206,16 +209,16 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 
 		try
 		{
-			assert handler.schedule.size() > 0;
+			Objs.notNull( handler.schedule );
+			Objs.notNull( handler.locations );
 
 			final TreeSet<Date> days = handler.sampleDays();
 
 			TwoWayView mDayView = root.findViewById( R.id.daylist );
 			TextView mDateDisplay = root.findViewById( R.id.date_display );
 
-			assert mDayView != null;
-			assert mDateDisplay != null;
-			assert days.size() > 0;
+			Objs.notNull( mDayView );
+			Objs.notNull( mDateDisplay );
 
 			mListView = root.findViewById( R.id.schedule_listview );
 
@@ -310,9 +313,8 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 		}
 		catch ( Exception e )
 		{
-			ACRA.getErrorReporter().handleException( new RuntimeException( "Unexpected Exception.", e ) );
-
-			// Toast.makeText( HomeActivity.instance, "We had a problem loading the schedule. The error has been reported.", Toast.LENGTH_LONG ).show();
+			ACRAHelper.handleExceptionOnce( "booklet-" + ContentManager.getActiveBooklet().getId() + "-loading", new RuntimeException( "Unexpected Exception.", e ) );
+			( ( BaseActivity ) getActivity() ).uiShowErrorDialog( "We had a problem loading the schedule. The problem has been reported to the developer. Please try deleting and re-downloading the booklet." );
 		}
 	}
 }

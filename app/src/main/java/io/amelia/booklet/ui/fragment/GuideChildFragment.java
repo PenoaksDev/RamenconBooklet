@@ -80,7 +80,7 @@ public class GuideChildFragment extends Fragment implements ImageCache.ImageFoun
 		else
 		{
 			image.setImageResource( R.drawable.loading_image );
-			ImageCache.cacheRemoteImage( getActivity(), "guide-" + guidePageModel.pageNo, ImageCache.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/guide/" + guidePageModel.image, "guide/" + guidePageModel.image, isRefresh, this, this );
+			ImageCache.cacheRemoteImage( getActivity(), "guide-" + guidePageModel.pageNo, ImageCache.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/guide/" + guidePageModel.image, "guide/" + guidePageModel.image, null, isRefresh, this, this );
 		}
 	}
 

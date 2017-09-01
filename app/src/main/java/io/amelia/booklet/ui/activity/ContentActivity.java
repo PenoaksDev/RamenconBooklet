@@ -230,6 +230,13 @@ public class ContentActivity extends BaseActivity implements NavigationView.OnNa
 	}
 
 	@Override
+	protected void onPause()
+	{
+		super.onPause();
+		ContentManager.saveUserData();
+	}
+
+	@Override
 	protected void onSaveInstanceState( Bundle outState )
 	{
 		super.onSaveInstanceState( outState );

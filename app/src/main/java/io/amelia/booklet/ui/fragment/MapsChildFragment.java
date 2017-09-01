@@ -80,7 +80,7 @@ public class MapsChildFragment extends Fragment implements ImageCache.ImageFound
 		else
 		{
 			image.setImageResource( R.drawable.loading_image );
-			ImageCache.cacheRemoteImage( getActivity(), "map-" + map.id, ImageCache.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/maps/" + map.image, "maps/" + map.image, isRefresh, this, this );
+			ImageCache.cacheRemoteImage( getActivity(), "map-" + map.id, ImageCache.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/maps/" + map.image, "maps/" + map.image, null, isRefresh, this, this );
 		}
 	}
 

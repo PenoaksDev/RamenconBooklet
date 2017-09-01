@@ -5,9 +5,11 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.widget.Toast;
 
 import io.amelia.R;
 import io.amelia.android.data.BoundData;
+import io.amelia.android.log.PLog;
 import io.amelia.android.support.UIUpdater;
 import io.amelia.booklet.data.ContentManager;
 
@@ -80,7 +82,9 @@ public abstract class BaseActivity extends AppCompatActivity implements UIUpdate
 		{
 			String message = data.getString( "message", "Encountered an internal error." );
 
-			new AlertDialog.Builder( this ).setTitle( "Error" ).setIcon( R.drawable.errored ).setNeutralButton( "BUMMER! :(", new DialogInterface.OnClickListener()
+			PLog.i( "Showing Error Dialog: " + message );
+
+			new AlertDialog.Builder( this ).setTitle( "Error" ).setIcon( R.drawable.ic_error ).setNeutralButton( "BUMMER! :(", new DialogInterface.OnClickListener()
 			{
 				@Override
 				public void onClick( DialogInterface dialog, int which )
@@ -94,7 +98,13 @@ public abstract class BaseActivity extends AppCompatActivity implements UIUpdate
 			String message = data.getString( "message", "Please Wait..." );
 			int length = data.getInteger( "length", Snackbar.LENGTH_SHORT );
 
-			Snackbar.make( getCurrentFocus(), message, length ).show();
+			PLog.i( "Showing Snackbar: " + message );
+
+			// TODO Get the VIEW some other way!
+			if ( getCurrentFocus() == null )
+				Toast.makeText( this, message, length == Snackbar.LENGTH_SHORT ? Toast.LENGTH_SHORT : Toast.LENGTH_LONG ).show();
+			else
+				Snackbar.make( getCurrentFocus(), message, length ).show();
 		}
 		else
 			processUpdate0( type, data );

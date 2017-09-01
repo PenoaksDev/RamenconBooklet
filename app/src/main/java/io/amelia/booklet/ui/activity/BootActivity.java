@@ -14,6 +14,7 @@ import io.amelia.android.data.BoundData;
 import io.amelia.android.fragments.FragmentStack;
 import io.amelia.android.log.PLog;
 import io.amelia.android.support.UIUpdater;
+import io.amelia.booklet.data.ContentManager;
 import io.amelia.booklet.ui.fragment.DownloadFragment;
 
 public class BootActivity extends BaseActivity
@@ -100,6 +101,13 @@ public class BootActivity extends BaseActivity
 			stacker.setFragment( DownloadFragment.class );
 		else
 			stacker.loadInstanceState( savedInstanceState );
+	}
+
+	@Override
+	protected void onPause()
+	{
+		super.onPause();
+		ContentManager.saveUserData();
 	}
 
 	@Override

@@ -7,6 +7,12 @@
             android:summary="Display event time in 24 hour format"
             android:title="Use Military Time"/>
 
+    <SwitchPreference
+            android:defaultValue="false"
+            android:key="pref_auto_update"
+            android:summary="Should booklets be auto-updated"
+            android:title="Auto Update Booklets"/>
+
     <ListPreference
             android:defaultValue="360"
             android:key="pref_image_cache"

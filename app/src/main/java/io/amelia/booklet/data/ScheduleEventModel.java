@@ -5,7 +5,7 @@ import android.app.Notification;
 import java.util.Date;
 
 import io.amelia.R;
-import io.amelia.android.configuration.ConfigurationSection;
+import io.amelia.android.data.BoundData;
 import io.amelia.android.support.DateAndTime;
 import io.amelia.android.support.Strs;
 import io.amelia.booklet.ui.activity.ContentActivity;
@@ -21,10 +21,9 @@ public class ScheduleEventModel
 	public String time;
 	public String title;
 
-	private ConfigurationSection getConfigurationSection()
+	private BoundData getBoundData()
 	{
 		// return DataPersistence.getInstance().config( "users/" + FirebaseAuth.getInstance().getCurrentUser().getUid() + "/events/" + id );
-
 		return null;
 	}
 
@@ -118,12 +117,24 @@ public class ScheduleEventModel
 
 	public boolean isHearted()
 	{
-		return getConfigurationSection().getBoolean( "hearted", false );
+		BoundData userData = ContentManager.getUserData();
+		String key = "booklet-" + ContentManager.getActiveBooklet().getId();
+
+		if ( !userData.hasBoundData( key ) )
+			return false;
+
+		return userData.getBoundData( key ).getBoolean( id + "-hearted", false );
 	}
 
 	public void setHearted( boolean hearted )
 	{
-		getConfigurationSection().set( "hearted", hearted );
+		BoundData userData = ContentManager.getUserData();
+		String key = "booklet-" + ContentManager.getActiveBooklet().getId();
+
+		if ( !userData.hasBoundData( key ) )
+			userData.put( key, new BoundData() );
+
+		userData.getBoundData( key ).put( id + "-hearted", hearted );
 	}
 
 	public void setTimer( boolean timer )

@@ -14,11 +14,11 @@ public class DefaultScheduleFilter implements ScheduleFilter
 		Moshi moshi = new Moshi.Builder().build();
 		return moshi.adapter( DefaultScheduleFilter.class );
 	}
-	private long min = -1;
-	private long max = -1;
 
-	private TriStateList timed = TriStateList.UNSET;
 	private TriStateList hearted = TriStateList.UNSET;
+	private long max = -1;
+	private long min = -1;
+	private TriStateList timed = TriStateList.UNSET;
 
 	public DefaultScheduleFilter()
 	{
@@ -72,20 +72,22 @@ public class DefaultScheduleFilter implements ScheduleFilter
 		return this;
 	}
 
-	public DefaultScheduleFilter setMin( long min )
-	{
-		this.min = min;
-		return this;
-	}
-
 	public DefaultScheduleFilter setMax( long max )
 	{
 		this.max = max;
 		return this;
 	}
 
+	public DefaultScheduleFilter setMin( long min )
+	{
+		this.min = min;
+		return this;
+	}
+
 	public enum TriStateList
 	{
-		UNSET, SHOW, HIDE
+		UNSET,
+		SHOW,
+		HIDE
 	}
 }

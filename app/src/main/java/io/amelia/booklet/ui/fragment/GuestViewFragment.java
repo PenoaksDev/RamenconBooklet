@@ -74,7 +74,7 @@ public class GuestViewFragment extends Fragment implements ImageCache.ImageFound
 		else
 		{
 			image.setImageResource( R.drawable.loading_image );
-			ImageCache.cacheRemoteImage( getActivity(), "guest-" + guest.id, ImageCache.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/guests/" + listGroup.id + "/" + guest.image, "guests/" + listGroup.id + "/" + guest.image, false, this, null );
+			ImageCache.cacheRemoteImage( getActivity(), "guest-" + guest.id, ImageCache.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/guests/" + listGroup.id + "/" + guest.image, "guests/" + listGroup.id + "/" + guest.image, null, false, this, null );
 		}
 
 		return root;

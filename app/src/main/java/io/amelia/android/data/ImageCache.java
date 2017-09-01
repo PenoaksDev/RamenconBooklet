@@ -19,6 +19,7 @@ import java.io.OutputStream;
 import io.amelia.android.log.PLog;
 import io.amelia.android.support.ACRAHelper;
 import io.amelia.android.support.Objs;
+import io.amelia.booklet.data.Booklet;
 import io.amelia.booklet.data.ContentManager;
 
 public class ImageCache
@@ -32,9 +33,9 @@ public class ImageCache
 		options.inPreferredConfig = Bitmap.Config.ARGB_8888;
 	}
 
-	public static void cacheRemoteImage( Context context, String id, String remoteUrl, String localName, boolean forceUpdate, ImageFoundListener foundListener, @Nullable ImageProgressListener progressListener )
+	public static void cacheRemoteImage( Context context, String id, String remoteUrl, String localName, String bookletId, boolean forceUpdate, ImageFoundListener foundListener, @Nullable ImageProgressListener progressListener )
 	{
-		new ImageResolveTask( context, id, remoteUrl, localName, forceUpdate, foundListener, progressListener ).executeOnExecutor( ContentManager.getExecutorThreadPool() );
+		new ImageResolveTask( context, id, remoteUrl, localName, bookletId, forceUpdate, foundListener, progressListener ).executeOnExecutor( ContentManager.getExecutorThreadPool() );
 	}
 
 	private ImageCache()
@@ -60,6 +61,7 @@ public class ImageCache
 
 	public static class ImageResolveTask extends AsyncTask<Void, Void, Void>
 	{
+		final String bookletId;
 		Context context;
 		boolean forceUpdate;
 		ImageFoundListener foundListener;
@@ -73,7 +75,7 @@ public class ImageCache
 		Exception resultError;
 		boolean waiting = false;
 
-		ImageResolveTask( Context context, String id, String remoteUrl, String localName, boolean forceUpdate, ImageFoundListener foundListener, @Nullable ImageProgressListener progressListener )
+		ImageResolveTask( Context context, String id, String remoteUrl, String localName, String bookletId, boolean forceUpdate, ImageFoundListener foundListener, @Nullable ImageProgressListener progressListener )
 		{
 			Objs.notEmpty( context );
 			Objs.notEmpty( id );
@@ -85,6 +87,7 @@ public class ImageCache
 			this.id = id;
 			this.remoteUrl = remoteUrl;
 			this.localName = localName;
+			this.bookletId = bookletId;
 			this.forceUpdate = forceUpdate;
 			this.foundListener = foundListener;
 			this.progressListener = progressListener;
@@ -95,7 +98,7 @@ public class ImageCache
 		{
 			int imageCacheTimeout = ContentManager.getImageCacheTimeout() * 60 * 1000; // Minutes to Millis
 
-			final File dest = new File( ContentManager.getActiveBooklet().getDataDirectory(), localName );
+			final File dest = new File( bookletId == null ? ContentManager.getActiveBooklet().getDataDirectory() : Booklet.getBooklet( bookletId ).getDataDirectory(), localName );
 			dest.getParentFile().mkdirs();
 
 			boolean update = false;

@@ -18,7 +18,7 @@ public abstract class ContentHandler
 	{
 		listeners.put( key.toLowerCase(), listener );
 
-		if ( data != null )
+		if ( data != null && listener.isEnabled() )
 			listener.sectionHandle( data, false );
 	}
 
@@ -81,7 +81,7 @@ public abstract class ContentHandler
 		this.lastUpdated = lastUpdated;
 		this.data = data;
 
-		PLog.i( "[Data Dump]\n" + data.dump() );
+		// PLog.i( "[Data Dump]\n" + data.dump() );
 
 		onSectionHandle( data, lastUpdated > 0 );
 		for ( ContentListener listener : listeners.values() )

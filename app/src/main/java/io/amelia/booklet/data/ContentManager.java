@@ -1,18 +1,23 @@
 package io.amelia.booklet.data;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
 import java.io.File;
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import io.amelia.android.log.PLog;
+import io.amelia.android.data.BoundData;
 import io.amelia.android.support.DateAndTime;
 import io.amelia.android.support.LibAndroid;
-import io.amelia.android.support.LibIO;
 import io.amelia.booklet.ui.activity.BaseActivity;
+import io.amelia.booklet.ui.activity.BootActivity;
 
 public class ContentManager
 {
@@ -26,25 +31,26 @@ public class ContentManager
 	private static File cacheDir;
 	private static boolean contentManagerReady = false;
 	private static Context context;
+	private static BoundData userData;
 
 	public static void clearImageCache()
 	{
 		for ( Booklet booklet : Booklet.booklets )
-		{
-			File data = booklet.getDataDirectory();
-			if ( data.exists() )
-				for ( File file : LibIO.recursiveFiles( data, "*\\.(jpg|jpeg|png|gif|bmp)+" ) )
-				{
-					file.delete();
-					PLog.i( "Deleted Image Cache File: " + LibIO.relPath( file, ContentManager.cacheDir ) );
-				}
-		}
+			booklet.clearImageCache();
 	}
 
-	public static void factoryReset()
+	public static void factoryAppReset()
 	{
-		for ( File file : getCacheDir().listFiles() )
-			file.delete();
+		for ( Booklet booklet : Booklet.booklets )
+		{
+			booklet.getDataFile().delete();
+			booklet.delete();
+		}
+
+		getUserDataFile().delete();
+
+		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences( context );
+		sharedPreferences.edit().clear().commit();
 
 		setActiveBooklet( null );
 
@@ -52,6 +58,8 @@ public class ContentManager
 
 		Booklet.addBooklet( "ramencon2016" );
 		Booklet.addBooklet( "ramencon2017" );
+
+		getActivity().startActivity( new Intent( context, BootActivity.class ) );
 	}
 
 	public static Booklet getActiveBooklet()
@@ -90,7 +98,13 @@ public class ContentManager
 		return context;
 	}
 
-	public static File getCacheDir()
+	public static boolean getAutoUpdate()
+	{
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences( ContentManager.getApplicationContext() );
+		return prefs.getBoolean( "pref_auto_update", false );
+	}
+
+	public static File getCacheDirectory()
 	{
 		return cacheDir;
 	}
@@ -108,13 +122,47 @@ public class ContentManager
 
 	public static Booklet getLatestBooklet()
 	{
+		SimpleDateFormat date = new SimpleDateFormat( "yyyy-MM-dd" );
 		long now = DateAndTime.epoch();
 		Booklet last = null;
-		long lastDiff = 9999;
+		long lastDiff = 9999999999L;
 		for ( Booklet booklet : Booklet.booklets )
-			if ( now - booklet.getDataLastUpdated() < lastDiff )
-				last = booklet;
+		{
+			try
+			{
+				Date whenFromDate = date.parse( booklet.getData().getString( Booklet.KEY_WHEN_FROM ) );
+				long diff = now - whenFromDate.getTime();
+				if ( diff < lastDiff )
+				{
+					lastDiff = diff;
+					last = booklet;
+				}
+			}
+			catch ( ParseException e )
+			{
+				e.printStackTrace();
+			}
+		}
 		return last;
+	}
+
+	public static BoundData getUserData()
+	{
+		if ( userData == null )
+			try
+			{
+				userData = LibAndroid.readJsonToBoundData( getUserDataFile() )[0];
+			}
+			catch ( IOException e )
+			{
+				userData = new BoundData();
+			}
+		return userData;
+	}
+
+	public static File getUserDataFile()
+	{
+		return new File( cacheDir, "user.json" );
 	}
 
 	public static boolean isBookletsRefreshing()
@@ -190,6 +238,19 @@ public class ContentManager
 			}
 		} );
 		*/
+	}
+
+	public static void saveUserData()
+	{
+		if ( userData != null )
+			try
+			{
+				LibAndroid.writeBoundDataToJsonFile( userData, getUserDataFile() );
+			}
+			catch ( IOException e )
+			{
+				e.printStackTrace();
+			}
 	}
 
 	public static void setupContentManager( File cacheDir, Context context )

@@ -75,7 +75,7 @@ public class SettingsFragment extends PreferenceFragment
 					public void onClick( DialogInterface dialog, int which )
 					{
 						getPreferenceManager().getSharedPreferences().edit().clear().apply();
-						ContentManager.factoryReset();
+						ContentManager.factoryAppReset();
 						/* HomeActivity.instance.signOut(); */
 
 						Toast.makeText( getContext(), "App Successfully Factory Reset", Toast.LENGTH_LONG ).show();

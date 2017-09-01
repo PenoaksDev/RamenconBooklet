@@ -15,6 +15,7 @@ import io.amelia.android.data.BoundData;
 import io.amelia.android.log.PLog;
 import io.amelia.android.support.ACRAHelper;
 import io.amelia.android.support.LibAndroid;
+import io.amelia.android.support.LibIO;
 import io.amelia.android.support.Objs;
 import io.amelia.booklet.ui.activity.ContentActivity;
 import io.amelia.booklet.ui.fragment.DownloadFragment;
@@ -73,7 +74,7 @@ public class Booklet
 	{
 		booklets.clear();
 
-		for ( File file : ContentManager.getCacheDir().listFiles() )
+		for ( File file : ContentManager.getCacheDirectory().listFiles() )
 		{
 			try
 			{
@@ -92,8 +93,8 @@ public class Booklet
 		}
 	}
 
-	volatile BoundData data;
-	Exception lastException = null;
+	private volatile BoundData data;
+	private volatile List<Exception> exceptions = new ArrayList<>();
 	private String id;
 	private boolean inUse = false;
 	private volatile Map<String, ContentHandler> sectionHandlerList = new HashMap<>();
@@ -123,14 +124,65 @@ public class Booklet
 			throw new IllegalArgumentException( "The internal booklet data file ID doesn't match the file path." );
 	}
 
-	public void clearFailure()
+	public void addException( Exception e )
 	{
-		lastException = null;
+		e.printStackTrace();
+		exceptions.add( e );
+		triggerUpdate();
+
+		ContentManager.getActivity().uiShowErrorDialog( e.getMessage() );
+	}
+
+	public void clearExceptions()
+	{
+		exceptions.clear();
+		triggerUpdate();
+	}
+
+	public void clearImageCache()
+	{
+		File data = getDataDirectory();
+		if ( data.exists() )
+			for ( File file : LibIO.recursiveFiles( data, ".+\\.(jpg|jpeg|png|gif|bmp)+" ) )
+			{
+				file.delete();
+				PLog.i( "Deleted Image Cache File: " + LibIO.relPath( file, ContentManager.getCacheDirectory() ) );
+			}
+	}
+
+	public void delete()
+	{
+		boolean deleted = true;
+
+		for ( File file : getSectionFiles( "data.json" ).values() )
+			if ( file.exists() )
+				if ( file.delete() )
+					PLog.i( "Deleted file: " + LibIO.relPath( file, ContentManager.getCacheDirectory() ) );
+				else
+				{
+					deleted = false;
+					PLog.i( "FAILED to delete file: " + LibIO.relPath( file, ContentManager.getCacheDirectory() ) );
+				}
+
+		clearImageCache();
+		clearExceptions();
+
+		if ( deleted )
+			ContentManager.getActivity().uiShowSnakeBar( "Booklet " + getDataTitle() + " has been deleted!", Snackbar.LENGTH_LONG );
+		else
+			ContentManager.getActivity().uiShowSnakeBar( "Booklet " + getDataTitle() + " was not deleted!", Snackbar.LENGTH_LONG );
+
+		triggerUpdate();
 	}
 
 	public BoundData getData()
 	{
 		return data;
+	}
+
+	void setData( BoundData data )
+	{
+		this.data = data;
 	}
 
 	public String getDataDescription()
@@ -140,7 +192,7 @@ public class Booklet
 
 	public File getDataDirectory()
 	{
-		File file = new File( ContentManager.getCacheDir(), "booklet-" + getId() );
+		File file = new File( ContentManager.getCacheDirectory(), "booklet-" + getId() );
 		file.getParentFile().mkdirs();
 		return file;
 	}
@@ -167,14 +219,14 @@ public class Booklet
 		return data.getString( KEY_TITLE );
 	}
 
+	public List<Exception> getExceptions()
+	{
+		return exceptions;
+	}
+
 	public String getId()
 	{
 		return data.getString( KEY_ID );
-	}
-
-	public Exception getLastException()
-	{
-		return lastException;
 	}
 
 	/**
@@ -185,7 +237,7 @@ public class Booklet
 	 */
 	public BoundData getSectionData( String section )
 	{
-		File localFile = new File( getDataDirectory(), section + ".json" );
+		File localFile = getSectionFile( section + "/data.json" );
 		try
 		{
 			BoundData[] result = LibAndroid.readJsonToBoundData( localFile );
@@ -197,6 +249,46 @@ public class Booklet
 		{
 			throw new RuntimeException( "We had a problem loading the section " + section + " from " + localFile.getAbsolutePath(), e );
 		}
+	}
+
+	public File getSectionFile( String section )
+	{
+		return new File( getDataDirectory(), section );
+	}
+
+	public Map<String, File> getSectionFiles()
+	{
+		/*
+		Typical Data Structure:
+		| booklet-[bookletId]
+		|	-> data.json
+		|    -> header.png
+		|	-> guests
+		|		-> data.json
+		|	-> guide
+		|		-> data.json
+		|	-> maps
+		|		-> data.json
+		|         -> map1.jpg
+		|         -> map2.jpg
+		*/
+
+		return new HashMap<String, File>()
+		{{
+			for ( String section : getDataSections() )
+				if ( !section.equals( "welcome" ) )
+					put( section, getSectionFile( section ) );
+		}};
+	}
+
+	public Map<String, File> getSectionFiles( String append )
+	{
+		return new HashMap<String, File>()
+		{{
+			for ( String section : getDataSections() )
+				if ( !section.equals( "welcome" ) )
+					put( section, new File( getSectionFile( section ), append ) );
+		}};
 	}
 
 	public <T extends ContentHandler> T getSectionHandler( Class<T> sectionClass )
@@ -252,7 +344,7 @@ public class Booklet
 	 */
 	public BookletState getState()
 	{
-		if ( lastException != null )
+		if ( exceptions.size() > 0 )
 			return BookletState.FAILURE;
 		if ( inUse )
 			return BookletState.BUSY;
@@ -312,6 +404,11 @@ public class Booklet
 						data.put( KEY_LAST_UPDATED, 0 ); // Never Downloaded
 					}
 
+					if ( ContentManager.getAutoUpdate() )
+						goDownload();
+					else
+						triggerUpdate();
+
 					// TODO An auto-update setting?
 				}
 				catch ( IOException e )
@@ -339,14 +436,7 @@ public class Booklet
 		if ( isInUse() )
 			return;
 
-		try
-		{
-			new BookletDownloadTask( this, false );
-		}
-		catch ( BookletDownloadTask.UpdateAbortException e )
-		{
-			// Ignore
-		}
+		new BookletDownloadTask( this, false );
 	}
 
 	public void goDownloadAndOpen()
@@ -354,14 +444,7 @@ public class Booklet
 		if ( isInUse() )
 			return;
 
-		try
-		{
-			new BookletDownloadTask( this, true );
-		}
-		catch ( BookletDownloadTask.UpdateAbortException e )
-		{
-			// Ignore
-		}
+		new BookletDownloadTask( this, true );
 	}
 
 	public void goOpen()
@@ -377,21 +460,19 @@ public class Booklet
 			ContentManager.getActivity().uiShowSnakeBar( "That booklet is currently not available.", Snackbar.LENGTH_SHORT );
 	}
 
-	void handleException( Exception e )
-	{
-		e.printStackTrace();
-		lastException = e;
-
-		ContentManager.getActivity().uiShowErrorDialog( e.getMessage() );
-	}
-
 	/**
 	 * Does a booklet file check, looks for specified JSON and Image files.
 	 */
 	public boolean isDownloaded()
 	{
-		// TODO
-
+		for ( File file : getSectionFiles( "data.json" ).values() )
+			if ( !file.exists() )
+			{
+				PLog.i( "File " + LibIO.relPath( file, ContentManager.getCacheDirectory() ) + " does not exist!" );
+				return false;
+			}
+			else
+				PLog.i( "File " + LibIO.relPath( file, ContentManager.getCacheDirectory() ) + " exists!" );
 		return data.getLong( KEY_LAST_UPDATED, 0L ) > 0;
 	}
 
@@ -419,8 +500,13 @@ public class Booklet
 		}
 		catch ( IOException e )
 		{
-			handleException( e );
+			addException( e );
 		}
+	}
+
+	private void triggerUpdate()
+	{
+		DownloadFragment.instance().uiComputeVisibilities( getId() );
 	}
 
 	protected void updateSectionHandler( ContentHandler contentHandler )

@@ -11,6 +11,7 @@ import java.util.TreeSet;
 
 import io.amelia.android.data.BoundData;
 import io.amelia.android.log.PLog;
+import io.amelia.android.support.Objs;
 import io.amelia.booklet.data.filters.ScheduleFilter;
 
 public class ScheduleHandler extends ContentHandler
@@ -36,6 +37,11 @@ public class ScheduleHandler extends ContentHandler
 
 	public List<MapsLocationModel> locations;
 	public TreeSet<ScheduleEventModel> schedule;
+
+	public ScheduleHandler()
+	{
+		PLog.i( "INIT ScheduleHandler " + hashCode() );
+	}
 
 	public Set<ScheduleEventModel> eventList()
 	{
@@ -99,7 +105,7 @@ public class ScheduleHandler extends ContentHandler
 	@Override
 	public void onSectionHandle( BoundData data, boolean isRefresh )
 	{
-		PLog.i( "Schedule data " + getClass().getSimpleName() + " // " + data.keySet() );
+		Objs.notNull( data );
 
 		String dateFormat = "yyyy-MM-dd"; // data.getString( "dateFormat", "yyyy-MM-dd" );
 		String timeFormat = "hh:mm a"; // data.getString( "timeFormat", "hh:mm a" );
@@ -126,31 +132,31 @@ public class ScheduleHandler extends ContentHandler
 
 		simpleCombinedFormat = new SimpleDateFormat( simpleDateFormat.toPattern() + " " + simpleTimeFormat.toPattern() );
 
-		locations = new ArrayList<>();
-		if ( data.hasBoundData( "locations" ) )
-			for ( BoundData section : data.getBoundDataList( "locations" ) )
-			{
-				MapsLocationModel mapsLocationModel = new MapsLocationModel();
-				mapsLocationModel.id = section.getString( "id" );
-				mapsLocationModel.title = section.getString( "title" );
-				locations.add( mapsLocationModel );
-			}
+		if ( !data.containsKey( "schedule" ) || !data.containsKey( "locations" ) )
+			throw new IllegalStateException( "BoundData is missing the critical 'schedule' and 'locations' keys." );
 
 		schedule = new TreeSet<>( new ScheduleEventModelComparator() );
-		if ( data.hasBoundData( "schedule" ) )
-			for ( BoundData section : data.getBoundDataList( "schedule" ) )
-			{
-				ScheduleEventModel scheduleEventModel = new ScheduleEventModel();
-				scheduleEventModel.date = section.getString( "date" );
-				scheduleEventModel.description = section.getString( "description" );
-				scheduleEventModel.duration = section.getString( "duration" );
-				scheduleEventModel.id = section.getString( "id" );
-				scheduleEventModel.location = section.getString( "location" );
-				scheduleEventModel.time = section.getString( "time" );
-				scheduleEventModel.title = section.getString( "title" );
-				schedule.add( scheduleEventModel );
-			}
+		for ( BoundData section : data.getBoundDataList( "schedule" ) )
+		{
+			ScheduleEventModel scheduleEventModel = new ScheduleEventModel();
+			scheduleEventModel.date = section.getString( "date" );
+			scheduleEventModel.description = section.getString( "description" );
+			scheduleEventModel.duration = section.getString( "duration" );
+			scheduleEventModel.id = section.getString( "id" );
+			scheduleEventModel.location = section.getString( "location" );
+			scheduleEventModel.time = section.getString( "time" );
+			scheduleEventModel.title = section.getString( "title" );
+			schedule.add( scheduleEventModel );
+		}
 
+		locations = new ArrayList<>();
+		for ( BoundData section : data.getBoundDataList( "locations" ) )
+		{
+			MapsLocationModel mapsLocationModel = new MapsLocationModel();
+			mapsLocationModel.id = section.getString( "id" );
+			mapsLocationModel.title = section.getString( "title" );
+			locations.add( mapsLocationModel );
+		}
 	}
 
 	public TreeSet<Date> sampleDays()

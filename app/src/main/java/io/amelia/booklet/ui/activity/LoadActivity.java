@@ -43,15 +43,15 @@ public class LoadActivity extends BaseActivity
 			{
 				Booklet booklet = ContentManager.getActiveBooklet();
 
-				if ( booklet == null || booklet.getState() == BookletState.OUTDATED )
-				{
-					// Send to DownloadActivity
-					startActivity( new Intent( LoadActivity.this, BootActivity.class ) );
-				}
-				else
+				if ( booklet != null && booklet.getState() == BookletState.READY )
 				{
 					// Load Booklet
 					startActivity( new Intent( LoadActivity.this, ContentActivity.class ) );
+				}
+				else
+				{
+					// Send to DownloadActivity
+					startActivity( new Intent( LoadActivity.this, BootActivity.class ) );
 				}
 			}
 

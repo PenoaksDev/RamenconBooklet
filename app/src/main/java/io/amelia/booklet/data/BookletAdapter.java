@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
+import android.widget.Button;
 import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -44,6 +45,63 @@ public class BookletAdapter extends BaseExpandableListAdapter
 	public boolean areAllItemsEnabled()
 	{
 		return true;
+	}
+
+	public void computeVisibilities( String bookletId )
+	{
+		for ( Container container : booklets )
+			if ( container.booklet.getId().equals( bookletId ) && container.childView != null && bookletListview.isGroupExpanded( container.inx ) )
+				computeVisibilities( container.childView, container.booklet );
+	}
+
+	public void computeVisibilities( View view, Booklet booklet )
+	{
+		BookletState state = booklet.getState();
+
+		Button buttonDownload = view.findViewById( R.id.download_download );
+		Button buttonOpen = view.findViewById( R.id.download_open );
+		Button buttonDelete = view.findViewById( R.id.download_delete );
+		TextView textView = view.findViewById( R.id.message );
+
+		textView.setText( "Booklet State: " + booklet.getState() );
+
+		if ( state == BookletState.BUSY )
+			view.setVisibility( View.GONE );
+		else
+		{
+			view.setVisibility( View.VISIBLE );
+
+			buttonDownload.setVisibility( state == BookletState.OUTDATED || state == BookletState.AVAILABLE ? View.VISIBLE : View.GONE );
+			buttonDownload.setText( state == BookletState.OUTDATED ? "Update Booklet" : "Download Booklet" );
+			buttonDownload.setOnClickListener( new View.OnClickListener()
+			{
+				@Override
+				public void onClick( View view )
+				{
+					booklet.goDownload();
+				}
+			} );
+
+			buttonOpen.setVisibility( state == BookletState.READY ? View.VISIBLE : View.GONE );
+			buttonOpen.setOnClickListener( new View.OnClickListener()
+			{
+				@Override
+				public void onClick( View view )
+				{
+					booklet.goOpen();
+				}
+			} );
+
+			buttonDelete.setVisibility( state == BookletState.OUTDATED || state == BookletState.FAILURE || state == BookletState.READY ? View.VISIBLE : View.GONE );
+			buttonDelete.setOnClickListener( new View.OnClickListener()
+			{
+				@Override
+				public void onClick( View view )
+				{
+					booklet.delete();
+				}
+			} );
+		}
 	}
 
 	public View getBookletChildView( String bookletId )
@@ -87,23 +145,7 @@ public class BookletAdapter extends BaseExpandableListAdapter
 			final Booklet booklet = container.booklet;
 			View childView = container.childView;
 
-			childView.findViewById( R.id.download_download ).setOnClickListener( new View.OnClickListener()
-			{
-				@Override
-				public void onClick( View view )
-				{
-					booklet.goDownload();
-				}
-			} );
-
-			childView.findViewById( R.id.download_open ).setOnClickListener( new View.OnClickListener()
-			{
-				@Override
-				public void onClick( View view )
-				{
-					booklet.goOpen();
-				}
-			} );
+			computeVisibilities( childView, booklet );
 
 			return childView;
 		}
@@ -165,7 +207,7 @@ public class BookletAdapter extends BaseExpandableListAdapter
 		{
 			final ImageView bookletHeader = rowView.findViewById( R.id.booklet_header );
 			bookletHeader.setImageResource( R.drawable.loading_image );
-			ImageCache.cacheRemoteImage( parent.getContext(), "welcome-header-" + booklet.getId(), ImageCache.REMOTE_IMAGES_URL + booklet.getId() + "/header.png", "header.png", false, new ImageCache.ImageFoundListener()
+			ImageCache.cacheRemoteImage( parent.getContext(), "welcome-header-" + booklet.getId(), ImageCache.REMOTE_IMAGES_URL + booklet.getId() + "/header.png", "header.png", booklet.getId(), false, new ImageCache.ImageFoundListener()
 			{
 				@Override
 				public void error( Exception exception )
