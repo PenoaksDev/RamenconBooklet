@@ -139,7 +139,7 @@ public class WelcomeFragment extends ContentFragment<WelcomeHandler>
 		final ImageView welcomeHeader = root.findViewById( R.id.welcome_header );
 
 		welcomeHeader.setImageResource( R.drawable.loading_image );
-		ImageCache.cacheRemoteImage( getContext(), "welcome-header-" + handler.id, ImageCache.REMOTE_IMAGES_URL + handler.id + "/header.png", false, new ImageCache.ImageResolveTask.ImageFoundListener()
+		ImageCache.cacheRemoteImage( getContext(), "welcome-header-" + handler.id, ImageCache.REMOTE_IMAGES_URL + handler.id + "/header.png", "header.png", false, new ImageCache.ImageFoundListener()
 		{
 			@Override
 			public void error( Exception exception )

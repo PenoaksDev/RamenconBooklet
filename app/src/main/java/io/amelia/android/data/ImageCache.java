@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
+import android.support.annotation.Nullable;
 
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
@@ -17,34 +18,44 @@ import java.io.OutputStream;
 
 import io.amelia.android.log.PLog;
 import io.amelia.android.support.ACRAHelper;
+import io.amelia.android.support.Objs;
 import io.amelia.booklet.data.ContentManager;
 
 public class ImageCache
 {
 	public static final String REMOTE_IMAGES_URL = "http://booklet.dev.penoaks.com/images/";
 
-	private static File cacheDirectory = new File( ContentManager.getCacheDir(), "imageCache" );
 	private static BitmapFactory.Options options = new BitmapFactory.Options();
 
 	static
 	{
-		if ( cacheDirectory.isFile() )
-			cacheDirectory.delete();
-
-		if ( !cacheDirectory.exists() )
-			cacheDirectory.mkdirs();
-
 		options.inPreferredConfig = Bitmap.Config.ARGB_8888;
 	}
 
-	public static void cacheRemoteImage( Context context, String id, String remoteUrl, boolean forceUpdate, ImageResolveTask.ImageFoundListener foundListener, ImageResolveTask.ImageProgressListener progressListener )
+	public static void cacheRemoteImage( Context context, String id, String remoteUrl, String localName, boolean forceUpdate, ImageFoundListener foundListener, @Nullable ImageProgressListener progressListener )
 	{
-		new ImageResolveTask( context, id, remoteUrl, forceUpdate, foundListener, progressListener ).executeOnExecutor( ContentManager.getExecutorThreadPool() );
+		new ImageResolveTask( context, id, remoteUrl, localName, forceUpdate, foundListener, progressListener ).executeOnExecutor( ContentManager.getExecutorThreadPool() );
 	}
 
 	private ImageCache()
 	{
 
+	}
+
+	public interface ImageFoundListener
+	{
+		void error( Exception exception );
+
+		void update( Bitmap bitmap );
+	}
+
+	public interface ImageProgressListener
+	{
+		void finish();
+
+		void progress( long bytesTransferred, long totalByteCount );
+
+		void start();
 	}
 
 	public static class ImageResolveTask extends AsyncTask<Void, Void, Void>
@@ -53,6 +64,7 @@ public class ImageCache
 		boolean forceUpdate;
 		ImageFoundListener foundListener;
 		String id;
+		String localName;
 		long progressBytesTransferred = 0;
 		ImageProgressListener progressListener;
 		long progressTotalByteCount = 0;
@@ -61,11 +73,18 @@ public class ImageCache
 		Exception resultError;
 		boolean waiting = false;
 
-		ImageResolveTask( Context context, String id, String remoteUrl, boolean forceUpdate, ImageFoundListener foundListener, ImageProgressListener progressListener )
+		ImageResolveTask( Context context, String id, String remoteUrl, String localName, boolean forceUpdate, ImageFoundListener foundListener, @Nullable ImageProgressListener progressListener )
 		{
+			Objs.notEmpty( context );
+			Objs.notEmpty( id );
+			Objs.notEmpty( remoteUrl );
+			Objs.notEmpty( localName );
+			Objs.notNull( foundListener );
+
 			this.context = context;
 			this.id = id;
 			this.remoteUrl = remoteUrl;
+			this.localName = localName;
 			this.forceUpdate = forceUpdate;
 			this.foundListener = foundListener;
 			this.progressListener = progressListener;
@@ -76,7 +95,9 @@ public class ImageCache
 		{
 			int imageCacheTimeout = ContentManager.getImageCacheTimeout() * 60 * 1000; // Minutes to Millis
 
-			final File dest = new File( cacheDirectory, id + ".png" );
+			final File dest = new File( ContentManager.getActiveBooklet().getDataDirectory(), localName );
+			dest.getParentFile().mkdirs();
+
 			boolean update = false;
 
 			if ( imageCacheTimeout == 0 )
@@ -215,20 +236,5 @@ public class ImageCache
 				progressListener.progress( progressBytesTransferred, progressTotalByteCount );
 		}
 
-		public interface ImageFoundListener
-		{
-			void error( Exception exception );
-
-			void update( Bitmap bitmap );
-		}
-
-		public interface ImageProgressListener
-		{
-			void finish();
-
-			void progress( long bytesTransferred, long totalByteCount );
-
-			void start();
-		}
 	}
 }

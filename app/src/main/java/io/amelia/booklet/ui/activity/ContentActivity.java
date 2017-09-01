@@ -24,6 +24,7 @@ import io.amelia.R;
 import io.amelia.android.data.BoundData;
 import io.amelia.android.fragments.FragmentStack;
 import io.amelia.android.log.PLog;
+import io.amelia.android.support.ACRAHelper;
 import io.amelia.android.support.UIUpdater;
 import io.amelia.booklet.data.ContentManager;
 import io.amelia.booklet.ui.fragment.GuestFragment;
@@ -175,7 +176,15 @@ public class ContentActivity extends BaseActivity implements NavigationView.OnNa
 		} );
 
 		if ( savedInstanceState == null )
-			stacker.setFragment( WelcomeFragment.class );
+			try
+			{
+				stacker.setFragment( WelcomeFragment.class );
+			}
+			catch ( RuntimeException e )
+			{
+				ACRAHelper.handleExceptionOnce( "welcome-fragment-exception", e );
+				startActivity( new Intent( this, BootActivity.class ) );
+			}
 		else
 			stacker.loadInstanceState( savedInstanceState );
 	}

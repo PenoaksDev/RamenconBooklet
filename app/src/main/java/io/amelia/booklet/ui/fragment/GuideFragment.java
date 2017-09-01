@@ -22,9 +22,11 @@ import java.util.List;
 import io.amelia.R;
 import io.amelia.android.data.BoundData;
 import io.amelia.android.fragments.PersistentFragment;
+import io.amelia.android.support.ACRAHelper;
 import io.amelia.android.ui.widget.TouchImageView;
 import io.amelia.booklet.data.ContentFragment;
 import io.amelia.booklet.data.GuideHandler;
+import io.amelia.booklet.data.GuidePageModel;
 
 public class GuideFragment extends ContentFragment<GuideHandler> implements PersistentFragment
 {
@@ -91,7 +93,34 @@ public class GuideFragment extends ContentFragment<GuideHandler> implements Pers
 			selectedPosition = savedState.getInt( "selectedPosition", 0 );
 
 		mTwoWayView = root.findViewById( R.id.guide_listview );
-		mTwoWayView.setAdapter( new PagedListAdapater() );
+		mTwoWayView.setAdapter( new PagedListAdapter() );
+		mTwoWayView.setOnScrollListener( new TwoWayView.OnScrollListener()
+		{
+			@Override
+			public void onScroll( TwoWayView view, int firstVisibleItem, int visibleItemCount, int totalItemCount )
+			{
+				if ( visibleItemCount == 0 )
+					return;
+
+				for ( int i = 0; i < mTwoWayView.getChildCount(); i++ )
+					mTwoWayView.getChildAt( i ).setBackgroundColor( 0x00000000 );
+
+				if ( selectedPosition >= firstVisibleItem && selectedPosition < firstVisibleItem + visibleItemCount )
+				{
+					View child = view.getChildAt( selectedPosition - firstVisibleItem );
+					if ( child != null )
+						child.setBackgroundColor( 0xFFff4081 );
+				}
+
+				// PLog.i( "Scroll Notice: " + firstVisibleItem + " // " + visibleItemCount + " // " + totalItemCount + " // " + selectedPosition );
+			}
+
+			@Override
+			public void onScrollStateChanged( TwoWayView view, int scrollState )
+			{
+
+			}
+		} );
 
 		mViewPager = root.findViewById( R.id.guide_pager );
 		mViewPager.setAdapter( new ViewPagerAdapter( getFragmentManager(), isRefresh ) );
@@ -113,17 +142,30 @@ public class GuideFragment extends ContentFragment<GuideHandler> implements Pers
 			@Override
 			public void onPageSelected( int position )
 			{
-				for ( int i = 0; i < mTwoWayView.getChildCount(); i++ )
-					mTwoWayView.getChildAt( i ).setBackgroundColor( 0x00000000 );
-				if ( mTwoWayView.getChildAt( position ) != null )
-					mTwoWayView.getChildAt( position ).setBackgroundColor( 0xFFff4081 );
+				selectedPosition = position;
+
+				try
+				{
+					int middle = ( mTwoWayView.getChildCount() / 2 ) - 1;
+
+					if ( selectedPosition < middle )
+						mTwoWayView.setSelection( 0 );
+					else
+						mTwoWayView.setSelection( position - middle );
+				}
+				catch ( Exception e )
+				{
+					ACRAHelper.handleExceptionOnce( "guide-booklet-page-scroll", e );
+					mTwoWayView.setSelection( position );
+				}
+
 				if ( mViewPager.getChildAt( position ) != null )
 					( ( TouchImageView ) mViewPager.getChildAt( position ).findViewById( R.id.guide_image ) ).resetZoom();
 			}
 		} );
 	}
 
-	public class PagedListAdapater extends BaseAdapter
+	public class PagedListAdapter extends BaseAdapter
 	{
 		@Override
 		public int getCount()
@@ -146,35 +188,27 @@ public class GuideFragment extends ContentFragment<GuideHandler> implements Pers
 		@Override
 		public View getView( final int position, View convertView, ViewGroup parent )
 		{
-			TextView tv = new TextView( getContext() );
-			tv.setText( handler.guidePageModels.get( position ).title );
-			tv.setPadding( 12, 6, 12, 6 );
-			tv.setTextColor( 0xffffffff );
-			tv.setGravity( Gravity.CENTER );
-			tv.setLayoutParams( new TwoWayView.LayoutParams( ViewPager.LayoutParams.WRAP_CONTENT, ViewPager.LayoutParams.WRAP_CONTENT ) );
+			TextView guidePageLabel = new TextView( getContext() );
+			GuidePageModel model = handler.guidePageModels.get( position );
+			guidePageLabel.setText( model.title == null ? model.pageNo : model.title );
+			guidePageLabel.setPadding( 12, 6, 12, 6 );
+			guidePageLabel.setTextColor( 0xffffffff );
+			guidePageLabel.setGravity( Gravity.CENTER );
+			guidePageLabel.setLayoutParams( new TwoWayView.LayoutParams( ViewPager.LayoutParams.WRAP_CONTENT, ViewPager.LayoutParams.WRAP_CONTENT ) );
 
 			if ( position == selectedPosition )
-				tv.setBackgroundColor( 0xFFff4081 );
+				guidePageLabel.setBackgroundColor( 0xFFff4081 );
 
-			tv.setOnClickListener( new View.OnClickListener()
+			guidePageLabel.setOnClickListener( new View.OnClickListener()
 			{
 				@Override
 				public void onClick( View v )
 				{
-					ViewGroup parent = ( ViewGroup ) v.getParent();
-					for ( int i = 0; i < parent.getChildCount(); i++ )
-						parent.getChildAt( i ).setBackgroundColor( 0x00000000 );
-
-					v.setBackgroundColor( 0xFFff4081 );
-
 					mViewPager.setCurrentItem( position );
-
-					if ( mViewPager.getChildAt( position ) != null )
-						( ( TouchImageView ) mViewPager.getChildAt( position ).findViewById( R.id.guide_image ) ).resetZoom();
 				}
 			} );
 
-			return tv;
+			return guidePageLabel;
 		}
 	}
 

@@ -24,20 +24,6 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
         </service>
-        <service
-                android:name="io.amelia.booklet.AppService"
-                android:exported="false"/>
-
-        <receiver
-                android:name="io.amelia.booklet.AppReceiver"
-                android:enabled="true"
-                android:exported="true"
-                android:label="AppReceiver">
-            <intent-filter>
-                <action android:name="com.ramencon.action.TRIGGER_ALARM"/>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-            </intent-filter>
-        </receiver>
 
         <activity android:name="io.amelia.booklet.ui.activity.ContentActivity"/>
         <activity android:name="io.amelia.booklet.ui.activity.LoadActivity">
@@ -48,6 +34,7 @@
             </intent-filter>
         </activity>
         <activity android:name="io.amelia.booklet.ui.activity.BootActivity"/>
+
     </application>
 
 </manifest>

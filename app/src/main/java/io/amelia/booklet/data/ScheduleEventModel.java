@@ -6,10 +6,8 @@ import java.util.Date;
 
 import io.amelia.R;
 import io.amelia.android.configuration.ConfigurationSection;
-import io.amelia.android.log.PLog;
 import io.amelia.android.support.DateAndTime;
 import io.amelia.android.support.Strs;
-import io.amelia.booklet.AppService;
 import io.amelia.booklet.ui.activity.ContentActivity;
 import io.amelia.booklet.ui.fragment.ScheduleFragment;
 
@@ -88,17 +86,6 @@ public class ScheduleEventModel
 	public boolean hasEventPassed()
 	{
 		return getStartTime() - new Date().getTime() < 0;
-	}
-
-	public boolean hasEventReminderPassed()
-	{
-		long nowTime = new Date().getTime();
-		long startTime = getStartTime();
-
-		PLog.i( ">>> Event time debug (" + id + "): Now " + DateAndTime.now( "MMM dx HH:mm:ss a", nowTime ) + " (" + nowTime + ") // Then " + DateAndTime.now( "MMM dx HH:mm:ss a", startTime ) + " (" + startTime + ") // Reminder Delay " + AppService.getReminderDelay() );
-		PLog.i( "Result: " + startTime + " - " + nowTime + " - " + AppService.getReminderDelay() + " = " + ( startTime - nowTime - AppService.getReminderDelay() ) );
-
-		return getStartTime() - new Date().getTime() - AppService.getReminderDelay() < 0;
 	}
 
 	public boolean hasTimer()

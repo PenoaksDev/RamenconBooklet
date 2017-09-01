@@ -24,6 +24,7 @@ public class GuideHandler extends ContentHandler
 			GuidePageModel guidePageModel = new GuidePageModel();
 			guidePageModel.pageNo = boundData.getString( "pageNo" );
 			guidePageModel.image = boundData.getString( "image" );
+			guidePageModel.title = boundData.hasString( "title" ) ? boundData.getString( "title" ) : null;
 			guidePageModels.add( guidePageModel );
 		}
 	}

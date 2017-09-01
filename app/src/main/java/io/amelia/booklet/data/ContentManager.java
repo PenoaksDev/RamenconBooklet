@@ -1,18 +1,18 @@
 package io.amelia.booklet.data;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.view.View;
 
 import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import io.amelia.android.log.PLog;
+import io.amelia.android.support.DateAndTime;
 import io.amelia.android.support.LibAndroid;
+import io.amelia.android.support.LibIO;
 import io.amelia.booklet.ui.activity.BaseActivity;
-import io.amelia.booklet.ui.activity.ContentActivity;
 
 public class ContentManager
 {
@@ -27,12 +27,26 @@ public class ContentManager
 	private static boolean contentManagerReady = false;
 	private static Context context;
 
+	public static void clearImageCache()
+	{
+		for ( Booklet booklet : Booklet.booklets )
+		{
+			File data = booklet.getDataDirectory();
+			if ( data.exists() )
+				for ( File file : LibIO.recursiveFiles( data, "*\\.(jpg|jpeg|png|gif|bmp)+" ) )
+				{
+					file.delete();
+					PLog.i( "Deleted Image Cache File: " + LibIO.relPath( file, ContentManager.cacheDir ) );
+				}
+		}
+	}
+
 	public static void factoryReset()
 	{
 		for ( File file : getCacheDir().listFiles() )
 			file.delete();
 
-		activeBooklet = null;
+		setActiveBooklet( null );
 
 		Booklet.setup();
 
@@ -66,6 +80,11 @@ public class ContentManager
 		return activity;
 	}
 
+	public static BaseActivity getActivitySafe()
+	{
+		return activity;
+	}
+
 	public static Context getApplicationContext()
 	{
 		return context;
@@ -87,6 +106,17 @@ public class ContentManager
 		return Integer.parseInt( prefs.getString( "pref_image_cache", "360" ) );
 	}
 
+	public static Booklet getLatestBooklet()
+	{
+		long now = DateAndTime.epoch();
+		Booklet last = null;
+		long lastDiff = 9999;
+		for ( Booklet booklet : Booklet.booklets )
+			if ( now - booklet.getDataLastUpdated() < lastDiff )
+				last = booklet;
+		return last;
+	}
+
 	public static boolean isBookletsRefreshing()
 	{
 		for ( Booklet booklet : Booklet.getBooklets() )
@@ -98,19 +128,6 @@ public class ContentManager
 	public static boolean isContentManagerReady()
 	{
 		return contentManagerReady;
-	}
-
-	public static void onBookletClick( Booklet booklet, View view )
-	{
-		BookletState state = booklet.getState();
-
-		if ( state == BookletState.AVAILABLE || state == BookletState.OUTDATED )
-			booklet.goDownload( view );
-		else
-		{
-			setActiveBooklet( booklet.getId() );
-			getActivity().startActivity( new Intent( getActivity(), ContentActivity.class ) );
-		}
 	}
 
 	public static void onStartActivity( BaseActivity activity )

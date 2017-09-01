@@ -26,6 +26,11 @@
             android:title="Event Reminder Delay"/> -->
 
     <Preference
+            android:key="pref_delete_images"
+            android:summary="Forcefully deletes all downloaded image cache"
+            android:title="Clear Image Cache"/>
+
+    <Preference
             android:key="pref_force_reset"
             android:summary="Forcefully reverts the app to it's initial install state"
             android:title="App Data Reset"/>

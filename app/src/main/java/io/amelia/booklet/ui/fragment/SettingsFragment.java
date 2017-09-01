@@ -93,6 +93,18 @@ public class SettingsFragment extends PreferenceFragment
 				return true;
 			}
 		} );
+
+		Preference mDeleteImageCache = findPreference( "pref_delete_images" );
+		mDeleteImageCache.setOnPreferenceClickListener( new Preference.OnPreferenceClickListener()
+		{
+			@Override
+			public boolean onPreferenceClick( Preference preference )
+			{
+				ContentManager.clearImageCache();
+				Toast.makeText( getContext(), "Image Cache Deleted", Toast.LENGTH_LONG ).show();
+				return true;
+			}
+		} );
 	}
 
 	@Override

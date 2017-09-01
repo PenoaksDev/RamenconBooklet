@@ -7,13 +7,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
-import android.widget.Button;
 import android.widget.ExpandableListView;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import io.amelia.R;
@@ -23,19 +25,41 @@ import io.amelia.android.support.DateAndTime;
 
 public class BookletAdapter extends BaseExpandableListAdapter
 {
-	public List<Booklet> booklets;
+	public final ExpandableListView bookletListview;
+	public final List<Container> booklets;
 	private LayoutInflater inflater = null;
 
-	public BookletAdapter( List<Booklet> booklets )
+	public BookletAdapter( ExpandableListView bookletListview, List<Booklet> booklets )
 	{
+		this.bookletListview = bookletListview;
 		this.inflater = ( LayoutInflater ) ContentManager.getActivity().getSystemService( Context.LAYOUT_INFLATER_SERVICE );
-		this.booklets = booklets;
+
+		List<Container> origBooklets = new ArrayList<>();
+		for ( Booklet booklet : booklets )
+			origBooklets.add( new Container( origBooklets.size(), booklet ) );
+		this.booklets = Collections.unmodifiableList( origBooklets );
 	}
 
 	@Override
 	public boolean areAllItemsEnabled()
 	{
 		return true;
+	}
+
+	public View getBookletChildView( String bookletId )
+	{
+		for ( Container container : booklets )
+			if ( container.booklet.getId().equals( bookletId ) )
+				return container.childView;
+		return null;
+	}
+
+	public View getBookletGroupView( String bookletId )
+	{
+		for ( Container container : booklets )
+			if ( container.booklet.getId().equals( bookletId ) )
+				return container.groupView;
+		return null;
 	}
 
 	@Override
@@ -55,18 +79,31 @@ public class BookletAdapter extends BaseExpandableListAdapter
 	{
 		try
 		{
-			View childView = convertView == null ? inflater.inflate( R.layout.fragment_download_listitem_child, null ) : convertView;
+			Container container = booklets.get( groupPosition );
+			container.childView = convertView;
+			if ( container.childView == null )
+				container.childView = inflater.inflate( R.layout.fragment_download_listitem_child, null );
 
-			final Booklet booklet = booklets.get( groupPosition );
+			final Booklet booklet = container.booklet;
+			View childView = container.childView;
 
-			TextView bookletDate = childView.findViewById( R.id.booklet_date );
-			TextView bookletLocation = childView.findViewById( R.id.booklet_where );
-			TextView bookletDescription = childView.findViewById( R.id.booklet_description );
+			childView.findViewById( R.id.download_download ).setOnClickListener( new View.OnClickListener()
+			{
+				@Override
+				public void onClick( View view )
+				{
+					booklet.goDownload();
+				}
+			} );
 
-			SimpleDateFormat date = new SimpleDateFormat( "yyyy-MM-dd" );
-			bookletDate.setText( DateAndTime.formatDateRange( date.parse( booklet.getData().getString( Booklet.KEY_WHEN_FROM ) ), date.parse( booklet.getData().getString( Booklet.KEY_WHEN_TO ) ) ) );
-			bookletLocation.setText( booklet.getData().getString( Booklet.KEY_WHERE ) );
-			bookletDescription.setText( booklet.getDataDescription() );
+			childView.findViewById( R.id.download_open ).setOnClickListener( new View.OnClickListener()
+			{
+				@Override
+				public void onClick( View view )
+				{
+					booklet.goOpen();
+				}
+			} );
 
 			return childView;
 		}
@@ -117,19 +154,18 @@ public class BookletAdapter extends BaseExpandableListAdapter
 	@Override
 	public View getGroupView( final int position, boolean isExpanded, View convertView, final ViewGroup parent )
 	{
-		View rowView = convertView == null ? inflater.inflate( R.layout.fragment_download_listitem, null ) : convertView;
-
-		final Booklet booklet = booklets.get( position );
+		Container container = booklets.get( position );
+		container.groupView = convertView;
+		if ( container.groupView == null )
+			container.groupView = inflater.inflate( R.layout.fragment_download_listitem, null );
+		final Booklet booklet = container.booklet;
+		View rowView = container.groupView;
 
 		try
 		{
 			final ImageView bookletHeader = rowView.findViewById( R.id.booklet_header );
-			TextView booklet_title = rowView.findViewById( R.id.booklet_title );
-			Button booket_info = rowView.findViewById( R.id.booklet_info );
-			FrameLayout booklet_view = rowView.findViewById( R.id.booklet_view );
-
 			bookletHeader.setImageResource( R.drawable.loading_image );
-			ImageCache.cacheRemoteImage( parent.getContext(), "welcome-header-" + booklet.getId(), ImageCache.REMOTE_IMAGES_URL + booklet.getId() + "/header.png", false, new ImageCache.ImageResolveTask.ImageFoundListener()
+			ImageCache.cacheRemoteImage( parent.getContext(), "welcome-header-" + booklet.getId(), ImageCache.REMOTE_IMAGES_URL + booklet.getId() + "/header.png", "header.png", false, new ImageCache.ImageFoundListener()
 			{
 				@Override
 				public void error( Exception exception )
@@ -145,55 +181,34 @@ public class BookletAdapter extends BaseExpandableListAdapter
 				}
 			}, null );
 
-			booklet_title.setText( booklet.getDataTitle() );
+			TextView bookletTitle = rowView.findViewById( R.id.booklet_title );
+			bookletTitle.setText( booklet.getDataTitle() );
 
-			booket_info.setOnClickListener( new View.OnClickListener()
+			TextView bookletDate = rowView.findViewById( R.id.booklet_date );
+			SimpleDateFormat date = new SimpleDateFormat( "yyyy-MM-dd" );
+			bookletDate.setText( DateAndTime.formatDateRange( date.parse( booklet.getData().getString( Booklet.KEY_WHEN_FROM ) ), date.parse( booklet.getData().getString( Booklet.KEY_WHEN_TO ) ) ) );
+
+			TextView bookletLocation = rowView.findViewById( R.id.booklet_where );
+			bookletLocation.setText( booklet.getData().getString( Booklet.KEY_WHERE ) );
+
+			LinearLayout bookletGroup = rowView.findViewById( R.id.booklet_group );
+			bookletGroup.setOnClickListener( new View.OnClickListener()
 			{
 				@Override
 				public void onClick( View v )
 				{
+					ImageView bookletCaret = rowView.findViewById( R.id.booklet_caret );
 					ExpandableListView lv = ( ( ExpandableListView ) parent );
 					if ( lv.isGroupExpanded( position ) )
+					{
 						lv.collapseGroup( position );
+						bookletCaret.setImageResource( android.R.drawable.arrow_down_float );
+					}
 					else
+					{
 						lv.expandGroup( position );
-				}
-			} );
-
-			final Runnable postTask = new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					// context.onListItemClick( booklet );
-				}
-			};
-
-			booklet_view.setOnClickListener( new View.OnClickListener()
-			{
-				@Override
-				public void onClick( View v )
-				{
-					ContentManager.onBookletClick( booklet, v );
-					// context.onListItemClick( booklet );
-					// booklet.updateAndOpen( v, false, postTask );
-				}
-			} );
-
-			booklet_view.setOnLongClickListener( new View.OnLongClickListener()
-			{
-				@Override
-				public boolean onLongClick( View v )
-				{
-					/* Open Menu
-					 * -> Open (If READY or OUTDATED)
-					 * -> Delete (If READY or OUTDATED)
-					 * -> Update (If OUTDATED)
-					 * -> Download (If AVAILABLE)
-					 */
-					// booklet.updateAndOpen( v, true, postTask );
-					booklet.goDownload( v );
-					return true;
+						bookletCaret.setImageResource( android.R.drawable.arrow_up_float );
+					}
 				}
 			} );
 		}
@@ -234,5 +249,56 @@ public class BookletAdapter extends BaseExpandableListAdapter
 	public void onGroupExpanded( int groupPosition )
 	{
 
+	}
+
+	public void showProgressBar( String bookletId, boolean show )
+	{
+		for ( Container container : booklets )
+			if ( container.booklet.getId().equals( bookletId ) )
+			{
+				View groupView = container.groupView;
+				if ( groupView != null )
+				{
+					ProgressBar progressBar = groupView.findViewById( R.id.booklet_progress );
+					progressBar.setVisibility( show ? View.VISIBLE : View.GONE );
+					progressBar.setIndeterminate( true );
+				}
+
+				return;
+			}
+	}
+
+	public void updateProgressBar( String bookletId, Integer progressValue, Integer progressMax, Boolean isDone )
+	{
+		for ( Container container : booklets )
+			if ( container.booklet.getId().equals( bookletId ) )
+			{
+				bookletListview.expandGroup( container.inx );
+
+				View groupView = container.groupView;
+				if ( groupView != null )
+				{
+					ProgressBar progressBar = groupView.findViewById( R.id.booklet_progress );
+					progressBar.setMax( progressMax );
+					progressBar.setProgress( progressValue );
+					progressBar.setIndeterminate( isDone );
+				}
+
+				return;
+			}
+	}
+
+	private class Container
+	{
+		final Booklet booklet;
+		final int inx;
+		View childView = null;
+		View groupView = null;
+
+		Container( int inx, Booklet booklet )
+		{
+			this.inx = inx;
+			this.booklet = booklet;
+		}
 	}
 }

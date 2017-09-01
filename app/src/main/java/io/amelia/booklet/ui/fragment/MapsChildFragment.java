@@ -20,7 +20,7 @@ import io.amelia.android.ui.widget.TouchImageView;
 import io.amelia.booklet.data.ContentManager;
 import io.amelia.booklet.data.MapsMapModel;
 
-public class MapsChildFragment extends Fragment implements ImageCache.ImageResolveTask.ImageFoundListener, ImageCache.ImageResolveTask.ImageProgressListener
+public class MapsChildFragment extends Fragment implements ImageCache.ImageFoundListener, ImageCache.ImageProgressListener
 {
 	public static List<MapsMapModel> maps;
 	private TouchImageView image;
@@ -80,7 +80,7 @@ public class MapsChildFragment extends Fragment implements ImageCache.ImageResol
 		else
 		{
 			image.setImageResource( R.drawable.loading_image );
-			ImageCache.cacheRemoteImage( getActivity(), "map-" + map.id, ImageCache.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/maps/" + map.image, isRefresh, this, this );
+			ImageCache.cacheRemoteImage( getActivity(), "map-" + map.id, ImageCache.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/maps/" + map.image, "maps/" + map.image, isRefresh, this, this );
 		}
 	}
 

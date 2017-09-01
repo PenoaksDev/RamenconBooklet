@@ -1,7 +1,7 @@
 package io.amelia.booklet.data;
 
+import android.content.Intent;
 import android.support.design.widget.Snackbar;
-import android.view.View;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,6 +16,8 @@ import io.amelia.android.log.PLog;
 import io.amelia.android.support.ACRAHelper;
 import io.amelia.android.support.LibAndroid;
 import io.amelia.android.support.Objs;
+import io.amelia.booklet.ui.activity.ContentActivity;
+import io.amelia.booklet.ui.fragment.DownloadFragment;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -332,19 +334,47 @@ public class Booklet
 	 * Starts the booklet download.
 	 * Doesn't check if already downloaded as it's used for both AVAILABLE and OUTDATED states.
 	 */
-	public void goDownload( View view )
+	public void goDownload()
 	{
 		if ( isInUse() )
 			return;
 
 		try
 		{
-			new BookletDownloadTask( this, view );
+			new BookletDownloadTask( this, false );
 		}
 		catch ( BookletDownloadTask.UpdateAbortException e )
 		{
 			// Ignore
 		}
+	}
+
+	public void goDownloadAndOpen()
+	{
+		if ( isInUse() )
+			return;
+
+		try
+		{
+			new BookletDownloadTask( this, true );
+		}
+		catch ( BookletDownloadTask.UpdateAbortException e )
+		{
+			// Ignore
+		}
+	}
+
+	public void goOpen()
+	{
+		BookletState state = getState();
+
+		if ( state == BookletState.AVAILABLE || state == BookletState.OUTDATED || state == BookletState.READY )
+		{
+			ContentManager.setActiveBooklet( getId() );
+			ContentManager.getActivity().startActivity( new Intent( ContentManager.getActivity(), ContentActivity.class ) );
+		}
+		else
+			ContentManager.getActivity().uiShowSnakeBar( "That booklet is currently not available.", Snackbar.LENGTH_SHORT );
 	}
 
 	void handleException( Exception e )
@@ -374,6 +404,9 @@ public class Booklet
 	{
 		// Possibly tells the Download List to show a intermittent waiting background.
 		this.inUse = inUse;
+
+		if ( DownloadFragment.instance() != null )
+			DownloadFragment.instance().uiSetBookletInUse( getId(), inUse );
 	}
 
 	public void saveData()

@@ -20,7 +20,7 @@ import io.amelia.android.ui.widget.TouchImageView;
 import io.amelia.booklet.data.ContentManager;
 import io.amelia.booklet.data.GuidePageModel;
 
-public class GuideChildFragment extends Fragment implements ImageCache.ImageResolveTask.ImageFoundListener, ImageCache.ImageResolveTask.ImageProgressListener
+public class GuideChildFragment extends Fragment implements ImageCache.ImageFoundListener, ImageCache.ImageProgressListener
 {
 	public static List<GuidePageModel> guideMapModels;
 	private GuidePageModel guidePageModel;
@@ -80,7 +80,7 @@ public class GuideChildFragment extends Fragment implements ImageCache.ImageReso
 		else
 		{
 			image.setImageResource( R.drawable.loading_image );
-			ImageCache.cacheRemoteImage( getActivity(), "guide-" + guidePageModel.pageNo, ImageCache.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/guide/" + guidePageModel.image, isRefresh, this, this );
+			ImageCache.cacheRemoteImage( getActivity(), "guide-" + guidePageModel.pageNo, ImageCache.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/guide/" + guidePageModel.image, "guide/" + guidePageModel.image, isRefresh, this, this );
 		}
 	}
 

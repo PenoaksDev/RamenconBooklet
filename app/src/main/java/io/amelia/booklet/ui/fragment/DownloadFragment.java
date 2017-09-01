@@ -18,8 +18,8 @@ import android.widget.Toast;
 
 import io.amelia.R;
 import io.amelia.android.data.BoundData;
-import io.amelia.android.log.PLog;
 import io.amelia.android.support.UIUpdater;
+import io.amelia.android.support.WaitFor;
 import io.amelia.booklet.data.Booklet;
 import io.amelia.booklet.data.BookletAdapter;
 import io.amelia.booklet.data.ContentManager;
@@ -27,15 +27,29 @@ import io.amelia.booklet.ui.activity.BootActivity;
 
 public class DownloadFragment extends Fragment implements UIUpdater.Receiver
 {
-	public static final int UPDATE_BOOKLETS = 0x03;
+	public static final int UPDATE_BOOKLETS = 0x10;
+	public static final int SET_BOOKLET_INUSE = 0x11;
+	public static final int UPDATE_PROGRESS_BAR = 0x12;
+
+	private static DownloadFragment instance;
 
 	public static DownloadFragment instance()
 	{
-		return new DownloadFragment();
+		return instance;
 	}
 
 	private ExpandableListView bookletListview;
 	private SwipeRefreshLayout refreshLayout;
+
+	public DownloadFragment()
+	{
+		instance = this;
+	}
+
+	public BookletAdapter getBookletAdapter()
+	{
+		return ( BookletAdapter ) bookletListview.getExpandableListAdapter();
+	}
 
 	private BootActivity getBootActivity()
 	{
@@ -46,7 +60,6 @@ public class DownloadFragment extends Fragment implements UIUpdater.Receiver
 	public void onCreate( Bundle savedInstanceState )
 	{
 		super.onCreate( savedInstanceState );
-
 		setHasOptionsMenu( true );
 	}
 
@@ -61,56 +74,20 @@ public class DownloadFragment extends Fragment implements UIUpdater.Receiver
 	public View onCreateView( LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState )
 	{
 		View root = inflater.inflate( R.layout.fragment_download, container, false );
-
 		getActivity().setTitle( "Ramencon Booklet" );
-
-		/* FloatingActionButton settingsFab = ( FloatingActionButton ) root.findViewById( R.id.settings_fab );
-		settingsFab.setOnClickListener( new View.OnClickListener()
-		{
-			@Override
-			public void onClick( View v )
-			{
-				( ( BootActivity ) getActivity() ).stacker.setFragment( SettingsFragment.class, true );
-			}
-		} ); */
-
-		refreshLayout = root.findViewById( R.id.booklet_refresher );
-		refreshLayout.setColorSchemeColors( getResources().getColor( R.color.colorPrimary ), getResources().getColor( R.color.colorAccent ), getResources().getColor( R.color.lighter_gray ) );
-		refreshLayout.setRefreshing( false );
-		refreshLayout.setOnRefreshListener( new SwipeRefreshLayout.OnRefreshListener()
-		{
-			@Override
-			public void onRefresh()
-			{
-				ContentManager.refreshBooklets();
-
-				refreshLayout.setRefreshing( false );
-				// TODO Make this stay on screen until finished!
-			}
-		} );
-
-		bookletListview = ( ExpandableListView ) root.findViewById( R.id.bootlet_listview );
-
+		bookletListview = root.findViewById( R.id.bootlet_listview );
 		return root;
-	}
-
-	public void onListItemClick( Booklet booklet )
-	{
-		// ( ( ContentActivity ) getActivity() ).stacker.setFragment( BookletFragment.instance( booklet.bookletId ), true );
 	}
 
 	@Override
 	public boolean onOptionsItemSelected( MenuItem item )
 	{
-		PLog.i( "Option Item Click: " + item.getTitle() + " // " + item.getItemId() );
-
 		switch ( item.getItemId() )
 		{
 			case R.id.options_settings:
 				( ( BootActivity ) getActivity() ).stacker.setFragment( SettingsFragment.class, true );
 				return true;
 			case R.id.options_refresh:
-
 				ContentManager.refreshBooklets();
 
 				Animation animation = new RotateAnimation( 0.0f, 360.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f );
@@ -131,6 +108,8 @@ public class DownloadFragment extends Fragment implements UIUpdater.Receiver
 						{
 							item.getActionView().clearAnimation();
 							item.setActionView( null );
+
+							uiUpdateBooklets();
 						}
 					}
 
@@ -158,7 +137,6 @@ public class DownloadFragment extends Fragment implements UIUpdater.Receiver
 
 				iv.startAnimation( animation );
 				item.setActionView( iv );
-
 				return true;
 		}
 		return super.onOptionsItemSelected( item );
@@ -169,26 +147,83 @@ public class DownloadFragment extends Fragment implements UIUpdater.Receiver
 	{
 		super.onStart();
 
-		PLog.i( "Starting DownloadFragment" );
-
 		ContentManager.refreshBooklets();
-		updateBookletsView();
+		getBootActivity().uiShowProgressBar( null, null );
+
+		new WaitFor( new WaitFor.Task()
+		{
+			@Override
+			public boolean isReady()
+			{
+				return !ContentManager.isBookletsRefreshing();
+			}
+
+			@Override
+			public void onFinish()
+			{
+				getBootActivity().uiHideProgressBar();
+				updateBookletsView();
+			}
+
+			@Override
+			public void onTimeout()
+			{
+				getBootActivity().uiHideProgressBar();
+				updateBookletsView();
+			}
+		}, 10000 );
 	}
 
 	@Override
 	public void processUpdate( int type, BoundData data )
 	{
-		if ( type == DownloadFragment.UPDATE_BOOKLETS )
+		if ( type == UPDATE_BOOKLETS )
 			updateBookletsView();
+		if ( getBookletAdapter() != null )
+		{
+			if ( type == SET_BOOKLET_INUSE )
+				getBookletAdapter().showProgressBar( data.getString( "bookletId" ), data.getBoolean( "inUse" ) );
+			if ( type == UPDATE_PROGRESS_BAR )
+				getBookletAdapter().updateProgressBar( data.getString( "bookletId" ), data.getInt( "progressValue" ), data.getInt( "progressMax" ), data.getBoolean( "isDone" ) );
+		}
 	}
 
-	public void updateBooklets()
+	public void uiSetBookletInUse( String bookletId, boolean inUse )
+	{
+		BoundData data = new BoundData();
+		data.put( "bookletId", bookletId );
+		data.put( "inUse", inUse );
+		getBootActivity().putUIUpdate( SET_BOOKLET_INUSE, data );
+	}
+
+	public void uiUpdateBooklets()
 	{
 		getBootActivity().putUIUpdate( UPDATE_BOOKLETS, null );
 	}
 
+	public void uiUpdateProgressBar( String bookletId, int progressValue, int progressMax, boolean isDone )
+	{
+		if ( progressMax < progressValue )
+			progressMax = progressValue;
+
+		BoundData data = new BoundData();
+		data.put( "bookletId", bookletId );
+		data.put( "progressValue", progressValue );
+		data.put( "progressMax", progressMax );
+		data.put( "isDone", isDone );
+		getBootActivity().putUIUpdate( UPDATE_PROGRESS_BAR, data );
+	}
+
 	private void updateBookletsView()
 	{
-		bookletListview.setAdapter( new BookletAdapter( Booklet.getBooklets() ) );
+		bookletListview.setAdapter( new BookletAdapter( bookletListview, Booklet.getBooklets() ) );
+
+		// First Run
+		if ( ContentManager.getActiveBooklet() == null )
+		{
+			Booklet booklet = ContentManager.getLatestBooklet();
+			if ( booklet != null )
+				booklet.goDownloadAndOpen();
+		}
 	}
 }

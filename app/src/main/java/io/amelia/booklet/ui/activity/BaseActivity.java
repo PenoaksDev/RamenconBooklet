@@ -3,6 +3,7 @@ package io.amelia.booklet.ui.activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 
 import io.amelia.R;
@@ -15,9 +16,15 @@ public abstract class BaseActivity extends AppCompatActivity implements UIUpdate
 	public static final int SHOW_PROGRESS_BAR = 0x00;
 	public static final int HIDE_PROGRESS_BAR = 0x01;
 	public static final int SHOW_ERROR_DIALOG = 0x02;
+	public static final int SHOW_SNACKBAR = 0x03;
 
 	private ProgressDialog loading;
 	private UIUpdater uiUpdater;
+
+	public BaseActivity()
+	{
+		uiUpdater = new UIUpdater( this );
+	}
 
 	@Override
 	protected void onPause()
@@ -41,7 +48,8 @@ public abstract class BaseActivity extends AppCompatActivity implements UIUpdate
 	{
 		super.onStart();
 
-		uiUpdater = new UIUpdater( this );
+		if ( uiUpdater.isCancelled() )
+			uiUpdater = new UIUpdater( this );
 		uiUpdater.executeOnExecutor( ContentManager.getExecutorThreadPool() );
 	}
 
@@ -51,7 +59,6 @@ public abstract class BaseActivity extends AppCompatActivity implements UIUpdate
 		super.onStop();
 
 		uiUpdater.cancel( false );
-		uiUpdater = null;
 	}
 
 	@Override
@@ -82,6 +89,13 @@ public abstract class BaseActivity extends AppCompatActivity implements UIUpdate
 				}
 			} ).setMessage( message ).create().show();
 		}
+		else if ( type == SHOW_SNACKBAR )
+		{
+			String message = data.getString( "message", "Please Wait..." );
+			int length = data.getInteger( "length", Snackbar.LENGTH_SHORT );
+
+			Snackbar.make( getCurrentFocus(), message, length ).show();
+		}
 		else
 			processUpdate0( type, data );
 	}
@@ -92,7 +106,10 @@ public abstract class BaseActivity extends AppCompatActivity implements UIUpdate
 	{
 		if ( data == null )
 			data = new BoundData();
-		uiUpdater.putBoundData( type, data );
+		if ( uiUpdater.isUIThread() )
+			processUpdate( type, data );
+		else
+			uiUpdater.putBoundData( type, data );
 		// TODO Figure out a way to better differentiate each fragments updates.
 	}
 
@@ -105,13 +122,21 @@ public abstract class BaseActivity extends AppCompatActivity implements UIUpdate
 	{
 		BoundData bundle = new BoundData();
 		bundle.put( "message", message );
-		uiUpdater.putBoundData( SHOW_ERROR_DIALOG, bundle );
+		putUIUpdate( SHOW_ERROR_DIALOG, bundle );
 	}
 
 	public void uiShowProgressBar( String title, String message )
 	{
 		BoundData bundle = new BoundData();
 		bundle.put( "message", message );
-		uiUpdater.putBoundData( SHOW_PROGRESS_BAR, bundle );
+		putUIUpdate( SHOW_PROGRESS_BAR, bundle );
+	}
+
+	public void uiShowSnakeBar( String message, int length )
+	{
+		BoundData bundle = new BoundData();
+		bundle.put( "message", message );
+		bundle.put( "length", length );
+		putUIUpdate( SHOW_SNACKBAR, bundle );
 	}
 }

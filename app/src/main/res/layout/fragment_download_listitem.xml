@@ -1,96 +1,97 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
+<LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
+        android:id="@+id/booklet_group"
         android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:orientation="vertical"
         android:paddingTop="5dp"
         android:paddingBottom="5dp">
 
-    <Button
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_weight="1"
-            android:elevation="0dp"
-            style="@style/Widget.AppCompat.Button.Borderless"
-            android:background="@android:drawable/ic_menu_info_details"
-            android:layout_margin="6dp"
-            android:layout_gravity="left|center_vertical|start"
-            android:id="@+id/booklet_info"/>
-
-    <View
-            android:layout_width="0.5dp"
-            android:layout_height="match_parent"
-            android:background="@color/lighter_gray"
-            android:id="@+id/view2"
-            android:layout_marginStart="44dp"
-            android:layout_marginLeft="44dp"
-            android:layout_gravity="left|start"/>
-
-    <FrameLayout
+    <ImageView
+            android:id="@+id/booklet_header"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/booklet_view"
-            android:clickable="true"
-            android:layout_marginStart="48dp"
-            android:layout_marginLeft="48dp">
+            android:layout_height="60dp"
+            android:src="@drawable/loading_image"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="7dp"/>
 
-        <LinearLayout
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:weightSum="1"
-                android:layout_width="match_parent"
-                android:layout_weight="1"
-                android:layout_marginRight="48dp"
-                android:layout_marginEnd="48dp"
-                >
+    <TextView
+            android:id="@+id/booklet_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="5dp"
+            android:text="Booklet Title"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textSize="20sp"
+            android:textStyle="bold"/>
 
-            <ProgressBar
-                    style="?android:attr/progressBarStyleHorizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/booklet_progress"
-                    android:visibility="gone"/>
-
-            <ImageView
-                    android:id="@+id/booklet_header"
-                    android:layout_width="match_parent"
-                    android:layout_height="60dp"
-                    android:src="@drawable/loading_image"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="7dp"/>
-
-            <TextView
-                    android:id="@+id/booklet_title"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginBottom="5dp"
-                    android:text="Booklet Title"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:textSize="18sp"
-                    android:textStyle="bold"/>
-
-        </LinearLayout>
-
-        <View
-                android:layout_width="0.5dp"
-                android:layout_height="match_parent"
-                android:background="@color/lighter_gray"
-                android:id="@+id/view"
-                android:layout_marginEnd="44dp"
-                android:layout_marginRight="44dp"
-                android:layout_gravity="right|end"/>
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center"
+            android:orientation="horizontal">
 
         <ImageView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                app:srcCompat="@android:drawable/ic_menu_send"
-                android:layout_margin="6dp"
-                android:layout_gravity="right|center_vertical|end"/>
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/ic_list_time"/>
 
-    </FrameLayout>
+        <TextView
+                android:id="@+id/booklet_date"
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"
+                android:clickable="true"
+                android:gravity="left|center_vertical"
+                android:text="September 23-25, 2016"
+                android:textAppearance="?android:attr/textAppearanceSmall"/>
 
-</FrameLayout>
+    </LinearLayout>
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingBottom="8dp">
+
+        <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/ic_list_pin"/>
+
+        <TextView
+                android:id="@+id/booklet_where"
+                android:layout_width="wrap_content"
+                android:layout_height="20dp"
+                android:clickable="true"
+                android:gravity="left|center_vertical"
+                android:text="800 E 81st Ave Merrillville, IN 46410"
+                android:textAppearance="?android:attr/textAppearanceSmall"/>
+
+    </LinearLayout>
+
+    <ProgressBar
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+            android:id="@+id/booklet_progress"
+            android:paddingStart="10dp"
+            android:paddingRight="10dp"
+            android:paddingEnd="10dp"
+            android:paddingLeft="10dp"
+            android:visibility="gone"/>
+
+    <ImageView
+            android:id="@+id/booklet_caret"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:srcCompat="@android:drawable/arrow_down_float"/>
+
+</LinearLayout>

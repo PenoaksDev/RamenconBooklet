@@ -62,7 +62,7 @@ public class GuestsAdapter extends BaseExpandableListAdapter
 		else
 		{
 			iv_thumbnail.setImageResource( R.drawable.loading_image );
-			ImageCache.cacheRemoteImage( context, "guest-" + guest.id, ImageCache.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/guests/" + group.id + "/" + guest.image, false, new ImageCache.ImageResolveTask.ImageFoundListener()
+			ImageCache.cacheRemoteImage( context, "guest-" + guest.id, ImageCache.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/guests/" + group.id + "/" + guest.image, "guests/" + group.id + "/" + guest.image, false, new ImageCache.ImageFoundListener()
 			{
 				@Override
 				public void error( Exception exception )

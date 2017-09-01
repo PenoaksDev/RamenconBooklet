@@ -20,7 +20,7 @@ import io.amelia.booklet.data.GuestsGroupModel;
 import io.amelia.booklet.data.GuestsHandler;
 import io.amelia.booklet.data.GuestsModel;
 
-public class GuestViewFragment extends Fragment implements ImageCache.ImageResolveTask.ImageFoundListener
+public class GuestViewFragment extends Fragment implements ImageCache.ImageFoundListener
 {
 	public static Fragment instance( String groupId, String guestId )
 	{
@@ -74,7 +74,7 @@ public class GuestViewFragment extends Fragment implements ImageCache.ImageResol
 		else
 		{
 			image.setImageResource( R.drawable.loading_image );
-			ImageCache.cacheRemoteImage( getActivity(), "guest-" + guest.id, ImageCache.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/guests/" + listGroup.id + "/" + guest.image, false, this, null );
+			ImageCache.cacheRemoteImage( getActivity(), "guest-" + guest.id, ImageCache.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/guests/" + listGroup.id + "/" + guest.image, "guests/" + listGroup.id + "/" + guest.image, false, this, null );
 		}
 
 		return root;

@@ -10,35 +10,12 @@
 package io.amelia.android.support;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 public class Maps
 {
-	private Maps()
-	{
-	}
-
-	public static Map<String, Object> flattenMap( Map<String, Object> map )
-	{
-		Map<String, Object> result = new HashMap<>();
-		flattenMap( result, "", map );
-		return result;
-	}
-
-	private static void flattenMap( Map<String, Object> result, String path, Map<String, Object> map )
-	{
-		for ( Map.Entry<String, Object> entry : map.entrySet() )
-		{
-			String key = path.isEmpty() ? entry.getKey() : path + "/" + entry.getKey();
-
-			if ( entry.getValue() instanceof Map )
-				flattenMap( result, key, ( Map<String, Object> ) entry.getValue() );
-			else
-				result.put( key, entry.getValue() );
-		}
-	}
-
 	/**
 	 * Checks and converts the string key to an integer. Non-numeric keys are removed from the treemap.
 	 *
@@ -58,11 +35,44 @@ public class Maps
 		}};
 	}
 
+	private static void flattenMap( Map<String, Object> result, String path, Map<String, Object> map )
+	{
+		for ( Map.Entry<String, Object> entry : map.entrySet() )
+		{
+			String key = path.isEmpty() ? entry.getKey() : path + "/" + entry.getKey();
+
+			if ( entry.getValue() instanceof Map )
+				flattenMap( result, key, ( Map<String, Object> ) entry.getValue() );
+			else
+				result.put( key, entry.getValue() );
+		}
+	}
+
+	public static Map<String, Object> flattenMap( Map<String, Object> map )
+	{
+		Map<String, Object> result = new HashMap<>();
+		flattenMap( result, "", map );
+		return result;
+	}
+
+	public static <V> Map<Integer, V> incrementedMap( List<V> values )
+	{
+		return new HashMap<Integer, V>()
+		{{
+			for ( int i = 0; i < values.size(); i++ )
+				put( i, values.get( i ) );
+		}};
+	}
+
 	public static <K, V> HashMap<K, V> newHashMap( final K key, final V value )
 	{
 		return new HashMap<K, V>()
 		{{
 			put( key, value );
 		}};
+	}
+
+	private Maps()
+	{
 	}
 }

@@ -11,10 +11,10 @@ public class ACRAHelper
 
 	public static void handleExceptionOnce( String id, Exception e )
 	{
+		e.printStackTrace();
+
 		if ( !reportedExceptions.contains( id ) )
 			ACRA.getErrorReporter().handleException( e );
-
-		e.printStackTrace();
 
 		reportedExceptions.add( id );
 	}

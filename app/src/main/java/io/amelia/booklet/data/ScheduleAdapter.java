@@ -102,7 +102,7 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 
 			final ImageView iv_alarm = ( ImageView ) childView.findViewById( R.id.alarm );
 
-			if ( event.hasEventReminderPassed() )
+			if ( event.hasEventPassed() )
 				iv_alarm.setVisibility( View.INVISIBLE );
 			else
 				iv_alarm.setVisibility( View.VISIBLE );

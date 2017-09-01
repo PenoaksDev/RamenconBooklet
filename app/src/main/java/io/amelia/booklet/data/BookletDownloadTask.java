@@ -2,8 +2,6 @@ package io.amelia.booklet.data;
 
 import android.os.AsyncTask;
 import android.support.design.widget.Snackbar;
-import android.view.View;
-import android.widget.ProgressBar;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,12 +9,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import io.amelia.R;
 import io.amelia.android.data.BoundData;
 import io.amelia.android.data.OkHttpProgress;
 import io.amelia.android.log.PLog;
 import io.amelia.android.support.LibAndroid;
 import io.amelia.android.support.Objs;
+import io.amelia.booklet.ui.fragment.DownloadFragment;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -26,41 +24,27 @@ import okhttp3.Response;
 class BookletDownloadTask
 {
 	final Booklet booklet;
-	final ProgressBar progressBar;
-	Exception lastException;
 	List<FileDownload> pendingFiles = new ArrayList<>();
-	String response;
 	private InternalDownloadTask internalDownloadTask = null;
+	private boolean postOpen;
 	private BoundData updatedData;
 
-	public BookletDownloadTask( final Booklet booklet, final View view ) throws UpdateAbortException
+	public BookletDownloadTask( final Booklet booklet, final boolean postOpen ) throws UpdateAbortException
 	{
 		Objs.notNull( booklet );
+
+		this.postOpen = postOpen;
 
 		BookletState bookletState = booklet.getState();
 		final String bookletId = booklet.getId();
 		final String url = ContentManager.REMOTE_CATALOG_URL + bookletId;
 
 		if ( bookletState == BookletState.BUSY )
-			if ( view == null )
-				throw new IllegalStateException( "Booklet is already updating!" );
-			else
-			{
-				Snackbar.make( view, "Booklet is already updating... Please Wait!", Snackbar.LENGTH_SHORT ).show();
-				throw new UpdateAbortException();
-			}
+			ContentManager.getActivity().uiShowSnakeBar( "Booklet is already updating... Please Wait!", Snackbar.LENGTH_SHORT );
 
 		booklet.setInUse( true );
 
-		if ( view != null )
-			Snackbar.make( view, "Downloading Booklet " + booklet.getDataTitle() + ", Please Wait...", Snackbar.LENGTH_SHORT ).show();
-
-		progressBar = view == null ? null : ( ProgressBar ) view.findViewById( R.id.booklet_progress );
-		if ( progressBar != null )
-		{
-			progressBar.setIndeterminate( true );
-			progressBar.setMax( 100 );
-		}
+		ContentManager.getActivity().uiShowSnakeBar( "Downloading Booklet " + booklet.getDataTitle() + ", Please Wait...", Snackbar.LENGTH_SHORT );
 
 		this.booklet = booklet;
 
@@ -263,15 +247,15 @@ class BookletDownloadTask
 		@Override
 		protected void onPostExecute( Void aVoid )
 		{
-			if ( progressBar != null )
-				progressBar.setVisibility( View.GONE );
-
 			booklet.data = updatedData;
 			booklet.saveData();
 
 			booklet.setInUse( false );
 
 			PLog.i( "Finished downloading booklet " + booklet.getId() );
+
+			if ( postOpen )
+				booklet.goOpen();
 		}
 
 		@Override
@@ -280,24 +264,19 @@ class BookletDownloadTask
 			for ( FileDownload fileDownload : values )
 				PLog.i( "File " + fileDownload.remoteFile + " Progress: " + ( 100 * ( fileDownload.bytesRead / fileDownload.contentLength ) ) + " (" + fileDownload.bytesRead + " of " + fileDownload.contentLength + " bytes)" );
 
-			if ( progressBar != null )
+			int percentDone = 0;
+			boolean isDone = true;
+
+			for ( FileDownload fileDownload : pendingFiles )
 			{
-				int percentDone = 0;
-				boolean isDone = true;
+				if ( fileDownload.contentLength > 0 )
+					percentDone = percentDone + ( int ) ( 100 * ( fileDownload.bytesRead / fileDownload.contentLength ) );
 
-				for ( FileDownload fileDownload : pendingFiles )
-				{
-					if ( fileDownload.contentLength > 0 )
-						percentDone = percentDone + ( int ) ( 100 * ( fileDownload.bytesRead / fileDownload.contentLength ) );
-
-					if ( !fileDownload.done )
-						isDone = false;
-				}
-
-				progressBar.setProgress( percentDone );
-				progressBar.setMax( pendingFiles.size() * 100 );
-				progressBar.setIndeterminate( isDone );
+				if ( !fileDownload.done )
+					isDone = false;
 			}
+
+			DownloadFragment.instance().uiUpdateProgressBar( booklet.getId(), percentDone, pendingFiles.size() * 100, isDone );
 		}
 	}
 

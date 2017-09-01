@@ -47,9 +47,9 @@ public class BoundData extends AbstractMap<String, Object>
 				return list;
 			}
 
-			for ( Class<?> bClass : allowableTypes )
-				if ( bClass.isAssignableFrom( first.getClass() ) )
-					return value;
+
+			if ( isAllowedType( first.getClass() ) )
+				return value;
 		}
 
 		throw new IllegalArgumentException( "Unparcelable list type: " + value.getClass().getSimpleName() + " {" + TextUtils.join( ", ", Lists.listClasses( ( Collection ) value ) ) + "}" );
@@ -200,34 +200,35 @@ public class BoundData extends AbstractMap<String, Object>
 		return getString( keyId ) != null;
 	}
 
+	public boolean isAllowedType( Class<?> aClass )
+	{
+		for ( Class<?> bClass : allowableTypes )
+			if ( bClass.isAssignableFrom( bClass ) )
+				return true;
+		return false;
+	}
+
 	public Object put( String key, Object value, Class<?> aClass )
 	{
-		Object oldValue = get( key );
+		synchronized ( this )
+		{
+			Object oldValue = get( key );
 
-		boolean assignable = false;
+			if ( value != null && !isAllowedType( value.getClass() ) )
+				if ( value instanceof Collection )
+					value = collectionToValue( ( Collection ) value );
+				else
+					throw new IllegalArgumentException( "Unparcelable type: " + value.getClass().getSimpleName() );
 
-		for ( Class<?> bClass : allowableTypes )
-			if ( bClass.isAssignableFrom( value.getClass() ) )
-				assignable = true;
-
-		if ( !assignable )
-			if ( value instanceof Collection )
-				value = collectionToValue( ( Collection ) value );
-			/* else if ( value instanceof Map )
-			{
-
-			} */
-			else
-				throw new IllegalArgumentException( "Unparcelable type: " + value.getClass().getSimpleName() );
-
-		values.add( new BoundDataEntry( key, value, aClass ) );
-		return oldValue;
+			values.add( new BoundDataEntry( key, value, aClass ) );
+			return oldValue;
+		}
 	}
 
 	@Override
 	public Object put( String key, Object value )
 	{
-		return put( key, value, value.getClass() );
+		return put( key, value, value == null ? null : value.getClass() );
 	}
 
 	private class BoundDataEntry extends SimpleEntry<String, Object>
@@ -258,7 +259,9 @@ public class BoundData extends AbstractMap<String, Object>
 		@Override
 		public Object setValue( Object value )
 		{
-			if ( aClass.isAssignableFrom( value.getClass() ) )
+			if ( aClass == Object.class && !isAllowedType( value.getClass() ) )
+				throw new IllegalArgumentException( "Value must be an allowable type of: " + allowableTypes );
+			else if ( !aClass.isAssignableFrom( value.getClass() ) )
 				throw new IllegalArgumentException( "Value must be the same as or a superclass of class " + aClass.getSimpleName() );
 
 			return super.setValue( value );

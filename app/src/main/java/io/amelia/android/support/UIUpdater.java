@@ -7,6 +7,7 @@ import java.util.NavigableMap;
 import java.util.TreeMap;
 
 import io.amelia.android.data.BoundData;
+import io.amelia.android.log.PLog;
 
 public class UIUpdater extends AsyncTask<Void, BoundData, Void>
 {
@@ -30,9 +31,11 @@ public class UIUpdater extends AsyncTask<Void, BoundData, Void>
 		do
 		{
 			if ( currentEntry == null )
-				currentEntry = pending.firstEntry();
+				currentEntry = pending.pollFirstEntry();
 
-			if ( isPaused || currentEntry == null || currentEntry.getKey() < DateAndTime.epoch() )
+			// PLog.i( hashCode() + " UIUpdater: " + pending + " // " + currentEntry + " // " + isPaused + " // " + DateAndTime.epoch() );
+
+			if ( isPaused || currentEntry == null || currentEntry.getKey() > DateAndTime.epoch() )
 				try
 				{
 					Thread.sleep( 250 );
@@ -73,23 +76,31 @@ public class UIUpdater extends AsyncTask<Void, BoundData, Void>
 
 	public void pause()
 	{
+		PLog.i( "UIUpdater pause!" );
 		isPaused = true;
 	}
 
 	public void putBoundData( int type, BoundData bundle )
 	{
 		bundle.put( "type", type );
-		pending.put( DateAndTime.epoch(), bundle );
+		synchronized ( pending )
+		{
+			pending.put( DateAndTime.epoch(), bundle );
+		}
 	}
 
 	public void putBoundData( Long future, int type, BoundData bundle )
 	{
 		bundle.put( "type", type );
-		pending.put( future, bundle );
+		synchronized ( pending )
+		{
+			pending.put( future, bundle );
+		}
 	}
 
 	public void resume()
 	{
+		PLog.i( "UIUpdater resume!" );
 		isPaused = false;
 	}
 

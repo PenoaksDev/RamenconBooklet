@@ -488,6 +488,11 @@ public class LibIO
 		return recursiveFiles( dir, maxDepth, null );
 	}
 
+	public static List<File> recursiveFiles( final File dir, final String regexPattern )
+	{
+		return recursiveFiles( dir, dir, 0, 9999, regexPattern );
+	}
+
 	public static List<File> recursiveFiles( final File dir, final int maxDepth, final String regexPattern )
 	{
 		return recursiveFiles( dir, dir, 0, maxDepth, regexPattern );
