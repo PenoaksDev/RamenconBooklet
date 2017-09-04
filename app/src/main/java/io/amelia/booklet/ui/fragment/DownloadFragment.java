@@ -16,6 +16,9 @@ import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.joanzapata.iconify.IconDrawable;
+import com.joanzapata.iconify.fonts.FontAwesomeIcons;
+
 import io.amelia.R;
 import io.amelia.android.data.BoundData;
 import io.amelia.android.log.PLog;
@@ -69,6 +72,9 @@ public class DownloadFragment extends Fragment implements UIUpdater.Receiver
 	public void onCreateOptionsMenu( Menu menu, MenuInflater inflater )
 	{
 		inflater.inflate( R.menu.default_options_menu, menu );
+
+		menu.findItem( R.id.options_settings ).setIcon( new IconDrawable( getActivity(), FontAwesomeIcons.fa_gear ).colorRes( R.color.lighter_gray ).actionBarSize() );
+		menu.findItem( R.id.options_refresh ).setIcon( new IconDrawable( getActivity(), FontAwesomeIcons.fa_refresh ).colorRes( R.color.lighter_gray ).actionBarSize() );
 	}
 
 	@Nullable
@@ -123,7 +129,8 @@ public class DownloadFragment extends Fragment implements UIUpdater.Receiver
 				} );
 
 				ImageView iv = new ImageView( getContext(), null, R.style.Widget_AppCompat_ActionButton );
-				iv.setImageResource( R.drawable.ic_options_refresh );
+				iv.setImageDrawable( new IconDrawable( getActivity(), FontAwesomeIcons.fa_refresh ).colorRes( R.color.lighter_gray ).actionBarSize() );
+				// iv.setImageResource( R.drawable.ic_options_refresh );
 				iv.setLayoutParams( new ViewGroup.LayoutParams( ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT ) );
 				float dpScale = getResources().getDisplayMetrics().density;
 				iv.setPadding( ( int ) ( 14 * dpScale * 0.5f ), 0, ( int ) ( 14 * dpScale * 0.5f ), 0 );

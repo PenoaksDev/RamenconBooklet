@@ -72,25 +72,24 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 		{
 			View childView = convertView == null ? inflater.inflate( R.layout.fragment_schedule_listitem_child, null ) : convertView;
 
-			TextView tv_description = ( TextView ) childView.findViewById( R.id.description );
-			// WebView tv_description = (WebView) childView.findViewById(R.id.description);
+			TextView eventDescription = childView.findViewById( R.id.description );
 
 			final ScheduleEventModel event = events.get( groupPosition );
 
-			final ImageView iv_heart = ( ImageView ) childView.findViewById( R.id.heart );
+			final ImageView imageButtonHeart = childView.findViewById( R.id.heart );
 
 			if ( event.isHearted() )
 			{
-				iv_heart.setSelected( true );
-				iv_heart.setColorFilter( context.getResources().getColor( R.color.colorAccent ) );
+				imageButtonHeart.setSelected( true );
+				imageButtonHeart.setColorFilter( context.getResources().getColor( R.color.colorAccent ) );
 			}
 			else
 			{
-				iv_heart.setSelected( false );
-				iv_heart.setColorFilter( context.getResources().getColor( R.color.lighter_gray ) );
+				imageButtonHeart.setSelected( false );
+				imageButtonHeart.setColorFilter( context.getResources().getColor( R.color.lighter_gray ) );
 			}
 
-			iv_heart.setOnClickListener( new View.OnClickListener()
+			imageButtonHeart.setOnClickListener( new View.OnClickListener()
 			{
 				@Override
 				public void onClick( final View v )
@@ -100,25 +99,25 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 				}
 			} );
 
-			final ImageView iv_alarm = ( ImageView ) childView.findViewById( R.id.alarm );
+			final ImageView imageButtonAlarm = childView.findViewById( R.id.alarm );
 
 			if ( event.hasEventPassed() )
-				iv_alarm.setVisibility( View.INVISIBLE );
+				imageButtonAlarm.setVisibility( View.INVISIBLE );
 			else
-				iv_alarm.setVisibility( View.VISIBLE );
+				imageButtonAlarm.setVisibility( View.VISIBLE );
 
 			if ( event.hasTimer() )
 			{
-				iv_alarm.setSelected( true );
-				iv_alarm.setColorFilter( context.getResources().getColor( R.color.colorAccent ) );
+				imageButtonAlarm.setSelected( true );
+				imageButtonAlarm.setColorFilter( context.getResources().getColor( R.color.colorAccent ) );
 			}
 			else
 			{
-				iv_alarm.setSelected( false );
-				iv_alarm.setColorFilter( context.getResources().getColor( R.color.lighter_gray ) );
+				imageButtonAlarm.setSelected( false );
+				imageButtonAlarm.setColorFilter( context.getResources().getColor( R.color.lighter_gray ) );
 			}
 
-			iv_alarm.setOnClickListener( new View.OnClickListener()
+			imageButtonAlarm.setOnClickListener( new View.OnClickListener()
 			{
 				@Override
 				public void onClick( final View v )
@@ -128,8 +127,8 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 				}
 			} );
 
-			tv_description.setText( event.getDescription() );
-			// tv_description.loadData("<p style=\"text-align: justified;\">" + event.getDescription() + "</p>", "text/html", "UTF-8");
+			eventDescription.setText( event.getDescription() );
+			// eventDescription.loadData("<p style=\"text-align: justified;\">" + event.getDescription() + "</p>", "text/html", "UTF-8");
 
 			return childView;
 		}

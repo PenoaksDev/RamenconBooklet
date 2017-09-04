@@ -18,10 +18,12 @@ import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.TimeZone;
 
 import io.amelia.R;
 import io.amelia.android.data.BoundData;
 import io.amelia.android.data.ImageCache;
+import io.amelia.android.log.PLog;
 import io.amelia.android.support.ACRAHelper;
 import io.amelia.android.support.DateAndTime;
 import io.amelia.booklet.data.ContentFragment;
@@ -48,8 +50,9 @@ public class WelcomeFragment extends ContentFragment<WelcomeHandler>
 		iCal.setType( "vnd.android.cursor.item/event" );
 		iCal.putExtra( CalendarContract.Events.TITLE, handler.title );
 		iCal.putExtra( CalendarContract.Events.DESCRIPTION, handler.description );
-		iCal.putExtra( CalendarContract.EXTRA_EVENT_BEGIN_TIME, handler.whenFromDate );
-		iCal.putExtra( CalendarContract.EXTRA_EVENT_END_TIME, handler.whenToDate );
+		iCal.putExtra( CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault() );
+		iCal.putExtra( CalendarContract.Events.DTSTART, handler.whenFromDate.getTime() );
+		iCal.putExtra( CalendarContract.Events.DTEND, handler.whenToDate.getTime() );
 		iCal.putExtra( CalendarContract.Events.ALL_DAY, true );
 
 		if ( iCal.resolveActivity( getActivity().getPackageManager() ) != null )
@@ -119,7 +122,7 @@ public class WelcomeFragment extends ContentFragment<WelcomeHandler>
 
 	public void openMaps()
 	{
-		Uri mapIntentUri = Uri.parse( "gwo:0,0?q=800 E 81st Ave Merrillville, IN 46410" );
+		Uri mapIntentUri = Uri.parse( "geo:0,0?q=" + handler.where );
 		final Intent iMap = new Intent( Intent.ACTION_VIEW, mapIntentUri );
 		iMap.setPackage( "com.google.android.apps.maps" );
 

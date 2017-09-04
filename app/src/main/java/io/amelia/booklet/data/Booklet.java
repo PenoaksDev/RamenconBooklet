@@ -1,6 +1,7 @@
 package io.amelia.booklet.data;
 
 import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 
 import java.io.File;
@@ -10,8 +11,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 import io.amelia.android.data.BoundData;
+import io.amelia.android.data.ImageCache;
 import io.amelia.android.log.PLog;
 import io.amelia.android.support.ACRAHelper;
 import io.amelia.android.support.LibAndroid;
@@ -155,14 +160,13 @@ public class Booklet
 		boolean deleted = true;
 
 		for ( File file : getSectionFiles( "data.json" ).values() )
-			if ( file.exists() )
-				if ( file.delete() )
-					PLog.i( "Deleted file: " + LibIO.relPath( file, ContentManager.getCacheDirectory() ) );
-				else
-				{
-					deleted = false;
-					PLog.i( "FAILED to delete file: " + LibIO.relPath( file, ContentManager.getCacheDirectory() ) );
-				}
+			if ( file.delete() )
+				PLog.i( "Deleted file: " + LibIO.relPath( file, ContentManager.getCacheDirectory() ) );
+			else
+			{
+				deleted = false;
+				PLog.i( "FAILED to delete file: " + LibIO.relPath( file, ContentManager.getCacheDirectory() ) );
+			}
 
 		clearImageCache();
 		clearExceptions();
@@ -209,7 +213,12 @@ public class Booklet
 
 	public List<String> getDataSections()
 	{
-		List<String> list = new ArrayList<>( data.getStringList( KEY_SECTIONS ) );
+		List<String> list = new ArrayList<>();
+		if ( data == null )
+			return list;
+		List<String> list1 = data.getStringList( KEY_SECTIONS );
+		if ( list1 != null )
+			list.addAll( list1 );
 		list.add( "welcome" );
 		return list;
 	}
@@ -305,32 +314,6 @@ public class Booklet
 			}
 
 		throw new IllegalStateException( "The section handler for key " + sectionClass.getSimpleName() + " does not exist! Does it exist in the Booklet manifest?" );
-
-		// TODO Init new section handler classes
-	}
-
-	private ContentHandler getSectionHandlerInternal( String key )
-	{
-		if ( !sectionHandlerList.containsKey( key ) )
-			switch ( key )
-			{
-				case "guests":
-					sectionHandlerList.put( "guests", new GuestsHandler().setBooklet( this ) );
-					break;
-				case "maps":
-					sectionHandlerList.put( "maps", new MapsHandler().setBooklet( this ) );
-					break;
-				case "schedule":
-					sectionHandlerList.put( "schedule", new ScheduleHandler().setBooklet( this ) );
-					break;
-				case "guide":
-					sectionHandlerList.put( "guide", new GuideHandler().setBooklet( this ) );
-					break;
-				default:
-					throw new IllegalArgumentException( "App does not implement the SectionHandler named " + key + "." );
-			}
-
-		return sectionHandlerList.get( key );
 	}
 
 	public List<ContentHandler> getSectionHandlers() throws IOException
@@ -460,6 +443,11 @@ public class Booklet
 			ContentManager.getActivity().uiShowSnakeBar( "That booklet is currently not available.", Snackbar.LENGTH_SHORT );
 	}
 
+	public boolean hasSection( String keyId )
+	{
+		return getDataSections().contains( keyId );
+	}
+
 	/**
 	 * Does a booklet file check, looks for specified JSON and Image files.
 	 */
@@ -488,6 +476,106 @@ public class Booklet
 
 		if ( DownloadFragment.instance() != null )
 			DownloadFragment.instance().uiSetBookletInUse( getId(), inUse );
+	}
+
+	public void preCacheImages()
+	{
+		// This pre-cache is disabled until I can confirm it's no longer going to crash the app
+		if ( true )
+			return;
+
+		// Do Not Pre-Cache
+		if ( ContentManager.getImageCacheTimeout() == 0 )
+			return;
+
+		updateSectionHandlers();
+
+		ExecutorService internalThreadPool = Executors.newFixedThreadPool( 2, new ThreadFactory()
+		{
+			@Override
+			public Thread newThread( @NonNull Runnable runnable )
+			{
+				Thread thread = new Thread( runnable );
+				thread.setPriority( Thread.MIN_PRIORITY );
+				return thread;
+			}
+		} );
+
+		internalThreadPool.submit( new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				try
+				{
+					if ( sectionHandlerList.containsKey( "guide" ) )
+					{
+						GuideHandler handler = getSectionHandler( GuideHandler.class );
+						for ( GuidePageModel guidePageModel : handler.guidePageModels )
+						{
+							final String remoteImage = guidePageModel.getRemoteImage();
+							final File dest = new File( getDataDirectory(), guidePageModel.getLocalImage() );
+							if ( !dest.exists() )
+								ImageCache.cacheRemoteImage( ContentManager.getActivity(), "guide-" + guidePageModel.pageNo, guidePageModel.getRemoteImage(), guidePageModel.getLocalImage(), null, false, null, new ImageCache.ImageProgressListener()
+								{
+									@Override
+									public void finish()
+									{
+										PLog.i( "Image PreCache Finish: " + remoteImage );
+									}
+
+									@Override
+									public void progress( long bytesTransferred, long totalByteCount )
+									{
+										PLog.i( "Image PreCache Progress (" + remoteImage + "): " + bytesTransferred + " of " + totalByteCount );
+									}
+
+									@Override
+									public void start()
+									{
+										PLog.i( "Image PreCache Start: " + remoteImage );
+									}
+								}, internalThreadPool );
+						}
+					}
+
+					if ( sectionHandlerList.containsKey( "maps" ) )
+					{
+						MapsHandler handler = getSectionHandler( MapsHandler.class );
+						for ( MapsMapModel mapsMapModel : handler.mapsMapModels )
+						{
+							final String remoteImage = mapsMapModel.getRemoteImage();
+							final File dest = new File( getDataDirectory(), mapsMapModel.getLocalImage() );
+							if ( !dest.exists() )
+								ImageCache.cacheRemoteImage( ContentManager.getActivity(), "map-" + mapsMapModel.id, mapsMapModel.getRemoteImage(), mapsMapModel.getLocalImage(), null, false, null, new ImageCache.ImageProgressListener()
+								{
+									@Override
+									public void finish()
+									{
+										PLog.i( "Image PreCache Finish: " + remoteImage );
+									}
+
+									@Override
+									public void progress( long bytesTransferred, long totalByteCount )
+									{
+										PLog.i( "Image PreCache Progress (" + remoteImage + "): " + bytesTransferred + " of " + totalByteCount );
+									}
+
+									@Override
+									public void start()
+									{
+										PLog.i( "Image PreCache Start: " + remoteImage );
+									}
+								}, internalThreadPool );
+						}
+					}
+				}
+				catch ( Exception e )
+				{
+					ACRAHelper.handleExceptionOnce( "image-precache-" + getId(), e );
+				}
+			}
+		} );
 	}
 
 	public void saveData()
@@ -537,6 +625,9 @@ public class Booklet
 							break;
 						case "guests":
 							sectionHandlerList.put( "guests", new GuestsHandler().setBooklet( this ) );
+							break;
+						case "vendors":
+							sectionHandlerList.put( "vendors", new VendorsHandler().setBooklet( this ) );
 							break;
 						case "maps":
 							sectionHandlerList.put( "maps", new MapsHandler().setBooklet( this ) );

@@ -15,6 +15,7 @@ import org.acra.ACRA;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.util.concurrent.ExecutorService;
 
 import io.amelia.android.log.PLog;
 import io.amelia.android.support.ACRAHelper;
@@ -25,7 +26,6 @@ import io.amelia.booklet.data.ContentManager;
 public class ImageCache
 {
 	public static final String REMOTE_IMAGES_URL = "http://booklet.dev.penoaks.com/images/";
-
 	private static BitmapFactory.Options options = new BitmapFactory.Options();
 
 	static
@@ -35,7 +35,12 @@ public class ImageCache
 
 	public static void cacheRemoteImage( Context context, String id, String remoteUrl, String localName, String bookletId, boolean forceUpdate, ImageFoundListener foundListener, @Nullable ImageProgressListener progressListener )
 	{
-		new ImageResolveTask( context, id, remoteUrl, localName, bookletId, forceUpdate, foundListener, progressListener ).executeOnExecutor( ContentManager.getExecutorThreadPool() );
+		cacheRemoteImage( context, id, remoteUrl, localName, bookletId, forceUpdate, foundListener, progressListener, ContentManager.getExecutorThreadPool() );
+	}
+
+	public static void cacheRemoteImage( Context context, String id, String remoteUrl, String localName, String bookletId, boolean forceUpdate, ImageFoundListener foundListener, @Nullable ImageProgressListener progressListener, ExecutorService executor )
+	{
+		new ImageResolveTask( context, id, remoteUrl, localName, bookletId, forceUpdate, foundListener, progressListener ).executeOnExecutor( executor );
 	}
 
 	private ImageCache()
@@ -81,7 +86,6 @@ public class ImageCache
 			Objs.notEmpty( id );
 			Objs.notEmpty( remoteUrl );
 			Objs.notEmpty( localName );
-			Objs.notNull( foundListener );
 
 			this.context = context;
 			this.id = id;
@@ -223,16 +227,19 @@ public class ImageCache
 		{
 			super.onProgressUpdate( values );
 
-			if ( resultBitmap != null )
+			if ( foundListener != null )
 			{
-				foundListener.update( resultBitmap );
-				resultBitmap = null;
-			}
+				if ( resultBitmap != null )
+				{
+					foundListener.update( resultBitmap );
+					resultBitmap = null;
+				}
 
-			if ( resultError != null )
-			{
-				foundListener.error( resultError );
-				resultError = null;
+				if ( resultError != null )
+				{
+					foundListener.error( resultError );
+					resultError = null;
+				}
 			}
 
 			if ( progressListener != null )

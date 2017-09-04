@@ -3,6 +3,9 @@ package io.amelia.booklet;
 import android.app.Application;
 import android.content.Context;
 
+import com.joanzapata.iconify.Iconify;
+import com.joanzapata.iconify.fonts.FontAwesomeModule;
+
 import org.acra.ACRA;
 import org.acra.annotation.ReportsCrashes;
 
@@ -25,6 +28,8 @@ public final class App extends Application
 		super.onCreate();
 
 		ContentManager.setupContentManager( getCacheDir(), getApplicationContext() );
+
+		Iconify.with( new FontAwesomeModule() );
 
 		// FacebookSdk.sdkInitialize(getApplicationContext());
 		// AppEventsLogger.activateApp(this);

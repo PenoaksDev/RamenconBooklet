@@ -16,6 +16,11 @@ public abstract class ContentFragment<R extends ContentHandler> extends Fragment
 		handler = ContentManager.getActiveBooklet().getSectionHandler( handlerClass );
 	}
 
+	public R getHandler()
+	{
+		return handler;
+	}
+
 	void loadStart()
 	{
 		mDialog = new ProgressDialog( getActivity() );

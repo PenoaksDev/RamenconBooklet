@@ -26,6 +26,7 @@ import io.amelia.android.data.BoundData;
 import io.amelia.android.fragments.PersistentFragment;
 import io.amelia.android.support.ACRAHelper;
 import io.amelia.android.support.DateAndTime;
+import io.amelia.android.support.LibAndroid;
 import io.amelia.android.support.Objs;
 import io.amelia.booklet.data.ContentFragment;
 import io.amelia.booklet.data.ContentManager;
@@ -79,7 +80,7 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 	{
 		super.onCreate( savedInstanceState );
 
-		getActivity().setTitle( "Convention Schedule" );
+		getActivity().setTitle( "Schedule" );
 		setHasOptionsMenu( true );
 	}
 
@@ -190,7 +191,11 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 
 		ExpandableListView lv = getView().findViewById( R.id.schedule_listview );
 
-		bundle.putString( "filter", DefaultScheduleFilter.getAdapter().toJson( currentFilter ) );
+		BoundData boundData = new BoundData();
+		boundData.put( "hearted", currentFilter.getHearted().name() );
+		boundData.put( "min", currentFilter.getMin() );
+		boundData.put( "max", currentFilter.getMax() );
+		bundle.putString( "filter", LibAndroid.writeBoundDataToJson( boundData ) );
 
 		if ( lv != null )
 		{
@@ -286,11 +291,12 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 			{
 				try
 				{
-					currentFilter = DefaultScheduleFilter.getAdapter().fromJson( savedState.getString( "filter" ) );
+					BoundData boundData = LibAndroid.readJsonToBoundData( savedState.getString( "filter" ) )[0];
+					currentFilter = new DefaultScheduleFilter( DefaultScheduleFilter.TriStateList.valueOf( boundData.getString( "hearted" ) ), boundData.getInteger( "min", -1 ), boundData.getInteger( "max", -1 ) );
 				}
-				catch ( IOException e )
+				catch ( Exception e )
 				{
-					e.printStackTrace();
+					currentFilter = new DefaultScheduleFilter();
 				}
 
 				selectedPosition = savedState.getInt( "selectedPosition", 0 );

@@ -4,14 +4,16 @@
     <group
             android:id="@+id/menu_group_general"
             android:checkableBehavior="single">
+
         <item
                 android:id="@+id/nav_welcome"
                 android:checkable="false"
                 android:checked="false"
                 android:enabled="true"
                 android:icon="@drawable/ic_menu_welcome"
-                android:title="About the Convention"
+                android:title="About"
                 android:visible="true"/>
+
         <item
                 android:id="@+id/nav_schedule"
                 android:checkable="false"
@@ -20,21 +22,32 @@
                 android:icon="@drawable/ic_menu_schedule"
                 android:title="Schedule"
                 android:visible="true"/>
+
         <item
-                android:id="@+id/nav_guests_vendors"
+                android:id="@+id/nav_guests"
                 android:checkable="false"
                 android:checked="false"
                 android:enabled="true"
                 android:icon="@drawable/ic_menu_friends"
-                android:title="Guests and Vendors"
+                android:title="Guests"
                 android:visible="true"/>
+
+        <item
+                android:id="@+id/nav_vendors"
+                android:checkable="false"
+                android:checked="false"
+                android:enabled="true"
+                android:icon="@drawable/ic_menu_friends"
+                android:title="Vendors"
+                android:visible="true"/>
+
         <item
                 android:id="@+id/nav_maps"
                 android:checkable="false"
                 android:checked="false"
                 android:enabled="true"
                 android:icon="@drawable/ic_menu_map"
-                android:title="Maps and Locations"
+                android:title="Maps"
                 android:visible="true"/>
 
         <item
@@ -43,7 +56,7 @@
                 android:checked="false"
                 android:enabled="true"
                 android:icon="@drawable/ic_menu_guide"
-                android:title="Official Guide Booklet"
+                android:title="Guide"
                 android:visible="true"/>
         <!-- <item
             android:id="@+id/nav_friends"

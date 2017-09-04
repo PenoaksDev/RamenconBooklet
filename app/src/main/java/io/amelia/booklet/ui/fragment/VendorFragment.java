@@ -14,22 +14,23 @@ import io.amelia.android.data.BoundData;
 import io.amelia.android.fragments.PersistentFragment;
 import io.amelia.booklet.data.ContentFragment;
 import io.amelia.booklet.data.GuestsAdapter;
-import io.amelia.booklet.data.GuestsHandler;
+import io.amelia.booklet.data.VendorsAdapter;
+import io.amelia.booklet.data.VendorsHandler;
 
-public class GuestFragment extends ContentFragment<GuestsHandler> implements PersistentFragment
+public class VendorFragment extends ContentFragment<VendorsHandler> implements PersistentFragment
 {
-	private static GuestFragment instance = null;
+	private static VendorFragment instance = null;
 
-	public static GuestFragment instance()
+	public static VendorFragment instance()
 	{
 		return instance;
 	}
 
 	private Bundle savedState = null;
 
-	public GuestFragment() throws IOException
+	public VendorFragment() throws IOException
 	{
-		super( GuestsHandler.class );
+		super( VendorsHandler.class );
 		instance = this;
 	}
 
@@ -44,7 +45,7 @@ public class GuestFragment extends ContentFragment<GuestsHandler> implements Per
 	{
 		super.onCreate( savedInstanceState );
 
-		getActivity().setTitle( "Guests" );
+		getActivity().setTitle( "Vendors" );
 	}
 
 	@Override
@@ -82,7 +83,7 @@ public class GuestFragment extends ContentFragment<GuestsHandler> implements Per
 		final View root = getView();
 
 		ExpandableListView lv = root.findViewById( R.id.guests_listview );
-		lv.setAdapter( new GuestsAdapter( getContext(), handler.guests ) );
+		lv.setAdapter( new VendorsAdapter( getContext(), handler.vendors ) );
 
 		if ( savedState != null && !savedState.isEmpty() )
 		{

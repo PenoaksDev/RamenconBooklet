@@ -12,17 +12,14 @@ import android.widget.Toast;
 
 import org.acra.ACRA;
 
-import java.util.List;
-
 import io.amelia.R;
 import io.amelia.android.data.ImageCache;
+import io.amelia.android.log.PLog;
 import io.amelia.android.ui.widget.TouchImageView;
-import io.amelia.booklet.data.ContentManager;
 import io.amelia.booklet.data.GuidePageModel;
 
 public class GuideChildFragment extends Fragment implements ImageCache.ImageFoundListener, ImageCache.ImageProgressListener
 {
-	public static List<GuidePageModel> guideMapModels;
 	private GuidePageModel guidePageModel;
 	private TouchImageView image;
 	private boolean isRefresh;
@@ -51,7 +48,7 @@ public class GuideChildFragment extends Fragment implements ImageCache.ImageFoun
 		super.onCreate( savedInstanceState );
 
 		assert getArguments() != null;
-		guidePageModel = guideMapModels.get( getArguments().getInt( "index" ) );
+		guidePageModel = GuideFragment.instance().getHandler().guidePageModels.get( getArguments().getInt( "index" ) );
 		isRefresh = getArguments().getBoolean( "isRefresh", false );
 	}
 
@@ -60,10 +57,10 @@ public class GuideChildFragment extends Fragment implements ImageCache.ImageFoun
 	{
 		View view = inflater.inflate( R.layout.fragment_guide_child, container, false );
 
-		image = view.findViewById( R.id.guide_image );
 		progressBar = view.findViewById( R.id.guide_progressbar );
 		progressBar.setVisibility( View.VISIBLE );
 
+		image = view.findViewById( R.id.guide_image );
 		image.setMaxZoom( 4 );
 		image.setScaleType( ImageView.ScaleType.MATRIX );
 
@@ -80,7 +77,7 @@ public class GuideChildFragment extends Fragment implements ImageCache.ImageFoun
 		else
 		{
 			image.setImageResource( R.drawable.loading_image );
-			ImageCache.cacheRemoteImage( getActivity(), "guide-" + guidePageModel.pageNo, ImageCache.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/guide/" + guidePageModel.image, "guide/" + guidePageModel.image, null, isRefresh, this, this );
+			ImageCache.cacheRemoteImage( getActivity(), "guide-" + guidePageModel.pageNo, guidePageModel.getRemoteImage(), guidePageModel.getLocalImage(), null, isRefresh, this, this );
 		}
 	}
 

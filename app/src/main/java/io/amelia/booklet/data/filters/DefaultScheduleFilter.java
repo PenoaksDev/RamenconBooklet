@@ -1,27 +1,27 @@
 package io.amelia.booklet.data.filters;
 
-import com.squareup.moshi.JsonAdapter;
-import com.squareup.moshi.Moshi;
-
 import java.util.TreeSet;
 
 import io.amelia.booklet.data.ScheduleEventModel;
 
 public class DefaultScheduleFilter implements ScheduleFilter
 {
-	public static JsonAdapter<DefaultScheduleFilter> getAdapter()
-	{
-		Moshi moshi = new Moshi.Builder().build();
-		return moshi.adapter( DefaultScheduleFilter.class );
-	}
-
 	private TriStateList hearted = TriStateList.UNSET;
 	private long max = -1;
 	private long min = -1;
-	private TriStateList timed = TriStateList.UNSET;
+	// private TriStateList timed = TriStateList.UNSET;
 
 	public DefaultScheduleFilter()
 	{
+
+	}
+
+	public DefaultScheduleFilter( TriStateList hearted, long min, long max )
+	{
+		this.hearted = hearted;
+		this.max = max;
+		this.min = min;
+		// this.timed = timed;
 	}
 
 	@Override
@@ -41,13 +41,28 @@ public class DefaultScheduleFilter implements ScheduleFilter
 		if ( hearted == TriStateList.HIDE && event.isHearted() )
 			return false;
 
-		if ( timed == TriStateList.SHOW && !event.hasTimer() )
+		/*if ( timed == TriStateList.SHOW && !event.hasTimer() )
 			return false;
 
 		if ( timed == TriStateList.HIDE && event.hasTimer() )
-			return false;
+			return false;*/
 
 		return true;
+	}
+
+	public TriStateList getHearted()
+	{
+		return hearted;
+	}
+
+	public long getMax()
+	{
+		return max;
+	}
+
+	public long getMin()
+	{
+		return min;
 	}
 
 	public DefaultScheduleFilter reset()
@@ -55,16 +70,16 @@ public class DefaultScheduleFilter implements ScheduleFilter
 		min = -1;
 		max = -1;
 		hearted = TriStateList.UNSET;
-		timed = TriStateList.UNSET;
+		// timed = TriStateList.UNSET;
 
 		return this;
 	}
 
-	public DefaultScheduleFilter setHasTimer( TriStateList timed )
+	/* public DefaultScheduleFilter setHasTimer( TriStateList timed )
 	{
 		this.timed = timed;
 		return this;
-	}
+	} */
 
 	public DefaultScheduleFilter setHearted( TriStateList hearted )
 	{

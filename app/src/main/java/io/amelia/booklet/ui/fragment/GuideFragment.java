@@ -4,7 +4,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -23,6 +23,7 @@ import io.amelia.R;
 import io.amelia.android.data.BoundData;
 import io.amelia.android.fragments.PersistentFragment;
 import io.amelia.android.support.ACRAHelper;
+import io.amelia.android.support.Objs;
 import io.amelia.android.ui.widget.TouchImageView;
 import io.amelia.booklet.data.ContentFragment;
 import io.amelia.booklet.data.GuideHandler;
@@ -59,7 +60,7 @@ public class GuideFragment extends ContentFragment<GuideHandler> implements Pers
 	{
 		super.onCreate( savedInstanceState );
 
-		getActivity().setTitle( "Official Guide Booklet" );
+		getActivity().setTitle( "Official Guide" );
 	}
 
 	@Override
@@ -123,7 +124,7 @@ public class GuideFragment extends ContentFragment<GuideHandler> implements Pers
 		} );
 
 		mViewPager = root.findViewById( R.id.guide_pager );
-		mViewPager.setAdapter( new ViewPagerAdapter( getFragmentManager(), isRefresh ) );
+		mViewPager.setAdapter( new ViewPagerAdapter( getChildFragmentManager(), isRefresh ) );
 		mViewPager.setCurrentItem( selectedPosition );
 		mViewPager.addOnPageChangeListener( new ViewPager.OnPageChangeListener()
 		{
@@ -190,7 +191,7 @@ public class GuideFragment extends ContentFragment<GuideHandler> implements Pers
 		{
 			TextView guidePageLabel = new TextView( getContext() );
 			GuidePageModel model = handler.guidePageModels.get( position );
-			guidePageLabel.setText( model.title == null ? model.pageNo : model.title );
+			guidePageLabel.setText( Objs.isEmpty( model.title ) ? model.pageNo : model.title );
 			guidePageLabel.setPadding( 12, 6, 12, 6 );
 			guidePageLabel.setTextColor( 0xffffffff );
 			guidePageLabel.setGravity( Gravity.CENTER );
@@ -212,7 +213,7 @@ public class GuideFragment extends ContentFragment<GuideHandler> implements Pers
 		}
 	}
 
-	public class ViewPagerAdapter extends FragmentStatePagerAdapter
+	public class ViewPagerAdapter extends FragmentPagerAdapter
 	{
 		private final List<Integer> refreshed = new ArrayList<>();
 		private boolean isRefresh;
@@ -232,8 +233,6 @@ public class GuideFragment extends ContentFragment<GuideHandler> implements Pers
 		@Override
 		public Fragment getItem( int position )
 		{
-			GuideChildFragment.guideMapModels = handler.guidePageModels;
-
 			Bundle bundle = new Bundle();
 			bundle.putInt( "index", position );
 			bundle.putBoolean( "isRefresh", isRefresh( position ) );

@@ -14,8 +14,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import io.amelia.R;
-import io.amelia.booklet.data.ScheduleEventModel;
 import io.amelia.booklet.data.ScheduleAdapter;
+import io.amelia.booklet.data.ScheduleEventModel;
 
 public class ScheduleViewFragment extends Fragment
 {
@@ -49,21 +49,21 @@ public class ScheduleViewFragment extends Fragment
 
 		View root = inflater.inflate( R.layout.fragment_schedule_view, container, false );
 
-		TextView tv_title = ( TextView ) root.findViewById( R.id.event_view_title );
-		TextView tv_location = ( TextView ) root.findViewById( R.id.event_view_location );
-		TextView tv_date = ( TextView ) root.findViewById( R.id.event_view_date );
-		TextView tv_time = ( TextView ) root.findViewById( R.id.event_view_time );
-		TextView tv_desc = ( TextView ) root.findViewById( R.id.event_view_description );
+		TextView eventTitle = root.findViewById( R.id.event_view_title );
+		TextView eventLocation = root.findViewById( R.id.event_view_location );
+		TextView eventDate = root.findViewById( R.id.event_view_date );
+		TextView eventTime = root.findViewById( R.id.event_view_time );
+		TextView eventDescription = root.findViewById( R.id.event_view_description );
 
 		if ( getArguments() == null )
-			tv_title.setText( "There was a problem! :(" );
+			eventTitle.setText( "There was a problem! :(" );
 		else
 		{
 			ScheduleEventModel event = adapter.events.get( getArguments().getInt( "event" ) );
 
-			tv_title.setText( event.title );
-			tv_location.setText( event.location );
-			tv_desc.setText( event.description );
+			eventTitle.setText( event.title );
+			eventLocation.setText( event.location );
+			eventDescription.setText( event.description );
 
 			try
 			{
@@ -77,8 +77,8 @@ public class ScheduleViewFragment extends Fragment
 				String format_from = use24h ? ScheduleAdapter.DISPLAY_FORMAT_TIME24.format( from ) : ScheduleAdapter.DISPLAY_FORMAT_TIME12.format( from );
 				String format_to = use24h ? ScheduleAdapter.DISPLAY_FORMAT_TIME24.format( to ) : ScheduleAdapter.DISPLAY_FORMAT_TIME12.format( to );
 
-				tv_date.setText( new SimpleDateFormat( "EEEE MM/dd" ).format( date ) );
-				tv_time.setText( format_from + " — " + format_to );
+				eventDate.setText( new SimpleDateFormat( "EEEE MM/dd" ).format( date ) );
+				eventTime.setText( format_from + " — " + format_to );
 			}
 			catch ( ParseException e )
 			{

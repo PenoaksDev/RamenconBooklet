@@ -4,7 +4,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -12,7 +12,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.lucasr.twowayview.TwoWayView;
 
@@ -123,7 +122,7 @@ public class MapsFragment extends ContentFragment<MapsHandler> implements Persis
 		} );
 
 		mViewPager = root.findViewById( R.id.maps_pager );
-		mViewPager.setAdapter( new ViewPagerAdapter( getFragmentManager(), isRefresh ) );
+		mViewPager.setAdapter( new ViewPagerAdapter( getChildFragmentManager(), isRefresh ) );
 		mViewPager.setCurrentItem( selectedPosition );
 		mViewPager.addOnPageChangeListener( new ViewPager.OnPageChangeListener()
 		{
@@ -170,7 +169,7 @@ public class MapsFragment extends ContentFragment<MapsHandler> implements Persis
 		@Override
 		public int getCount()
 		{
-			return handler.maps.size();
+			return handler.mapsMapModels.size();
 		}
 
 		@Override
@@ -189,7 +188,7 @@ public class MapsFragment extends ContentFragment<MapsHandler> implements Persis
 		public View getView( final int position, View convertView, ViewGroup parent )
 		{
 			TextView tv = new TextView( getContext() );
-			tv.setText( handler.maps.get( position ).title );
+			tv.setText( handler.mapsMapModels.get( position ).title );
 			tv.setPadding( 12, 6, 12, 6 );
 			tv.setTextColor( 0xffffffff );
 			tv.setGravity( Gravity.CENTER );
@@ -220,7 +219,7 @@ public class MapsFragment extends ContentFragment<MapsHandler> implements Persis
 		}
 	}
 
-	public class ViewPagerAdapter extends FragmentStatePagerAdapter
+	public class ViewPagerAdapter extends FragmentPagerAdapter
 	{
 		private final List<Integer> refreshed = new ArrayList<>();
 		private boolean isRefresh;
@@ -234,13 +233,13 @@ public class MapsFragment extends ContentFragment<MapsHandler> implements Persis
 		@Override
 		public int getCount()
 		{
-			return handler.maps.size();
+			return handler.mapsMapModels.size();
 		}
 
 		@Override
 		public Fragment getItem( int position )
 		{
-			MapsChildFragment.maps = handler.maps;
+			MapsChildFragment.maps = handler.mapsMapModels;
 
 			Bundle bundle = new Bundle();
 			bundle.putInt( "index", position );
