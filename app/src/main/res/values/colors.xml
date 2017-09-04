@@ -15,4 +15,6 @@
     <color name="twitter_dark">#508ba3</color>
     <color name="twitter_gray">#bee2f0</color>
     <color name="colorPurple">#ad1bd2</color>
+    <color name="colorWhite">#ffffff</color>
+    <color name="colorBlack">#000000</color>
 </resources>

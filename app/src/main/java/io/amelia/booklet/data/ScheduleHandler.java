@@ -97,7 +97,7 @@ public class ScheduleHandler extends ContentHandler
 	public boolean hasTimerEvents()
 	{
 		for ( ScheduleEventModel event : schedule )
-			if ( event.hasTimer() )
+			if ( event.hasEventId() )
 				return true;
 		return false;
 	}

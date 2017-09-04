@@ -1,6 +1,16 @@
 package io.amelia.booklet.ui.fragment;
 
+import android.Manifest;
+import android.accounts.AccountManager;
+import android.annotation.SuppressLint;
+import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.content.ContentValues;
+import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.CalendarContract;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -12,6 +22,15 @@ import android.widget.ExpandableListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.MultiplePermissionsReport;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionDeniedResponse;
+import com.karumi.dexter.listener.PermissionGrantedResponse;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
+import com.karumi.dexter.listener.single.PermissionListener;
+
 import org.lucasr.twowayview.TwoWayView;
 
 import java.io.IOException;
@@ -19,10 +38,13 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
 import java.util.TreeSet;
 
 import io.amelia.R;
 import io.amelia.android.data.BoundData;
+import io.amelia.android.data.BoundDataCallback;
 import io.amelia.android.fragments.PersistentFragment;
 import io.amelia.android.support.ACRAHelper;
 import io.amelia.android.support.DateAndTime;
@@ -41,7 +63,7 @@ import io.amelia.booklet.ui.activity.BaseActivity;
 public class ScheduleFragment extends ContentFragment<ScheduleHandler> implements PersistentFragment
 {
 	public static final long ONE_DAY = 1440 * 60 * 1000;
-
+	private static final int REQUEST_CHOOSE_ACCOUNT = 0x00;
 	private static ScheduleFragment instance = null;
 
 	public static ScheduleFragment instance()
@@ -63,16 +85,40 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 
 	public MapsLocationModel getLocation( String locId )
 	{
+		List<String> locations = new ArrayList<>();
 		for ( MapsLocationModel location : handler.locations )
+		{
 			if ( location.id.equals( locId ) )
 				return location;
-		return null;
+			locations.add( location.id );
+		}
+		throw new IllegalArgumentException( "The locationId '" + locId + "' was not found from the list " + locations );
 	}
 
 	@Override
 	public void loadState( Bundle bundle )
 	{
 		this.savedState = bundle;
+	}
+
+	@Override
+	public void onActivityResult( int requestCode, int resultCode, Intent data )
+	{
+		if ( requestCode == REQUEST_CHOOSE_ACCOUNT )
+		{
+			if ( resultCode == 0 || data == null )
+				Toast.makeText( getContext(), "Account Selection Cancelled. No Changes Made.", Toast.LENGTH_SHORT ).show();
+			else
+			{
+				String acct = data.getStringExtra( AccountManager.KEY_ACCOUNT_NAME );
+				ContentManager.setCalendarAccount( acct );
+
+				Toast.makeText( getContext(), "Google Calendar account was set to " + acct, Toast.LENGTH_SHORT ).show();
+			}
+			return;
+		}
+
+		super.onActivityResult( requestCode, resultCode, data );
 	}
 
 	@Override
@@ -308,10 +354,107 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 				savedState = null;
 			}
 
-			scheduleDayAdapter = new ScheduleDayAdapter( this, new ArrayList<>( days ), mDateDisplay, handler, mListView, mDayView, selectedPosition );
+			final List<ScheduleEventModel> modelList = new ArrayList<>( data );
+
+			BoundDataCallback alarmOnClick = new BoundDataCallback()
+			{
+				@Override
+				public void call( BoundData data )
+				{
+					ScheduleEventModel event = modelList.get( data.getInt( "position" ) );
+
+					if ( Objs.isEmpty( ContentManager.getCalendarAccount() ) )
+						showAccountChooser();
+
+					Dexter.withActivity( ContentManager.getActivity() ).withPermissions( Manifest.permission.WRITE_CALENDAR, Manifest.permission.READ_CALENDAR ).withListener( new MultiplePermissionsListener()
+					{
+						@Override
+						public void onPermissionRationaleShouldBeShown( List<PermissionRequest> permissions, PermissionToken token )
+						{
+
+						}
+
+						@SuppressLint( "MissingPermission" )
+						@Override
+						public void onPermissionsChecked( MultiplePermissionsReport report )
+						{
+							if ( report.isAnyPermissionPermanentlyDenied() )
+							{
+								Toast.makeText( ContentManager.getActivity(), "You must grant the Ramencon Booklet App the READ_CALENDAR and WRITE_CALENDAR permission.", Toast.LENGTH_LONG ).show();
+								return;
+							}
+
+							try
+							{
+								int calenderId = -1;
+								String calendarAccount = ContentManager.getCalendarAccount();
+								String[] projection = new String[] {CalendarContract.Calendars._ID, CalendarContract.Calendars.ACCOUNT_NAME};
+								ContentResolver contentResolver = ContentManager.getActivity().getContentResolver();
+								Cursor cursor = contentResolver.query( Uri.parse( "content://com.android.calendar/calendars" ), projection, CalendarContract.Calendars.ACCOUNT_NAME + "=? and (" + CalendarContract.Calendars.NAME + "=? or " + CalendarContract.Calendars.CALENDAR_DISPLAY_NAME + "=?)", new String[] {calendarAccount, calendarAccount, calendarAccount}, null );
+
+								if ( cursor.moveToFirst() )
+									if ( cursor.getString( 1 ).equals( calendarAccount ) )
+										calenderId = cursor.getInt( 0 );
+
+								contentResolver = ContentManager.getActivity().getContentResolver();
+
+								if ( event.hasEventId() )
+								{
+									Uri deleteUri = ContentUris.withAppendedId( CalendarContract.Events.CONTENT_URI, event.getEventId() );
+									contentResolver.delete( deleteUri, null, null );
+
+									event.setEventId( -1 );
+
+									Toast.makeText( ContentManager.getActivity(), "Event reminder removed from your Google Calendar.", Toast.LENGTH_LONG ).show();
+								}
+								else
+								{
+									ContentValues contentValues = new ContentValues();
+									contentValues.put( CalendarContract.Events.CALENDAR_ID, calenderId );
+									contentValues.put( CalendarContract.Events.TITLE, event.getTitle() );
+									contentValues.put( CalendarContract.Events.DESCRIPTION, event.getDescription() );
+									contentValues.put( CalendarContract.Events.EVENT_LOCATION, event.getLocation().title + " at " + ContentManager.getActiveBooklet().getDataTitle() );
+									contentValues.put( CalendarContract.Events.DTSTART, event.getStartTime() );
+									contentValues.put( CalendarContract.Events.DTEND, event.getEndTime() );
+									contentValues.put( CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().getID() );
+									contentValues.put( CalendarContract.Events.HAS_ALARM, 1 );
+
+									Uri uri = contentResolver.insert( Uri.parse( "content://com.android.calendar/events" ), contentValues );
+
+									long eventId = Long.parseLong( uri.getLastPathSegment() );
+
+									ContentValues values = new ContentValues();
+
+									int eventReminderDelay = ContentManager.getEventReminderDelay();
+									if ( eventReminderDelay > 0 )
+									{
+										// contentResolver.delete( ContentUris.withAppendedId( CalendarContract.Reminders.CONTENT_URI, eventId ), null, null );
+
+										values.put( CalendarContract.Reminders.MINUTES, eventReminderDelay );
+										values.put( CalendarContract.Reminders.EVENT_ID, eventId );
+										values.put( CalendarContract.Reminders.METHOD, CalendarContract.Reminders.METHOD_ALARM );
+
+										contentResolver.insert( CalendarContract.Reminders.CONTENT_URI, values );
+									}
+
+									event.setEventId( eventId );
+
+									Toast.makeText( ContentManager.getActivity(), "Event reminder added to your Google Calendar.", Toast.LENGTH_LONG ).show();
+								}
+							}
+							catch ( Exception e )
+							{
+								ACRAHelper.handleExceptionOnce( "event-alarm-" + event.id, e );
+							}
+						}
+					} ).check();
+				}
+			};
+
+			scheduleDayAdapter = new ScheduleDayAdapter( getContext(), alarmOnClick, new ArrayList<>( days ), mDateDisplay, handler, mListView, mDayView, selectedPosition );
 			mDayView.setAdapter( scheduleDayAdapter );
 
-			scheduleAdapter = new ScheduleAdapter( getActivity(), handler.simpleDateFormat(), handler.simpleTimeFormat(), handler.locations, new ArrayList<>( data ) );
+			scheduleAdapter = new ScheduleAdapter( getContext(), alarmOnClick, handler.simpleDateFormat(), handler.simpleTimeFormat(), handler.locations, modelList );
 			mListView.setAdapter( scheduleAdapter );
 
 			if ( positionVisible > 0 )
@@ -322,5 +465,30 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 			ACRAHelper.handleExceptionOnce( "booklet-" + ContentManager.getActiveBooklet().getId() + "-loading", new RuntimeException( "Unexpected Exception.", e ) );
 			( ( BaseActivity ) getActivity() ).uiShowErrorDialog( "We had a problem loading the schedule. The problem has been reported to the developer. Please try deleting and re-downloading the booklet." );
 		}
+	}
+
+	public void showAccountChooser()
+	{
+		Dexter.withActivity( ContentManager.getActivity() ).withPermission( Manifest.permission.GET_ACCOUNTS ).withListener( new PermissionListener()
+		{
+			@Override
+			public void onPermissionDenied( PermissionDeniedResponse response )
+			{
+				Toast.makeText( getContext(), "You must grant the Ramencon Booklet App the GET_ACCOUNTS permission.", Toast.LENGTH_LONG ).show();
+			}
+
+			@Override
+			public void onPermissionGranted( PermissionGrantedResponse response )
+			{
+				Intent intent = AccountManager.newChooseAccountIntent( null, null, new String[] {"com.google"}, true, null, null, null, null );
+				startActivityForResult( intent, REQUEST_CHOOSE_ACCOUNT );
+			}
+
+			@Override
+			public void onPermissionRationaleShouldBeShown( PermissionRequest permission, PermissionToken token )
+			{
+
+			}
+		} ).check();
 	}
 }

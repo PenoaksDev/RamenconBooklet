@@ -1,14 +1,14 @@
 package io.amelia.booklet.data;
 
-import android.app.Notification;
+import android.content.ContentUris;
+import android.database.Cursor;
+import android.net.Uri;
+import android.provider.CalendarContract;
 
 import java.util.Date;
 
-import io.amelia.R;
 import io.amelia.android.data.BoundData;
-import io.amelia.android.support.DateAndTime;
 import io.amelia.android.support.Strs;
-import io.amelia.booklet.ui.activity.ContentActivity;
 import io.amelia.booklet.ui.fragment.ScheduleFragment;
 
 public class ScheduleEventModel
@@ -20,12 +20,6 @@ public class ScheduleEventModel
 	public String location;
 	public String time;
 	public String title;
-
-	private BoundData getBoundData()
-	{
-		// return DataPersistence.getInstance().config( "users/" + FirebaseAuth.getInstance().getCurrentUser().getUid() + "/events/" + id );
-		return null;
-	}
 
 	public String getDescription()
 	{
@@ -39,18 +33,37 @@ public class ScheduleEventModel
 
 	public long getEndTime()
 	{
-		return getStartTime() + ( getDuration() * 60 );
+		return getStartTime() + ( getDuration() * 60 * 1000 );
+	}
+
+	public long getEventId()
+	{
+		BoundData userData = ContentManager.getUserData();
+		String key = "booklet-" + ContentManager.getActiveBooklet().getId();
+
+		if ( !userData.hasBoundData( key ) )
+			return -1;
+
+		return userData.getBoundData( key ).getLong( id + "-event", -1L );
+	}
+
+	public void setEventId( long eventId )
+	{
+		BoundData userData = ContentManager.getUserData();
+		String key = "booklet-" + ContentManager.getActiveBooklet().getId();
+
+		if ( !userData.hasBoundData( key ) )
+			userData.put( key, new BoundData() );
+
+		if ( eventId == -1 )
+			userData.getBoundData( key ).remove( id + "-event" );
+		else
+			userData.getBoundData( key ).put( id + "-event", eventId );
 	}
 
 	public MapsLocationModel getLocation()
 	{
 		return ScheduleFragment.instance().getLocation( location );
-	}
-
-	public Notification getNotification()
-	{
-		MapsLocationModel mLocation = getLocation();
-		return new Notification.Builder( ContentActivity.instance ).setWhen( getStartTime() ).setContentTitle( "You have an event starting soon!" ).setSmallIcon( R.mipmap.ic_app ).setContentText( title + " starts at " + DateAndTime.now( "h:mm a", getStartTime() ) + ( mLocation == null ? "" : " in " + mLocation.title ) ).build();
 	}
 
 	public Date getStartDate()
@@ -82,37 +95,21 @@ public class ScheduleEventModel
 		return Strs.fixQuotes( title );
 	}
 
+	public boolean hasEventId()
+	{
+		long eventId = getEventId();
+		if ( eventId > -1 )
+		{
+			Uri queryUri = ContentUris.withAppendedId( CalendarContract.Events.CONTENT_URI, eventId );
+			Cursor cr = ContentManager.getActivity().getContentResolver().query( queryUri, null, null, null, null );
+			return cr.getCount() > 0;
+		}
+		return false;
+	}
+
 	public boolean hasEventPassed()
 	{
 		return getStartTime() - new Date().getTime() < 0;
-	}
-
-	public boolean hasTimer()
-	{
-		/*if ( ContentActivity.instance == null || ContentActivity.instance.service == null )
-		{
-			PLog.e( "The AppService is not running. Why?" );
-			return false;
-		}
-
-		boolean timer = getConfigurationSection().getBoolean( "timer", false );
-
-		boolean pending = ContentActivity.instance.service.hasPushNotificationPending( id );
-		boolean pasted = hasEventReminderPassed();
-
-		if ( timer )
-		{
-			if ( pending && pasted )
-				ContentActivity.instance.service.cancelPushNotification( id );
-			else if ( !pending && !pasted )
-				ContentActivity.instance.service.schedulePushNotification( this, false );
-		}
-		else if ( pending )
-			ContentActivity.instance.service.cancelPushNotification( id );
-
-		return timer;*/
-
-		return false;
 	}
 
 	public boolean isHearted()
@@ -135,22 +132,5 @@ public class ScheduleEventModel
 			userData.put( key, new BoundData() );
 
 		userData.getBoundData( key ).put( id + "-hearted", hearted );
-	}
-
-	public void setTimer( boolean timer )
-	{
-		/*if ( ContentActivity.instance == null || ContentActivity.instance.service == null )
-		{
-			PLog.e( "The AppService is not running. Why?" );
-			return;
-		}
-
-		if ( timer && ContentActivity.instance.service.schedulePushNotification( this, true ) )
-			getConfigurationSection().set( "timer", true );
-		else
-		{
-			ContentActivity.instance.service.cancelPushNotification( id );
-			getConfigurationSection().set( "timer", false );
-		}*/
 	}
 }

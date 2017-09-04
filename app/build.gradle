@@ -45,6 +45,8 @@ dependencies {
 	// https://github.com/JoanZapata/android-iconify
 	compile 'com.joanzapata.iconify:android-iconify-fontawesome:2.2.2'
 
+	compile 'com.karumi:dexter:4.1.0'
+
 	/* Facebook Crap Libraries */
 	compile 'com.android.support:cardview-v7:26.0.1'
 	compile 'com.android.support:customtabs:26.0.1'

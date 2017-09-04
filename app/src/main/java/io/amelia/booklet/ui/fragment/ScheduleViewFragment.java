@@ -62,7 +62,7 @@ public class ScheduleViewFragment extends Fragment
 			ScheduleEventModel event = adapter.events.get( getArguments().getInt( "event" ) );
 
 			eventTitle.setText( event.title );
-			eventLocation.setText( event.location );
+			eventLocation.setText( event.getLocation().title );
 			eventDescription.setText( event.description );
 
 			try

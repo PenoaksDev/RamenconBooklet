@@ -25,11 +25,16 @@
             android:summary="Vibrate for event reminders"
             android:title="Vibrate on Reminder"/> -->
 
-    <!-- <ListPreference
+    <ListPreference
             android:defaultValue="10"
             android:key="pref_reminder_delays"
             android:summary="When would you like a reminder before an event?"
-            android:title="Event Reminder Delay"/> -->
+            android:title="Event Reminder Delay"/>
+
+    <Preference
+            android:key="pref_calendar_account"
+            android:summary="Selects which account to use when adding events to your Google Calendar"
+            android:title="Select Google Calendar Account"/>
 
     <Preference
             android:key="pref_delete_images"

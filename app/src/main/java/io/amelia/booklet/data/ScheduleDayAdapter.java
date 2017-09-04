@@ -17,6 +17,7 @@ import java.util.Date;
 import java.util.List;
 
 import io.amelia.R;
+import io.amelia.android.data.BoundDataCallback;
 import io.amelia.android.support.DateAndTime;
 import io.amelia.booklet.data.filters.DefaultScheduleFilter;
 import io.amelia.booklet.ui.fragment.ScheduleFragment;
@@ -24,6 +25,8 @@ import io.amelia.booklet.ui.fragment.ScheduleFragment;
 public class ScheduleDayAdapter extends BaseAdapter
 {
 	public static final String DATEFORMAT = "MMMM dx yyyy";
+	private BoundDataCallback alarmOnClick;
+	private Context context;
 	private List<Date> days = new ArrayList<>();
 	private LayoutInflater inflater = null;
 	private TextView mDateDisplay;
@@ -32,9 +35,11 @@ public class ScheduleDayAdapter extends BaseAdapter
 	private ScheduleHandler mScheduleDataReceiver;
 	private int selectedPosition;
 
-	public ScheduleDayAdapter( ScheduleFragment parent, List<Date> days, TextView mDateDisplay, ScheduleHandler mScheduleDataReceiver, ExpandableListView mListView, TwoWayView mDayView, int selectedPosition )
+	public ScheduleDayAdapter( Context context, BoundDataCallback alarmOnClick, List<Date> days, TextView mDateDisplay, ScheduleHandler mScheduleDataReceiver, ExpandableListView mListView, TwoWayView mDayView, int selectedPosition )
 	{
-		this.inflater = ( LayoutInflater ) parent.getActivity().getSystemService( Context.LAYOUT_INFLATER_SERVICE );
+		this.context = context;
+		this.inflater = ( LayoutInflater ) context.getSystemService( Context.LAYOUT_INFLATER_SERVICE );
+		this.alarmOnClick = alarmOnClick;
 		this.days = days;
 		this.mDateDisplay = mDateDisplay;
 		this.mScheduleDataReceiver = mScheduleDataReceiver;
@@ -71,9 +76,9 @@ public class ScheduleDayAdapter extends BaseAdapter
 	{
 		View view = inflater.inflate( R.layout.fragment_schedule_listitem_day, null );
 
-		TextView dayName = ( TextView ) view.findViewById( R.id.day_name );
-		TextView dayNumber = ( TextView ) view.findViewById( R.id.day_number );
-		ImageView dayImage = ( ImageView ) view.findViewById( R.id.day_image );
+		TextView dayName = view.findViewById( R.id.day_name );
+		TextView dayNumber = view.findViewById( R.id.day_number );
+		ImageView dayImage = view.findViewById( R.id.day_image );
 
 		assert dayName != null;
 		assert dayNumber != null;
@@ -154,7 +159,7 @@ public class ScheduleDayAdapter extends BaseAdapter
 
 		ScheduleDayAdapter.this.selectedPosition = position;
 
-		mListView.setAdapter( new ScheduleAdapter( ContentManager.getActivity(), mScheduleDataReceiver.simpleDateFormat(), mScheduleDataReceiver.simpleTimeFormat(), mScheduleDataReceiver.locations, data ) );
+		mListView.setAdapter( new ScheduleAdapter( context, alarmOnClick, mScheduleDataReceiver.simpleDateFormat(), mScheduleDataReceiver.simpleTimeFormat(), mScheduleDataReceiver.locations, data ) );
 
 		for ( int i = 0; i < mDayView.getChildCount(); i++ )
 			if ( i != position )

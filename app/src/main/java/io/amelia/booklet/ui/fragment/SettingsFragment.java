@@ -1,6 +1,9 @@
 package io.amelia.booklet.ui.fragment;
 
+import android.Manifest;
+import android.accounts.AccountManager;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -11,12 +14,21 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionDeniedResponse;
+import com.karumi.dexter.listener.PermissionGrantedResponse;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.single.PermissionListener;
+
 import io.amelia.R;
 import io.amelia.booklet.data.ContentManager;
 import io.amelia.booklet.ui.activity.BootActivity;
 
 public class SettingsFragment extends PreferenceFragment
 {
+	private static final int REQUEST_CHOOSE_ACCOUNT = 0x00;
+
 	public static SettingsFragment instance()
 	{
 		return new SettingsFragment();
@@ -27,32 +39,39 @@ public class SettingsFragment extends PreferenceFragment
 	}
 
 	@Override
+	public void onActivityResult( int requestCode, int resultCode, Intent data )
+	{
+		if ( requestCode == REQUEST_CHOOSE_ACCOUNT )
+		{
+			if ( resultCode == 0 || data == null )
+				Toast.makeText( getContext(), "Account Selection Cancelled. No Changes Made.", Toast.LENGTH_SHORT ).show();
+			else
+			{
+				String acct = data.getStringExtra( AccountManager.KEY_ACCOUNT_NAME );
+				ContentManager.setCalendarAccount( acct );
+
+				findPreference( "pref_calendar_account" ).setSummary( "Selects which account to use when adding events to the Google Calendar. Current Account: " + ( acct == null ? "Unset" : acct ) );
+			}
+			return;
+		}
+
+		super.onActivityResult( requestCode, resultCode, data );
+	}
+
+	@Override
 	public void onCreate( Bundle savedInstanceState )
 	{
 		super.onCreate( savedInstanceState );
 
 		addPreferencesFromResource( R.xml.pref_general );
 
-		// SharedPreferences prefs = getPreferenceManager().getSharedPreferences();
-		// if ( prefs.getString("pref_reminder_delays", null) == null)
+		ListPreference mReminderDelays = ( ListPreference ) findPreference( "pref_reminder_delays" );
 
-		/* ListPreference mReminderDelays = ( ListPreference ) findPreference( "pref_reminder_delays" );
+		CharSequence[] reminderDelaysEntitiesValues = new String[] {"0", "1", "2", "5", "10", "15", "20", "30", "45"};
+		CharSequence[] reminderDelaysEntitiesTitle = new String[] {"Disable", "1 Minute", "2 Minutes", "5 Minutes", "10 Minutes", "15 Minutes", "20 Minutes", "30 Minutes", "45 Minutes"};
 
-		CharSequence[] entitiesValues = new String[] {"1", "5", "10", "15", "30"};
-		CharSequence[] entitiesTitle = new String[] {"1 Minute", "5 Minutes", "10 Minutes", "15 Minutes", "30 Minutes"};
-
-		mReminderDelays.setEntryValues( entitiesValues );
-		mReminderDelays.setEntries( entitiesTitle );
-
-		mReminderDelays.setOnPreferenceChangeListener( new Preference.OnPreferenceChangeListener()
-		{
-			@Override
-			public boolean onPreferenceChange( Preference preference, Object newValue )
-			{
-				// HomeActivity.instance.service.restartAllNotifications( Long.parseLong( ( String ) newValue ) * 60 * 1000 );
-				return true;
-			}
-		} ); */
+		mReminderDelays.setEntryValues( reminderDelaysEntitiesValues );
+		mReminderDelays.setEntries( reminderDelaysEntitiesTitle );
 
 		ListPreference mImageCache = ( ListPreference ) findPreference( "pref_image_cache" );
 
@@ -102,6 +121,40 @@ public class SettingsFragment extends PreferenceFragment
 			{
 				ContentManager.clearImageCache();
 				Toast.makeText( getContext(), "Image Cache Deleted", Toast.LENGTH_LONG ).show();
+				return true;
+			}
+		} );
+
+		String acct = ContentManager.getCalendarAccount();
+
+		Preference mCalendarAccount = findPreference( "pref_calendar_account" );
+		mCalendarAccount.setSummary( "Selects which account to use when adding events to the Google Calendar. Current Account: " + ( acct == null ? "Not Set!" : acct ) );
+		mCalendarAccount.setOnPreferenceClickListener( new Preference.OnPreferenceClickListener()
+		{
+			@Override
+			public boolean onPreferenceClick( Preference preference )
+			{
+				Dexter.withActivity( ContentManager.getActivity() ).withPermission( Manifest.permission.GET_ACCOUNTS ).withListener( new PermissionListener()
+				{
+					@Override
+					public void onPermissionDenied( PermissionDeniedResponse response )
+					{
+						Toast.makeText( getContext(), "You must grant the Ramencon Booklet App the GET_ACCOUNTS permission.", Toast.LENGTH_LONG ).show();
+					}
+
+					@Override
+					public void onPermissionGranted( PermissionGrantedResponse response )
+					{
+						Intent intent = AccountManager.newChooseAccountIntent( null, null, new String[] {"com.google"}, true, null, null, null, null );
+						startActivityForResult( intent, REQUEST_CHOOSE_ACCOUNT );
+					}
+
+					@Override
+					public void onPermissionRationaleShouldBeShown( PermissionRequest permission, PermissionToken token )
+					{
+
+					}
+				} ).check();
 				return true;
 			}
 		} );

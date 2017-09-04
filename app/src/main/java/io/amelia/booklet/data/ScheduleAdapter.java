@@ -21,6 +21,8 @@ import java.util.Date;
 import java.util.List;
 
 import io.amelia.R;
+import io.amelia.android.data.BoundData;
+import io.amelia.android.data.BoundDataCallback;
 import io.amelia.android.log.PLog;
 import io.amelia.booklet.ui.fragment.ScheduleViewFragment;
 
@@ -33,14 +35,15 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 	public List<ScheduleEventModel> events;
 	public List<MapsLocationModel> locations;
 	public SimpleDateFormat timeFormat;
+	private BoundDataCallback alarmOnClick;
 	private Context context;
 	private LayoutInflater inflater = null;
 
-	public ScheduleAdapter( Context context, SimpleDateFormat dateFormat, SimpleDateFormat timeFormat, List<MapsLocationModel> locations, List<ScheduleEventModel> events )
+	public ScheduleAdapter( Context context, BoundDataCallback alarmOnClick, SimpleDateFormat dateFormat, SimpleDateFormat timeFormat, List<MapsLocationModel> locations, List<ScheduleEventModel> events )
 	{
-		this.inflater = ( LayoutInflater ) context.getSystemService( Context.LAYOUT_INFLATER_SERVICE );
 		this.context = context;
-
+		this.inflater = ( LayoutInflater ) context.getSystemService( Context.LAYOUT_INFLATER_SERVICE );
+		this.alarmOnClick = alarmOnClick;
 		this.dateFormat = dateFormat;
 		this.timeFormat = timeFormat;
 		this.locations = locations;
@@ -106,7 +109,7 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 			else
 				imageButtonAlarm.setVisibility( View.VISIBLE );
 
-			if ( event.hasTimer() )
+			if ( event.hasEventId() )
 			{
 				imageButtonAlarm.setSelected( true );
 				imageButtonAlarm.setColorFilter( context.getResources().getColor( R.color.colorAccent ) );
@@ -120,10 +123,13 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 			imageButtonAlarm.setOnClickListener( new View.OnClickListener()
 			{
 				@Override
-				public void onClick( final View v )
+				public void onClick( View view )
 				{
-					event.setTimer( !v.isSelected() );
-					startAnimation( v, false );
+					BoundData boundData = new BoundData();
+					boundData.put( "position", groupPosition );
+					boundData.put( "selected", !view.isSelected() );
+					alarmOnClick.call( boundData );
+					startAnimation( view, false );
 				}
 			} );
 
@@ -185,13 +191,13 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 
 		try
 		{
-			TextView tv_title = ( TextView ) rowView.findViewById( R.id.title );
-			TextView tv_time = ( TextView ) rowView.findViewById( R.id.time );
-			TextView tv_location = ( TextView ) rowView.findViewById( R.id.location );
+			TextView eventTitle = rowView.findViewById( R.id.title );
+			TextView eventTime = rowView.findViewById( R.id.time );
+			TextView eventLocation = rowView.findViewById( R.id.location );
 
 			for ( MapsLocationModel loc : locations )
 				if ( loc.id.equals( event.location ) )
-					event.location = loc.title;
+					event.location = loc.id;
 
 			ScheduleViewFragment.adapter = this;
 
@@ -204,12 +210,12 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 				SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences( context );
 				boolean use24h = pref.getBoolean( "pref_military", false );
 
-				tv_title.setText( event.getTitle() );
+				eventTitle.setText( event.getTitle() );
 
-				String format_from = use24h ? DISPLAY_FORMAT_TIME24.format( from ) : DISPLAY_FORMAT_TIME12.format( from );
-				String format_to = use24h ? DISPLAY_FORMAT_TIME24.format( to ) : DISPLAY_FORMAT_TIME12.format( to );
-				tv_time.setText( format_from + " — " + format_to );
-				tv_location.setText( event.location );
+				String formatFrom = use24h ? DISPLAY_FORMAT_TIME24.format( from ) : DISPLAY_FORMAT_TIME12.format( from );
+				String formatTo = use24h ? DISPLAY_FORMAT_TIME24.format( to ) : DISPLAY_FORMAT_TIME12.format( to );
+				eventTime.setText( formatFrom + " — " + formatTo );
+				eventLocation.setText( event.getLocation().title );
 			}
 			catch ( ParseException e )
 			{

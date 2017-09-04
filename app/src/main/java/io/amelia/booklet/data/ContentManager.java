@@ -109,6 +109,26 @@ public class ContentManager
 		return cacheDir;
 	}
 
+	public static String getCalendarAccount()
+	{
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences( ContentManager.getApplicationContext() );
+		return prefs.getString( "pref_calendar_account", null );
+	}
+
+	public static void setCalendarAccount( String calendarAccount )
+	{
+		if ( calendarAccount == null )
+			return;
+		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences( context );
+		pref.edit().putString( "pref_calendar_account", calendarAccount ).commit();
+	}
+
+	public static int getEventReminderDelay()
+	{
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences( ContentManager.getApplicationContext() );
+		return Integer.parseInt( prefs.getString( "pref_reminder_delays", "10" ) );
+	}
+
 	public static ExecutorService getExecutorThreadPool()
 	{
 		return threadPool;
