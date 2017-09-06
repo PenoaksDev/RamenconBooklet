@@ -1,7 +1,6 @@
 package io.amelia.booklet.data;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.support.design.widget.Snackbar;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,15 +13,17 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import io.amelia.R;
-import io.amelia.android.data.ImageCache;
-import io.amelia.android.support.ACRAHelper;
+import io.amelia.android.backport.function.BiConsumer;
+import io.amelia.android.files.FileBuilder;
 import io.amelia.android.support.DateAndTime;
+import io.amelia.android.support.ExceptionHelper;
 
 public class BookletAdapter extends BaseExpandableListAdapter
 {
@@ -207,21 +208,15 @@ public class BookletAdapter extends BaseExpandableListAdapter
 		{
 			final ImageView bookletHeader = rowView.findViewById( R.id.booklet_header );
 			bookletHeader.setImageResource( R.drawable.loading_image );
-			ImageCache.cacheRemoteImage( parent.getContext(), "welcome-header-" + booklet.getId(), ImageCache.REMOTE_IMAGES_URL + booklet.getId() + "/header.png", "header.png", booklet.getId(), false, new ImageCache.ImageFoundListener()
+			new FileBuilder( "welcome-header-" + booklet.getId() ).withLocalFile( new File( booklet.getDataDirectory(), "header.png" ) ).withRemoteFile( FileBuilder.REMOTE_IMAGES_URL + booklet.getId() + "/header.png" ).withCacheTimeout( ContentManager.getImageCacheTimeout() ).withExceptionHandler( new BiConsumer<String, Exception>()
 			{
 				@Override
-				public void error( Exception exception )
+				public void accept( String id, Exception exception )
 				{
-					ACRAHelper.handleExceptionOnce( "welcome-header-" + booklet.getId(), new RuntimeException( "Failed to load image from server [images/" + booklet.getId() + "/header.png]", exception ) );
+					ExceptionHelper.handleExceptionOnce( "welcome-header-" + booklet.getId(), new RuntimeException( "Failed to load image from server [images/" + booklet.getId() + "/header.png]", exception ) );
 					bookletHeader.setImageResource( R.drawable.error );
 				}
-
-				@Override
-				public void update( Bitmap bitmap )
-				{
-					bookletHeader.setImageBitmap( bitmap );
-				}
-			}, null );
+			} ).withImageView( bookletHeader ).request().start();
 
 			TextView bookletTitle = rowView.findViewById( R.id.booklet_title );
 			bookletTitle.setText( booklet.getDataTitle() );
@@ -256,8 +251,7 @@ public class BookletAdapter extends BaseExpandableListAdapter
 		}
 		catch ( Exception e )
 		{
-			e.printStackTrace();
-			ACRAHelper.handleExceptionOnce( "booklet-adapter-" + booklet.getId(), new RuntimeException( "Failure in booklet: " + booklet.getDataTitle() + " (" + booklet.getId() + ").", e ) );
+			ExceptionHelper.handleExceptionOnce( "booklet-adapter-" + booklet.getId(), new RuntimeException( "Failure in booklet: " + booklet.getDataTitle() + " (" + booklet.getId() + ").", e ) );
 		}
 
 		return rowView;

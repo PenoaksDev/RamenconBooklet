@@ -1,11 +1,11 @@
 package io.amelia.android.support;
 
-import org.acra.ACRA;
+import com.crashlytics.android.Crashlytics;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ACRAHelper
+public class ExceptionHelper
 {
 	private static List<String> reportedExceptions = new ArrayList<>();
 
@@ -14,12 +14,12 @@ public class ACRAHelper
 		e.printStackTrace();
 
 		if ( !reportedExceptions.contains( id ) )
-			ACRA.getErrorReporter().handleException( e );
+			Crashlytics.getInstance().core.logException( e );
 
 		reportedExceptions.add( id );
 	}
 
-	private ACRAHelper()
+	private ExceptionHelper()
 	{
 
 	}

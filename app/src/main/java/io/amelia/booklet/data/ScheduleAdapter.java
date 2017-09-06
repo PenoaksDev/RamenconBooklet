@@ -13,8 +13,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.acra.ACRA;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -24,6 +22,7 @@ import io.amelia.R;
 import io.amelia.android.data.BoundData;
 import io.amelia.android.data.BoundDataCallback;
 import io.amelia.android.log.PLog;
+import io.amelia.android.support.ExceptionHelper;
 import io.amelia.booklet.ui.fragment.ScheduleViewFragment;
 
 public class ScheduleAdapter extends BaseExpandableListAdapter
@@ -235,7 +234,7 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 		}
 		catch ( Exception e )
 		{
-			ACRA.getErrorReporter().handleException( new RuntimeException( "Failure in event: " + event.title + " (" + event.id + ").", e ) );
+			ExceptionHelper.handleExceptionOnce( "event-failure-" + event.id, new RuntimeException( "Failure in event: " + event.title + " (" + event.id + ").", e ) );
 			PLog.e( e, "Failure in event: " + event.title + " (" + event.id + ")." );
 		}
 

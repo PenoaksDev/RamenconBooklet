@@ -28,6 +28,11 @@ public abstract class BaseActivity extends AppCompatActivity implements UIUpdate
 		uiUpdater = new UIUpdater( this );
 	}
 
+	public UIUpdater getUiUpdater()
+	{
+		return uiUpdater;
+	}
+
 	@Override
 	protected void onPause()
 	{

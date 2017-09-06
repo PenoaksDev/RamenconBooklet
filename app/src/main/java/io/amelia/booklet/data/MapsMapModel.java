@@ -1,6 +1,6 @@
 package io.amelia.booklet.data;
 
-import io.amelia.android.data.ImageCache;
+import io.amelia.android.files.FileBuilder;
 
 public class MapsMapModel
 {
@@ -15,6 +15,6 @@ public class MapsMapModel
 
 	public String getRemoteImage()
 	{
-		return ImageCache.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/maps/" + image;
+		return FileBuilder.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/maps/" + image;
 	}
 }

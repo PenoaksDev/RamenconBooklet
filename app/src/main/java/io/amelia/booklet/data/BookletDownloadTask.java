@@ -132,11 +132,11 @@ class BookletDownloadTask
 				OkHttpClient client = new OkHttpClient.Builder().addNetworkInterceptor( new OkHttpProgress( new OkHttpProgress.ProgressListener()
 				{
 					@Override
-					public void update( long bytesRead, long contentLength, boolean done )
+					public void update( Object tag, long bytesRead, long contentLength, boolean intermittent )
 					{
 						fileDownload.bytesRead = bytesRead;
 						fileDownload.contentLength = contentLength;
-						fileDownload.done = done;
+						fileDownload.done = intermittent;
 
 						publishProgress( fileDownload );
 					}
@@ -269,7 +269,8 @@ class BookletDownloadTask
 		protected void onProgressUpdate( FileDownload... values )
 		{
 			for ( FileDownload fileDownload : values )
-				PLog.i( "File " + fileDownload.remoteFile + " progress: " + ( 100 * ( fileDownload.bytesRead / fileDownload.contentLength ) ) + " (" + fileDownload.bytesRead + " of " + fileDownload.contentLength + " bytes)" );
+				if ( fileDownload.contentLength > 0 )
+					PLog.i( "File " + fileDownload.remoteFile + " progress: " + ( 100 * ( fileDownload.bytesRead / fileDownload.contentLength ) ) + " (" + fileDownload.bytesRead + " of " + fileDownload.contentLength + " bytes)" );
 
 			int percentDone = 0;
 			boolean isDone = true;

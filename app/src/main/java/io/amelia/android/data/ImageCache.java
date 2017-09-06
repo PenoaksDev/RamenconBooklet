@@ -6,26 +6,17 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.support.annotation.Nullable;
 
-import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.ion.Ion;
-import com.koushikdutta.ion.ProgressCallback;
-
-import org.acra.ACRA;
-
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
 import java.util.concurrent.ExecutorService;
 
 import io.amelia.android.log.PLog;
-import io.amelia.android.support.ACRAHelper;
+import io.amelia.android.support.ExceptionHelper;
 import io.amelia.android.support.Objs;
 import io.amelia.booklet.data.Booklet;
 import io.amelia.booklet.data.ContentManager;
 
 public class ImageCache
 {
-	public static final String REMOTE_IMAGES_URL = "http://booklet.dev.penoaks.com/images/";
 	private static BitmapFactory.Options options = new BitmapFactory.Options();
 
 	static
@@ -50,18 +41,18 @@ public class ImageCache
 
 	public interface ImageFoundListener
 	{
-		void error( Exception exception );
+		void error( String id, Exception exception );
 
-		void update( Bitmap bitmap );
+		void update( String id, Bitmap bitmap );
 	}
 
 	public interface ImageProgressListener
 	{
-		void finish();
+		void finish( String id );
 
-		void progress( long bytesTransferred, long totalByteCount );
+		void progress( String id, long bytesTransferred, long totalByteCount );
 
-		void start();
+		void start( String id );
 	}
 
 	public static class ImageResolveTask extends AsyncTask<Void, Void, Void>
@@ -119,7 +110,7 @@ public class ImageCache
 				}
 				catch ( Exception e )
 				{
-					ACRA.getErrorReporter().handleException( new RuntimeException( "Recoverable Exception in Image Cache", e ) );
+					ExceptionHelper.handleExceptionOnce( "image-cache-" + id, new RuntimeException( "Recoverable Exception in Image Cache", e ) );
 				}
 
 				if ( System.currentTimeMillis() - dest.lastModified() > imageCacheTimeout )
@@ -134,7 +125,7 @@ public class ImageCache
 
 				PLog.i( "Loading image " + id + " from uri " + remoteUrl.toString() );
 
-				Ion.with( context ).load( remoteUrl ).progress( new ProgressCallback()
+				/* Ion.with( context ).load( remoteUrl ).progress( new ProgressCallback()
 				{
 					@Override
 					public void onProgress( long bytesTransferred, long totalByteCount )
@@ -176,7 +167,7 @@ public class ImageCache
 								}
 								catch ( Exception exception )
 								{
-									ACRAHelper.handleExceptionOnce( "IMAGE_CACHE_" + id, new RuntimeException( "Recoverable Exception", exception ) );
+									ExceptionHelper.handleExceptionOnce( "IMAGE_CACHE_" + id, new RuntimeException( "Recoverable Exception", exception ) );
 								}
 
 							resultBitmap = bitmap;
@@ -187,7 +178,7 @@ public class ImageCache
 
 						waiting = false;
 					}
-				} );
+				} ); */
 
 				while ( waiting )
 				{
@@ -210,7 +201,7 @@ public class ImageCache
 			super.onPostExecute( aVoid );
 
 			if ( progressListener != null )
-				progressListener.finish();
+				progressListener.finish( id );
 		}
 
 		@Override
@@ -219,7 +210,7 @@ public class ImageCache
 			super.onPreExecute();
 
 			if ( progressListener != null )
-				progressListener.start();
+				progressListener.start( id );
 		}
 
 		@Override
@@ -231,19 +222,19 @@ public class ImageCache
 			{
 				if ( resultBitmap != null )
 				{
-					foundListener.update( resultBitmap );
+					foundListener.update( id, resultBitmap );
 					resultBitmap = null;
 				}
 
 				if ( resultError != null )
 				{
-					foundListener.error( resultError );
+					foundListener.error( id, resultError );
 					resultError = null;
 				}
 			}
 
 			if ( progressListener != null )
-				progressListener.progress( progressBytesTransferred, progressTotalByteCount );
+				progressListener.progress( id, progressBytesTransferred, progressTotalByteCount );
 		}
 
 	}

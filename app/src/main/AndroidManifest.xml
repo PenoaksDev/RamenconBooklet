@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="io.amelia">
+<manifest
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        package="io.amelia">
 
     <!-- <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/> -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -21,6 +22,9 @@
         <meta-data
                 android:name="com.facebook.sdk.ApplicationId"
                 android:value="@string/facebook_app_id"/>
+        <meta-data
+                android:name="io.fabric.ApiKey"
+                android:value="c064ba195e4b09c71e39f84dfa6875db6ec81b68"/>
 
         <service android:name="io.amelia.booklet.FirebaseService">
             <intent-filter>

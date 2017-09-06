@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
+import com.crashlytics.android.Crashlytics;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
@@ -32,6 +34,16 @@ public class ContentManager
 	private static boolean contentManagerReady = false;
 	private static Context context;
 	private static BoundData userData;
+
+	static void checkActiveBooklet()
+	{
+		if ( activeBooklet == null )
+		{
+			SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences( context );
+			String activeBookletId = pref.getString( "activeBookletId", null );
+			activeBooklet = Booklet.getBooklet( activeBookletId );
+		}
+	}
 
 	public static void clearImageCache()
 	{
@@ -64,13 +76,9 @@ public class ContentManager
 
 	public static Booklet getActiveBooklet()
 	{
+		checkActiveBooklet();
 		if ( activeBooklet == null )
-		{
-			SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences( context );
-			String activeBookletId = pref.getString( "activeBookletId", null );
-			activeBooklet = Booklet.getBooklet( activeBookletId );
-		}
-
+			throw new IllegalStateException( "Active Booklet is unset!" );
 		return activeBooklet;
 	}
 
@@ -79,6 +87,12 @@ public class ContentManager
 		activeBooklet = null;
 		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences( context );
 		pref.edit().putString( "activeBookletId", bookletId ).commit();
+	}
+
+	public static Booklet getActiveBookletSafe()
+	{
+		checkActiveBooklet();
+		return activeBooklet;
 	}
 
 	public static BaseActivity getActivity()
@@ -121,6 +135,7 @@ public class ContentManager
 			return;
 		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences( context );
 		pref.edit().putString( "pref_calendar_account", calendarAccount ).commit();
+		Crashlytics.setUserEmail( calendarAccount );
 	}
 
 	public static int getEventReminderDelay()
@@ -183,6 +198,12 @@ public class ContentManager
 	public static File getUserDataFile()
 	{
 		return new File( cacheDir, "user.json" );
+	}
+
+	public static boolean hasActiveBooklet()
+	{
+		checkActiveBooklet();
+		return activeBooklet != null;
 	}
 
 	public static boolean isBookletsRefreshing()

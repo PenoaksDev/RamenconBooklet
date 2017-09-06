@@ -1,6 +1,5 @@
 package io.amelia.booklet.ui.fragment;
 
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -10,37 +9,23 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import org.acra.ACRA;
+import java.io.File;
 
 import io.amelia.R;
-import io.amelia.android.data.ImageCache;
-import io.amelia.android.log.PLog;
+import io.amelia.android.backport.function.BiConsumer;
+import io.amelia.android.files.FileBuilder;
+import io.amelia.android.files.FileResult;
+import io.amelia.android.support.ExceptionHelper;
 import io.amelia.android.ui.widget.TouchImageView;
+import io.amelia.booklet.data.ContentManager;
 import io.amelia.booklet.data.GuidePageModel;
 
-public class GuideChildFragment extends Fragment implements ImageCache.ImageFoundListener, ImageCache.ImageProgressListener
+public class GuideChildFragment extends Fragment
 {
 	private GuidePageModel guidePageModel;
-	private TouchImageView image;
+	// private TouchImageView image;
 	private boolean isRefresh;
-	private ProgressBar progressBar = null;
-
-	@Override
-	public void error( Exception exception )
-	{
-		if ( image != null )
-			image.setImageResource( R.drawable.error );
-
-		ACRA.getErrorReporter().handleException( new RuntimeException( "Recoverable Exception", exception ) );
-		Toast.makeText( getContext(), "We had a problem loading the guide. The problem was reported to the developer.", Toast.LENGTH_LONG ).show();
-	}
-
-	@Override
-	public void finish()
-	{
-		if ( progressBar != null )
-			progressBar.setVisibility( View.GONE );
-	}
+	// private ProgressBar progressBar = null;
 
 	@Override
 	public void onCreate( Bundle savedInstanceState )
@@ -55,16 +40,7 @@ public class GuideChildFragment extends Fragment implements ImageCache.ImageFoun
 	@Override
 	public View onCreateView( LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState )
 	{
-		View view = inflater.inflate( R.layout.fragment_guide_child, container, false );
-
-		progressBar = view.findViewById( R.id.guide_progressbar );
-		progressBar.setVisibility( View.VISIBLE );
-
-		image = view.findViewById( R.id.guide_image );
-		image.setMaxZoom( 4 );
-		image.setScaleType( ImageView.ScaleType.MATRIX );
-
-		return view;
+		return inflater.inflate( R.layout.fragment_guide_child, container, false );
 	}
 
 	@Override
@@ -72,38 +48,65 @@ public class GuideChildFragment extends Fragment implements ImageCache.ImageFoun
 	{
 		super.onStart();
 
+		TouchImageView image = getView().findViewById( R.id.guide_image );
+		image.setMaxZoom( 4 );
+		image.setScaleType( ImageView.ScaleType.MATRIX );
+
+		ProgressBar progressBar = getView().findViewById( R.id.guide_progressbar );
+		progressBar.setVisibility( View.VISIBLE );
+
 		if ( guidePageModel.image == null )
 			image.setImageResource( R.drawable.noimagefound );
 		else
 		{
 			image.setImageResource( R.drawable.loading_image );
-			ImageCache.cacheRemoteImage( getActivity(), "guide-" + guidePageModel.pageNo, guidePageModel.getRemoteImage(), guidePageModel.getLocalImage(), null, isRefresh, this, this );
-		}
-	}
+			try
+			{
+				new FileBuilder( "guide-image-" + guidePageModel.pageNo ).withLocalFile( new File( ContentManager.getActiveBooklet().getDataDirectory(), guidePageModel.getLocalImage() ) ).withRemoteFile( guidePageModel.getRemoteImage() ).withExceptionHandler( new BiConsumer<String, Exception>()
+				{
+					@Override
+					public void accept( String id, Exception exception )
+					{
+						image.setImageResource( R.drawable.error );
 
-	@Override
-	public void progress( long bytesTransferred, long totalByteCount )
-	{
-		if ( progressBar != null )
-		{
-			progressBar.setMax( ( int ) totalByteCount );
-			progressBar.setProgress( ( int ) bytesTransferred );
-		}
-	}
+						ExceptionHelper.handleExceptionOnce( "guest-view-image-error-" + id, new RuntimeException( "Recoverable Exception", exception ) );
+						Toast.makeText( getContext(), "We had a problem loading the guest image. The problem was reported to the developer.", Toast.LENGTH_LONG ).show();
+					}
+				} ).withProgressListener( new FileBuilder.ProgressListener()
+				{
+					@Override
+					public void finish( FileResult result )
+					{
+						if ( progressBar != null )
+							progressBar.setVisibility( View.GONE );
+					}
 
-	@Override
-	public void start()
-	{
-		if ( progressBar != null )
-		{
-			progressBar.setProgress( 0 );
-			progressBar.setVisibility( View.VISIBLE );
-		}
-	}
+					@Override
+					public void progress( FileResult result, long bytesTransferred, long totalByteCount, boolean indeterminate )
+					{
+						if ( progressBar != null )
+						{
+							progressBar.setMax( ( int ) totalByteCount );
+							progressBar.setProgress( ( int ) bytesTransferred );
+							progressBar.setIndeterminate( indeterminate );
+						}
+					}
 
-	@Override
-	public void update( Bitmap bitmap )
-	{
-		image.setImageBitmap( bitmap );
+					@Override
+					public void start( FileResult result )
+					{
+						if ( progressBar != null )
+						{
+							progressBar.setProgress( 0 );
+							progressBar.setVisibility( View.VISIBLE );
+						}
+					}
+				} ).withImageView( image ).forceDownload( isRefresh ).request().start();
+			}
+			catch ( FileBuilder.FileBuilderException e )
+			{
+				ExceptionHelper.handleExceptionOnce( "guide-page-" + guidePageModel.pageNo, new RuntimeException( "Failure in guide: " + guidePageModel.title + " // " + guidePageModel.image + ".", e ) );
+			}
+		}
 	}
 }

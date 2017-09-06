@@ -1,6 +1,7 @@
 package io.amelia.booklet.data;
 
 import android.content.Context;
+import android.support.v4.content.res.ResourcesCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -85,7 +86,7 @@ public class ScheduleDayAdapter extends BaseAdapter
 		assert dayImage != null;
 
 		if ( position == selectedPosition )
-			view.setBackgroundColor( 0xFFff4081 );
+			view.setBackgroundColor( ResourcesCompat.getColor( context.getResources(), R.color.colorAccent, null ) );
 
 		if ( position == 0 )
 		{
@@ -165,7 +166,7 @@ public class ScheduleDayAdapter extends BaseAdapter
 			if ( i != position )
 				mDayView.getChildAt( i ).setBackgroundColor( 0x00000000 );
 
-		mDayView.getChildAt( position ).setBackgroundColor( 0xFFff4081 );
+		mDayView.getChildAt( position ).setBackgroundColor( ResourcesCompat.getColor( context.getResources(), R.color.colorAccent, null ) );
 
 		if ( mDateDisplay != null && title != null )
 			mDateDisplay.setText( title );

@@ -1,6 +1,5 @@
 package io.amelia.booklet.ui.fragment;
 
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -10,40 +9,23 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import org.acra.ACRA;
-
-import java.util.List;
+import java.io.File;
 
 import io.amelia.R;
-import io.amelia.android.data.ImageCache;
+import io.amelia.android.backport.function.BiConsumer;
+import io.amelia.android.files.FileBuilder;
+import io.amelia.android.files.FileResult;
+import io.amelia.android.support.ExceptionHelper;
 import io.amelia.android.ui.widget.TouchImageView;
 import io.amelia.booklet.data.ContentManager;
 import io.amelia.booklet.data.MapsMapModel;
 
-public class MapsChildFragment extends Fragment implements ImageCache.ImageFoundListener, ImageCache.ImageProgressListener
+public class MapsChildFragment extends Fragment
 {
-	public static List<MapsMapModel> maps;
-	private TouchImageView image;
+	// private TouchImageView image;
 	private boolean isRefresh;
-	private MapsMapModel map;
-	private ProgressBar progressBar = null;
-
-	@Override
-	public void error( Exception exception )
-	{
-		if ( image != null )
-			image.setImageResource( R.drawable.error );
-
-		ACRA.getErrorReporter().handleException( new RuntimeException( "Recoverable Exception", exception ) );
-		Toast.makeText( getContext(), "We had a problem loading the map. The problem was reported to the developer.", Toast.LENGTH_LONG ).show();
-	}
-
-	@Override
-	public void finish()
-	{
-		if ( progressBar != null )
-			progressBar.setVisibility( View.GONE );
-	}
+	private MapsMapModel mapsMapModel;
+	// private ProgressBar progressBar = null;
 
 	@Override
 	public void onCreate( Bundle savedInstanceState )
@@ -51,23 +33,14 @@ public class MapsChildFragment extends Fragment implements ImageCache.ImageFound
 		super.onCreate( savedInstanceState );
 
 		assert getArguments() != null;
-		map = maps.get( getArguments().getInt( "index" ) );
+		mapsMapModel = MapsFragment.instance().getHandler().mapsMapModels.get( getArguments().getInt( "index" ) );
 		isRefresh = getArguments().getBoolean( "isRefresh", false );
 	}
 
 	@Override
 	public View onCreateView( LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState )
 	{
-		View view = inflater.inflate( R.layout.fragment_maps_child, container, false );
-
-		image = view.findViewById( R.id.maps_image );
-		progressBar = view.findViewById( R.id.maps_progressbar );
-		progressBar.setVisibility( View.VISIBLE );
-
-		image.setMaxZoom( 4 );
-		image.setScaleType( ImageView.ScaleType.MATRIX );
-
-		return view;
+		return inflater.inflate( R.layout.fragment_maps_child, container, false );
 	}
 
 	@Override
@@ -75,38 +48,65 @@ public class MapsChildFragment extends Fragment implements ImageCache.ImageFound
 	{
 		super.onStart();
 
-		if ( map.image == null )
+		ProgressBar progressBar = getView().findViewById( R.id.maps_progressbar );
+		progressBar.setVisibility( View.VISIBLE );
+
+		TouchImageView image = getView().findViewById( R.id.maps_image );
+		image.setMaxZoom( 4 );
+		image.setScaleType( ImageView.ScaleType.MATRIX );
+
+		if ( mapsMapModel.image == null )
 			image.setImageResource( R.drawable.noimagefound );
 		else
 		{
 			image.setImageResource( R.drawable.loading_image );
-			ImageCache.cacheRemoteImage( getActivity(), "map-" + map.id, ImageCache.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/maps/" + map.image, "mapsMapModels/" + map.image, null, isRefresh, this, this );
-		}
-	}
+			try
+			{
+				new FileBuilder( "map-image-" + mapsMapModel.id ).withLocalFile( new File( ContentManager.getActiveBooklet().getDataDirectory(), mapsMapModel.getLocalImage() ) ).withRemoteFile( mapsMapModel.getRemoteImage() ).withExceptionHandler( new BiConsumer<String, Exception>()
+				{
+					@Override
+					public void accept( String id, Exception exception )
+					{
+						image.setImageResource( R.drawable.error );
 
-	@Override
-	public void progress( long bytesTransferred, long totalByteCount )
-	{
-		if ( progressBar != null )
-		{
-			progressBar.setMax( ( int ) totalByteCount );
-			progressBar.setProgress( ( int ) bytesTransferred );
-		}
-	}
+						ExceptionHelper.handleExceptionOnce( "map-image-error-" + id, new RuntimeException( "Recoverable Exception", exception ) );
+						Toast.makeText( getContext(), "We had a problem loading the map. The problem was reported to the developer.", Toast.LENGTH_LONG ).show();
+					}
+				} ).withProgressListener( new FileBuilder.ProgressListener()
+				{
+					@Override
+					public void finish( FileResult result )
+					{
+						if ( progressBar != null )
+							progressBar.setVisibility( View.GONE );
+					}
 
-	@Override
-	public void start()
-	{
-		if ( progressBar != null )
-		{
-			progressBar.setProgress( 0 );
-			progressBar.setVisibility( View.VISIBLE );
-		}
-	}
+					@Override
+					public void progress( FileResult result, long bytesTransferred, long totalByteCount, boolean indeterminate )
+					{
+						if ( progressBar != null )
+						{
+							progressBar.setMax( ( int ) totalByteCount );
+							progressBar.setProgress( ( int ) bytesTransferred );
+							progressBar.setIndeterminate( indeterminate );
+						}
+					}
 
-	@Override
-	public void update( Bitmap bitmap )
-	{
-		image.setImageBitmap( bitmap );
+					@Override
+					public void start( FileResult result )
+					{
+						if ( progressBar != null )
+						{
+							progressBar.setProgress( 0 );
+							progressBar.setVisibility( View.VISIBLE );
+						}
+					}
+				} ).withImageView( image ).forceDownload( isRefresh ).request().start();
+			}
+			catch ( FileBuilder.FileBuilderException e )
+			{
+				ExceptionHelper.handleExceptionOnce( "map-child-" + mapsMapModel.id, new RuntimeException( "Failure in map: " + mapsMapModel.title + " // " + mapsMapModel.image + ".", e ) );
+			}
+		}
 	}
 }

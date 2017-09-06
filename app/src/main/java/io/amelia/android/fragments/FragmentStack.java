@@ -305,7 +305,7 @@ public class FragmentStack
 
 		public void loadState()
 		{
-			Log.i( "APP", "Loading " + fragment.getClass().getSimpleName() + " -> " + state );
+			// Log.i( "APP", "Loading " + fragment.getClass().getSimpleName() + " -> " + state );
 
 			if ( state != null && fragment != null && fragment instanceof PersistentFragment )
 				( ( PersistentFragment ) fragment ).loadState( state );
@@ -321,7 +321,7 @@ public class FragmentStack
 			state.putSerializable( "fragmentClass", clz );
 			state.putString( "visible", isVisible() ? "true" : "false" );
 
-			Log.i( "APP", "Storing " + fragment.getClass().getSimpleName() + " -> " + state );
+			// Log.i( "APP", "Storing " + fragment.getClass().getSimpleName() + " -> " + state );
 
 			return state;
 		}

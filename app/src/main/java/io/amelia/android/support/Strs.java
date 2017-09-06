@@ -9,8 +9,10 @@
  */
 package io.amelia.android.support;
 
+import android.support.annotation.NonNull;
 import android.util.Log;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,24 +37,18 @@ import java.util.regex.Pattern;
 
 public class Strs
 {
-	public static String fixQuotes( String var )
+	/**
+	 * Returns true if either array contains elements from the other
+	 */
+	public static boolean comparable( Object[] array1, Object[] array2 )
 	{
-		try
-		{
-			var = var.replaceAll( "\\\\\"", "\"" );
-			var = var.replaceAll( "\\\\'", "'" );
-
-			if ( var.startsWith( "\"" ) || var.startsWith( "'" ) )
-				var = var.substring( 1 );
-			if ( var.endsWith( "\"" ) || var.endsWith( "'" ) )
-				var = var.substring( 0, var.length() - 1 );
-		}
-		catch ( Exception ignore )
-		{
-
-		}
-
-		return var;
+		if ( array1.length == 0 && array2.length == 0 )
+			return true;
+		for ( Object obj : array1 )
+			for ( Object obj2 : array2 )
+				if ( obj.equals( obj2 ) )
+					return true;
+		return false;
 	}
 
 	public static boolean containsValidChars( String ref )
@@ -85,9 +81,50 @@ public class Strs
 		return collection;
 	}
 
-	public static Map<String, String> wrap( Map<String, String> map )
+	public static byte[] decodeDefault( @NonNull String str )
 	{
-		return wrap( map, '`', '\'' );
+		return str.getBytes( Charset.defaultCharset() );
+	}
+
+	public static byte[] decodeUtf8( @NonNull String str )
+	{
+		return str.getBytes( Charset.forName( "utf8" ) );
+	}
+
+	public static String encodeDefault( byte[] bytes )
+	{
+		return new String( bytes, Charset.defaultCharset() );
+	}
+
+	public static String encodeUtf8( byte[] bytes )
+	{
+		return new String( bytes, Charset.forName( "utf8" ) );
+	}
+
+	public static String fixQuotes( String var )
+	{
+		try
+		{
+			var = var.replaceAll( "\\\\\"", "\"" );
+			var = var.replaceAll( "\\\\'", "'" );
+
+			if ( var.startsWith( "\"" ) || var.startsWith( "'" ) )
+				var = var.substring( 1 );
+			if ( var.endsWith( "\"" ) || var.endsWith( "'" ) )
+				var = var.substring( 0, var.length() - 1 );
+		}
+		catch ( Exception ignore )
+		{
+
+		}
+
+		return var;
+	}
+
+	public static boolean isCamelCase( String var )
+	{
+		Objs.notNull( var );
+		return var.matches( "[a-z0-9]+(?:[A-Z]{1,2}[a-z0-9]+)*" );
 	}
 
 	/**
@@ -389,6 +426,11 @@ public class Strs
 		return normalizedText.substring( index ).trim();
 	}
 
+	public static Map<String, String> wrap( Map<String, String> map )
+	{
+		return wrap( map, '`', '\'' );
+	}
+
 	public static Collection<String> wrap( Collection<String> col )
 	{
 		return wrap( col, '`' );
@@ -492,26 +534,6 @@ public class Strs
 	public static String wrap( String str, char wrap )
 	{
 		return String.format( "%s%s%s", wrap, str, wrap );
-	}
-
-	public static boolean isCamelCase( String var )
-	{
-		Objs.notNull( var );
-		return var.matches( "[a-z0-9]+(?:[A-Z]{1,2}[a-z0-9]+)*" );
-	}
-
-	/**
-	 * Returns true if either array contains elements from the other
-	 */
-	public static boolean comparable( Object[] array1, Object[] array2 )
-	{
-		if ( array1.length == 0 && array2.length == 0 )
-			return true;
-		for ( Object obj : array1 )
-			for ( Object obj2 : array2 )
-				if ( obj.equals( obj2 ) )
-					return true;
-		return false;
 	}
 
 	private Strs()

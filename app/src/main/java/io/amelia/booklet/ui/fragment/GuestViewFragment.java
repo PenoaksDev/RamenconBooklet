@@ -1,6 +1,5 @@
 package io.amelia.booklet.ui.fragment;
 
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -11,16 +10,18 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.acra.ACRA;
+import java.io.File;
 
 import io.amelia.R;
-import io.amelia.android.data.ImageCache;
+import io.amelia.android.backport.function.BiConsumer;
+import io.amelia.android.files.FileBuilder;
+import io.amelia.android.support.ExceptionHelper;
 import io.amelia.booklet.data.ContentManager;
 import io.amelia.booklet.data.GuestsGroupModel;
 import io.amelia.booklet.data.GuestsHandler;
 import io.amelia.booklet.data.GuestsModel;
 
-public class GuestViewFragment extends Fragment implements ImageCache.ImageFoundListener
+public class GuestViewFragment extends Fragment
 {
 	public static Fragment instance( String groupId, String guestId )
 	{
@@ -33,17 +34,7 @@ public class GuestViewFragment extends Fragment implements ImageCache.ImageFound
 		return frag;
 	}
 
-	private ImageView image;
-
-	@Override
-	public void error( Exception exception )
-	{
-		if ( image != null )
-			image.setImageResource( R.drawable.error );
-
-		ACRA.getErrorReporter().handleException( new RuntimeException( "Recoverable Exception", exception ) );
-		Toast.makeText( getContext(), "We had a problem loading the guest image. The problem was reported to the developer.", Toast.LENGTH_LONG ).show();
-	}
+	// private ImageView image;
 
 	@Override
 	public View onCreateView( LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState )
@@ -54,36 +45,51 @@ public class GuestViewFragment extends Fragment implements ImageCache.ImageFound
 
 		Bundle bundle = getArguments();
 
-		assert bundle != null;
-
 		GuestsGroupModel listGroup = ContentManager.getActiveBooklet().getSectionHandler( GuestsHandler.class ).getModel( bundle.getString( "groupId" ) );
 		GuestsModel guest = listGroup.getModel( bundle.getString( "guestId" ) );
 
-		image = root.findViewById( R.id.guest_view_image );
-		TextView tv_title = root.findViewById( R.id.guest_view_title );
-		// TextView tv_desc =  root.findViewById(R.id.guest_view_description);
-		WebView tv_desc = root.findViewById( R.id.guest_view_description );
+		ImageView image = root.findViewById( R.id.guest_view_image );
 
-		tv_title.setText( guest.getTitle() );
-		//tv_desc.setText(guest.getDescription());
-		tv_desc.setBackgroundColor( root.getDrawingCacheBackgroundColor() );
-		tv_desc.loadData( "<p style=\"text-align: justified;\">" + guest.getDescription() + "</p>", "text/html", "UTF-8" );
-
-		if ( guest.image == null )
-			image.setImageResource( R.drawable.noimagefound );
-		else
+		try
 		{
-			image.setImageResource( R.drawable.loading_image );
-			ImageCache.cacheRemoteImage( getActivity(), "guest-" + guest.id, ImageCache.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/guests/" + listGroup.id + "/" + guest.image, "guests/" + listGroup.id + "/" + guest.image, null, false, this, null );
+			TextView textViewTitle = root.findViewById( R.id.guest_view_title );
+			textViewTitle.setText( guest.getTitle() );
+
+			WebView textViewDescription = root.findViewById( R.id.guest_view_description );
+			textViewDescription.setBackgroundColor( root.getDrawingCacheBackgroundColor() );
+			textViewDescription.loadData( "<p style=\"text-align: justified;\">" + guest.getDescription() + "</p>", "text/html", "UTF-8" );
+
+			if ( guest.image == null )
+				image.setImageResource( R.drawable.noimagefound );
+			else
+			{
+				image.setImageResource( R.drawable.loading_image );
+				new FileBuilder( "guest-view-image-" + guest.id ).withLocalFile( new File( ContentManager.getActiveBooklet().getDataDirectory(), "guests/" + listGroup.id + "/" + guest.image ) ).withRemoteFile( FileBuilder.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/guests/" + listGroup.id + "/" + guest.image ).withExceptionHandler( new BiConsumer<String, Exception>()
+				{
+					@Override
+					public void accept( String id, Exception exception )
+					{
+						image.setImageResource( R.drawable.error );
+
+						ExceptionHelper.handleExceptionOnce( "guest-view-image-error-" + id, new RuntimeException( "Recoverable Exception", exception ) );
+						Toast.makeText( getContext(), "We had a problem loading the guest image. The problem was reported to the developer.", Toast.LENGTH_LONG ).show();
+					}
+				} ).withImageView( image ).request().start();
+			}
+		}
+		catch ( Exception e )
+		{
+			image.setImageResource( R.drawable.error );
+			ExceptionHelper.handleExceptionOnce( "guest-view-image-" + guest.id, new RuntimeException( "Failure in guest view: " + guest.title + " (" + guest.id + ").", e ) );
+			Toast.makeText( getContext(), "We had a problem loading the guest image. The problem was reported to the developer.", Toast.LENGTH_LONG ).show();
 		}
 
 		return root;
 	}
 
 	@Override
-	public void update( Bitmap bitmap )
+	public void onResume()
 	{
-		if ( image != null )
-			image.setImageBitmap( bitmap );
+		super.onResume();
 	}
 }

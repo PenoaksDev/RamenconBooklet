@@ -26,7 +26,7 @@ import io.amelia.R;
 import io.amelia.android.data.BoundData;
 import io.amelia.android.fragments.FragmentStack;
 import io.amelia.android.log.PLog;
-import io.amelia.android.support.ACRAHelper;
+import io.amelia.android.support.ExceptionHelper;
 import io.amelia.android.support.UIUpdater;
 import io.amelia.booklet.data.Booklet;
 import io.amelia.booklet.data.ContentManager;
@@ -99,7 +99,7 @@ public class ContentActivity extends BaseActivity implements NavigationView.OnNa
 
 		super.onCreate( savedInstanceState );
 
-		if ( ContentManager.getActiveBooklet() == null )
+		if ( !ContentManager.hasActiveBooklet() )
 		{
 			startActivity( new Intent( this, BootActivity.class ) );
 			return;
@@ -126,23 +126,24 @@ public class ContentActivity extends BaseActivity implements NavigationView.OnNa
 
 		Booklet booklet = ContentManager.getActiveBooklet();
 
-		menu.findItem( R.id.nav_welcome ).setIcon( new IconDrawable( this, FontAwesomeIcons.fa_star_o ).colorRes( R.color.colorAccent ).actionBarSize() );
+		int dpSize = 18;
 
+		menu.findItem( R.id.nav_welcome ).setIcon( new IconDrawable( this, FontAwesomeIcons.fa_star_o ).colorRes( R.color.colorAccent ).sizeDp( dpSize ) );
 		MenuItem itemSchedule = menu.findItem( R.id.nav_schedule );
 		itemSchedule.setVisible( booklet.hasSection( "schedule" ) );
-		itemSchedule.setIcon( new IconDrawable( this, FontAwesomeIcons.fa_clock_o ).colorRes( R.color.colorAccent ).actionBarSize() );
+		itemSchedule.setIcon( new IconDrawable( this, FontAwesomeIcons.fa_clock_o ).colorRes( R.color.colorAccent ).sizeDp( dpSize ) );
 		MenuItem itemGuests = menu.findItem( R.id.nav_guests );
 		itemGuests.setVisible( booklet.hasSection( "guests" ) );
-		itemGuests.setIcon( new IconDrawable( this, FontAwesomeIcons.fa_users ).colorRes( R.color.colorAccent ).actionBarSize() );
+		itemGuests.setIcon( new IconDrawable( this, FontAwesomeIcons.fa_users ).colorRes( R.color.colorAccent ).sizeDp( dpSize ) );
 		MenuItem itemVendors = menu.findItem( R.id.nav_vendors );
 		itemVendors.setVisible( booklet.hasSection( "vendors" ) );
-		itemVendors.setIcon( new IconDrawable( this, FontAwesomeIcons.fa_archive ).colorRes( R.color.colorAccent ).actionBarSize() );
+		itemVendors.setIcon( new IconDrawable( this, FontAwesomeIcons.fa_archive ).colorRes( R.color.colorAccent ).sizeDp( dpSize ) );
 		MenuItem itemMaps = menu.findItem( R.id.nav_maps );
 		itemMaps.setVisible( booklet.hasSection( "maps" ) );
-		itemMaps.setIcon( new IconDrawable( this, FontAwesomeIcons.fa_map_o ).colorRes( R.color.colorAccent ).actionBarSize() );
+		itemMaps.setIcon( new IconDrawable( this, FontAwesomeIcons.fa_map_o ).colorRes( R.color.colorAccent ).sizeDp( dpSize ) );
 		MenuItem itemGuide = menu.findItem( R.id.nav_guide );
 		itemGuide.setVisible( booklet.hasSection( "guide" ) );
-		itemGuide.setIcon( new IconDrawable( this, FontAwesomeIcons.fa_book ).colorRes( R.color.colorAccent ).actionBarSize() );
+		itemGuide.setIcon( new IconDrawable( this, FontAwesomeIcons.fa_book ).colorRes( R.color.colorAccent ).sizeDp( dpSize ) );
 
 		final ActionBarDrawerToggle toggle = new ActionBarDrawerToggle( this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close );
 		// toggle.getDrawerArrowDrawable().setColor( android.graphics.Color.argb( 0xFF, 0xA6, 0x00, 0xFF ) );
@@ -208,7 +209,7 @@ public class ContentActivity extends BaseActivity implements NavigationView.OnNa
 			}
 			catch ( RuntimeException e )
 			{
-				ACRAHelper.handleExceptionOnce( "welcome-fragment-exception", e );
+				ExceptionHelper.handleExceptionOnce( "welcome-fragment-exception", e );
 				startActivity( new Intent( this, BootActivity.class ) );
 			}
 		else

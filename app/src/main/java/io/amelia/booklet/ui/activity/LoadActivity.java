@@ -41,7 +41,7 @@ public class LoadActivity extends BaseActivity
 			@Override
 			public void onFinish()
 			{
-				Booklet booklet = ContentManager.getActiveBooklet();
+				Booklet booklet = ContentManager.getActiveBookletSafe();
 
 				if ( booklet != null && booklet.getState() == BookletState.READY )
 				{

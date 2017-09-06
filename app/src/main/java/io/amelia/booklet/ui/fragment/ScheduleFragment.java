@@ -46,7 +46,7 @@ import io.amelia.R;
 import io.amelia.android.data.BoundData;
 import io.amelia.android.data.BoundDataCallback;
 import io.amelia.android.fragments.PersistentFragment;
-import io.amelia.android.support.ACRAHelper;
+import io.amelia.android.support.ExceptionHelper;
 import io.amelia.android.support.DateAndTime;
 import io.amelia.android.support.LibAndroid;
 import io.amelia.android.support.Objs;
@@ -444,7 +444,7 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 							}
 							catch ( Exception e )
 							{
-								ACRAHelper.handleExceptionOnce( "event-alarm-" + event.id, e );
+								ExceptionHelper.handleExceptionOnce( "event-alarm-" + event.id, e );
 							}
 						}
 					} ).check();
@@ -462,7 +462,7 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 		}
 		catch ( Exception e )
 		{
-			ACRAHelper.handleExceptionOnce( "booklet-" + ContentManager.getActiveBooklet().getId() + "-loading", new RuntimeException( "Unexpected Exception.", e ) );
+			ExceptionHelper.handleExceptionOnce( "booklet-" + ContentManager.getActiveBooklet().getId() + "-loading", new RuntimeException( "Unexpected Exception.", e ) );
 			( ( BaseActivity ) getActivity() ).uiShowErrorDialog( "We had a problem loading the schedule. The problem has been reported to the developer. Please try deleting and re-downloading the booklet." );
 		}
 	}

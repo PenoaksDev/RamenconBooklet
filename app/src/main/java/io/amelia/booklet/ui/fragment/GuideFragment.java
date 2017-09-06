@@ -5,6 +5,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.view.ViewPager;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -22,7 +23,7 @@ import java.util.List;
 import io.amelia.R;
 import io.amelia.android.data.BoundData;
 import io.amelia.android.fragments.PersistentFragment;
-import io.amelia.android.support.ACRAHelper;
+import io.amelia.android.support.ExceptionHelper;
 import io.amelia.android.support.Objs;
 import io.amelia.android.ui.widget.TouchImageView;
 import io.amelia.booklet.data.ContentFragment;
@@ -110,7 +111,7 @@ public class GuideFragment extends ContentFragment<GuideHandler> implements Pers
 				{
 					View child = view.getChildAt( selectedPosition - firstVisibleItem );
 					if ( child != null )
-						child.setBackgroundColor( 0xFFff4081 );
+						child.setBackgroundColor( ResourcesCompat.getColor( getResources(), R.color.colorAccent, null ) );
 				}
 
 				// PLog.i( "Scroll Notice: " + firstVisibleItem + " // " + visibleItemCount + " // " + totalItemCount + " // " + selectedPosition );
@@ -156,7 +157,7 @@ public class GuideFragment extends ContentFragment<GuideHandler> implements Pers
 				}
 				catch ( Exception e )
 				{
-					ACRAHelper.handleExceptionOnce( "guide-booklet-page-scroll", e );
+					ExceptionHelper.handleExceptionOnce( "guide-booklet-page-scroll", e );
 					mTwoWayView.setSelection( position );
 				}
 
@@ -198,7 +199,7 @@ public class GuideFragment extends ContentFragment<GuideHandler> implements Pers
 			guidePageLabel.setLayoutParams( new TwoWayView.LayoutParams( ViewPager.LayoutParams.WRAP_CONTENT, ViewPager.LayoutParams.WRAP_CONTENT ) );
 
 			if ( position == selectedPosition )
-				guidePageLabel.setBackgroundColor( 0xFFff4081 );
+				guidePageLabel.setBackgroundColor( ResourcesCompat.getColor( getResources(), R.color.colorAccent, null ) );
 
 			guidePageLabel.setOnClickListener( new View.OnClickListener()
 			{

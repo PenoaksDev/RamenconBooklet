@@ -1,7 +1,6 @@
 package io.amelia.booklet.data;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,11 +8,13 @@ import android.widget.BaseExpandableListAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.io.File;
 import java.util.List;
 
 import io.amelia.R;
-import io.amelia.android.data.ImageCache;
-import io.amelia.android.support.ACRAHelper;
+import io.amelia.android.backport.function.BiConsumer;
+import io.amelia.android.files.FileBuilder;
+import io.amelia.android.support.ExceptionHelper;
 import io.amelia.booklet.ui.activity.ContentActivity;
 import io.amelia.booklet.ui.fragment.GuestViewFragment;
 
@@ -52,43 +53,45 @@ public class GuestsAdapter extends BaseExpandableListAdapter
 		final GuestsGroupModel group = list.get( groupPosition );
 		final GuestsModel guest = group.children.get( childPosition );
 
-		// PLog.i("Group " + group.id + " // Guest " + guest.id);
-
-		final ImageView iv_thumbnail = listItemView.findViewById( R.id.guest_thumbnail );
-		final TextView tv_title = listItemView.findViewById( R.id.guest_title );
-
-		if ( guest.image == null )
-			iv_thumbnail.setImageResource( R.drawable.noimagefound );
-		else
+		try
 		{
-			iv_thumbnail.setImageResource( R.drawable.loading_image );
-			ImageCache.cacheRemoteImage( context, "guest-" + guest.id, ImageCache.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/guests/" + group.id + "/" + guest.image, "guests/" + group.id + "/" + guest.image, null, false, new ImageCache.ImageFoundListener()
+			// PLog.i("Group " + group.id + " // Guest " + guest.id);
+
+			final ImageView imageViewThumbnail = listItemView.findViewById( R.id.guest_thumbnail );
+			final TextView textViewTitle = listItemView.findViewById( R.id.guest_title );
+
+			if ( guest.image == null )
+				imageViewThumbnail.setImageResource( R.drawable.noimagefound );
+			else
 			{
-				@Override
-				public void error( Exception exception )
+				imageViewThumbnail.setImageResource( R.drawable.loading_image );
+				new FileBuilder( "guest-image-" + guest.id ).withLocalFile( new File( ContentManager.getActiveBooklet().getDataDirectory(), "guests/" + group.id + "/" + guest.image ) ).withRemoteFile( FileBuilder.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/guests/" + group.id + "/" + guest.image ).withExceptionHandler( new BiConsumer<String, Exception>()
 				{
-					ACRAHelper.handleExceptionOnce( "loading_failure_" + group.id + "_" + guest.image, new RuntimeException( "Failed to load image from Google Firebase [images/guests/" + group.id + "/" + guest.image + "]", exception ) );
-					iv_thumbnail.setImageResource( R.drawable.error );
-				}
-
-				@Override
-				public void update( Bitmap bitmap )
-				{
-					iv_thumbnail.setImageBitmap( bitmap );
-				}
-			}, null );
-		}
-
-		tv_title.setText( guest.getTitle() );
-
-		listItemView.setOnClickListener( new View.OnClickListener()
-		{
-			@Override
-			public void onClick( View v )
-			{
-				ContentActivity.instance.stacker.setFragment( GuestViewFragment.instance( group.id, guest.id ), true, true );
+					@Override
+					public void accept( String id, Exception exception )
+					{
+						ExceptionHelper.handleExceptionOnce( "loading_failure_" + group.id + "_" + guest.image, new RuntimeException( "Failed to load image [images/guests/" + group.id + "/" + guest.image + "]", exception ) );
+						imageViewThumbnail.setImageResource( R.drawable.error );
+					}
+				} ).withImageView( imageViewThumbnail ).request().start();
 			}
-		} );
+
+			textViewTitle.setText( guest.getTitle() );
+
+			listItemView.setOnClickListener( new View.OnClickListener()
+			{
+				@Override
+				public void onClick( View v )
+				{
+					ContentActivity.instance.stacker.setFragment( GuestViewFragment.instance( group.id, guest.id ), true, true );
+				}
+			} );
+
+		}
+		catch ( Exception e )
+		{
+			ExceptionHelper.handleExceptionOnce( "guests-image-" + guest.id, new RuntimeException( "Failure in guests: " + guest.title + " (" + guest.id + ").", e ) );
+		}
 
 		return listItemView;
 	}

@@ -247,10 +247,8 @@ public class DownloadFragment extends Fragment implements UIUpdater.Receiver
 	{
 		bookletListview.setAdapter( new BookletAdapter( bookletListview, Booklet.getBooklets() ) );
 
-		PLog.i( "Active Booklet: " + ContentManager.getActiveBooklet() );
-
 		// First Run
-		if ( ContentManager.getActiveBooklet() == null )
+		if ( !ContentManager.hasActiveBooklet() )
 		{
 			Booklet booklet = ContentManager.getLatestBooklet();
 			PLog.i( "Latest Booklet: " + booklet );

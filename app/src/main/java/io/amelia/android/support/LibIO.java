@@ -9,6 +9,7 @@
  */
 package io.amelia.android.support;
 
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import java.io.BufferedWriter;
@@ -426,7 +427,12 @@ public class LibIO
 		return true;
 	}
 
-	public static String readFileToString( File file ) throws IOException
+	public static byte[] readFileToBytes( File file ) throws IOException
+	{
+		return readStreamToBytes( new FileInputStream( file ) );
+	}
+
+	public static String readFileToString( @NonNull File file ) throws IOException
 	{
 		InputStream in = null;
 		try
@@ -447,6 +453,46 @@ public class LibIO
 		{
 			closeQuietly( in );
 		}
+	}
+
+	public static ByteArrayOutputStream readStreamToByteArray( InputStream is ) throws IOException
+	{
+		try
+		{
+			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+			int nRead;
+			byte[] data = new byte[16384];
+
+			while ( ( nRead = is.read( data, 0, data.length ) ) != -1 )
+				buffer.write( data, 0, nRead );
+
+			buffer.flush();
+			return buffer;
+		}
+		finally
+		{
+			closeQuietly( is );
+		}
+	}
+
+	public static byte[] readStreamToBytes( InputStream is ) throws IOException
+	{
+		try
+		{
+			byte[] buffer = new byte[is.available()];
+			is.read( buffer );
+			return buffer;
+		}
+		finally
+		{
+			closeQuietly( is );
+		}
+	}
+
+	public static String readStreamToString( InputStream is ) throws IOException
+	{
+		return Strs.encodeDefault( readStreamToByteArray( is ).toByteArray() );
 	}
 
 	public static List<File> recursiveFiles( final File dir )
@@ -522,6 +568,23 @@ public class LibIO
 			return null;
 
 		return new String( inputStream2Bytes( is ), "UTF-8" );
+	}
+
+	public static void writeBytesToFile( File file, byte[] bytes ) throws IOException
+	{
+		OutputStream out = null;
+		try
+		{
+			if ( !file.exists() )
+				file.createNewFile();
+			out = new FileOutputStream( file );
+			out.write( bytes );
+		}
+		finally
+		{
+			if ( out != null )
+				out.close();
+		}
 	}
 
 	public static void writeStringToFile( File file, String data ) throws IOException

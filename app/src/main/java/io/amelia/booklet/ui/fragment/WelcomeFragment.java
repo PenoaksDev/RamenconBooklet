@@ -1,7 +1,6 @@
 package io.amelia.booklet.ui.fragment;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -16,17 +15,19 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.TimeZone;
 
 import io.amelia.R;
+import io.amelia.android.backport.function.BiConsumer;
 import io.amelia.android.data.BoundData;
-import io.amelia.android.data.ImageCache;
-import io.amelia.android.log.PLog;
-import io.amelia.android.support.ACRAHelper;
+import io.amelia.android.files.FileBuilder;
 import io.amelia.android.support.DateAndTime;
+import io.amelia.android.support.ExceptionHelper;
 import io.amelia.booklet.data.ContentFragment;
+import io.amelia.booklet.data.ContentManager;
 import io.amelia.booklet.data.WelcomeHandler;
 
 public class WelcomeFragment extends ContentFragment<WelcomeHandler>
@@ -139,51 +140,53 @@ public class WelcomeFragment extends ContentFragment<WelcomeHandler>
 
 		View root = getView();
 
-		final ImageView welcomeHeader = root.findViewById( R.id.welcome_header );
+		final ImageView imagerViewHeader = root.findViewById( R.id.welcome_header );
 
-		welcomeHeader.setImageResource( R.drawable.loading_image );
-		ImageCache.cacheRemoteImage( getContext(), "welcome-header-" + handler.id, ImageCache.REMOTE_IMAGES_URL + handler.id + "/header.png", "header.png", handler.id, false, new ImageCache.ImageFoundListener()
+		imagerViewHeader.setImageResource( R.drawable.loading_image );
+		try
 		{
-			@Override
-			public void error( Exception exception )
+			new FileBuilder( "welcome-header-" + handler.id ).withLocalFile( new File( ContentManager.getActiveBooklet().getDataDirectory(), "header.png" ) ).withRemoteFile( FileBuilder.REMOTE_IMAGES_URL + handler.id + "/header.png" ).withExceptionHandler( new BiConsumer<String, Exception>()
 			{
-				ACRAHelper.handleExceptionOnce( "welcome-header-" + handler.id, new RuntimeException( "Failed to load image from server [images/" + handler.id + "/header.png]", exception ) );
-				welcomeHeader.setImageResource( R.drawable.error );
-			}
-
-			@Override
-			public void update( Bitmap bitmap )
-			{
-				welcomeHeader.setImageBitmap( bitmap );
-			}
-		}, null );
+				@Override
+				public void accept( String id, Exception exception )
+				{
+					ExceptionHelper.handleExceptionOnce( "welcome-header-" + handler.id, new RuntimeException( "Failed to load image from server [images/" + handler.id + "/header.png]", exception ) );
+					imagerViewHeader.setImageResource( R.drawable.error );
+				}
+			} ).withImageView( imagerViewHeader ).request().start();
+		}
+		catch ( Exception exception )
+		{
+			ExceptionHelper.handleExceptionOnce( "welcome-header-" + handler.id, new RuntimeException( "Failed to load image from server [images/" + handler.id + "/header.png]", exception ) );
+			imagerViewHeader.setImageResource( R.drawable.error );
+		}
 
 		TextView welcomeTitle = root.findViewById( R.id.welcome_title );
 		welcomeTitle.setText( handler.title );
 
 		Date now = new Date();
 
-		TextView welcomeDate = root.findViewById( R.id.welcome_date );
-		welcomeDate.setText( DateAndTime.formatDateRange( handler.whenFromDate, handler.whenToDate ) );
+		TextView textViewDate = root.findViewById( R.id.welcome_date );
+		textViewDate.setText( DateAndTime.formatDateRange( handler.whenFromDate, handler.whenToDate ) );
 		// PLog.i( "Date Range Debug " + handler.whenFrom + " -- " + handler.whenTo + " = " + DateAndTime.formatDateRange( whenFrom, whenTo ) );
 
-		TextView welcomeBlurb = root.findViewById( R.id.welcome_blurb );
+		TextView textViewBlurb = root.findViewById( R.id.welcome_blurb );
 		if ( now.after( handler.whenFromDate ) && now.before( handler.whenToDate ) )
-			welcomeBlurb.setText( "Howdy, we hope your enjoying the convention. :D" );
+			textViewBlurb.setText( "Howdy, we hope your enjoying the convention. :D" );
 		else if ( now.before( handler.whenFromDate ) )
-			welcomeBlurb.setText( "Hurray, we look forward to seeing you soon!" );
+			textViewBlurb.setText( "Hurray, we look forward to seeing you soon!" );
 		else if ( now.after( handler.whenToDate ) )
 		{
-			welcomeBlurb.setTextColor( Color.RED );
-			welcomeBlurb.setText( "Bummer, this convention was in the past. :( We hope it was an awesome year!" );
+			textViewBlurb.setTextColor( Color.RED );
+			textViewBlurb.setText( "Bummer, this convention was in the past. :( We hope it was an awesome year!" );
 		}
 		else
-			welcomeBlurb.setText( "" );
+			textViewBlurb.setText( "" );
 
-		TextView welcomeWhere = root.findViewById( R.id.welcome_where );
-		welcomeWhere.setText( handler.where );
+		TextView textViewWhere = root.findViewById( R.id.welcome_where );
+		textViewWhere.setText( handler.where );
 
-		TextView welcomeDescrtion = root.findViewById( R.id.welcome_description );
-		welcomeDescrtion.setText( handler.description );
+		TextView textViewDescription = root.findViewById( R.id.welcome_description );
+		textViewDescription.setText( handler.description );
 	}
 }

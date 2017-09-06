@@ -1,7 +1,6 @@
 package io.amelia.booklet.data;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,11 +8,13 @@ import android.widget.BaseExpandableListAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.io.File;
 import java.util.List;
 
 import io.amelia.R;
-import io.amelia.android.data.ImageCache;
-import io.amelia.android.support.ACRAHelper;
+import io.amelia.android.backport.function.BiConsumer;
+import io.amelia.android.files.FileBuilder;
+import io.amelia.android.support.ExceptionHelper;
 import io.amelia.booklet.ui.activity.ContentActivity;
 import io.amelia.booklet.ui.fragment.VendorViewFragment;
 
@@ -54,32 +55,33 @@ public class VendorsAdapter extends BaseExpandableListAdapter
 
 		// PLog.i("Group " + group.id + " // Vendor " + vendor.id);
 
-		final ImageView iv_thumbnail = listItemView.findViewById( R.id.guest_thumbnail );
-		final TextView tv_title = listItemView.findViewById( R.id.guest_title );
+		final ImageView imageViewThumbnail = listItemView.findViewById( R.id.guest_thumbnail );
+		final TextView textViewTitle = listItemView.findViewById( R.id.guest_title );
 
 		if ( vendorsModel.image == null )
-			iv_thumbnail.setImageResource( R.drawable.noimagefound );
+			imageViewThumbnail.setImageResource( R.drawable.noimagefound );
 		else
 		{
-			iv_thumbnail.setImageResource( R.drawable.loading_image );
-			ImageCache.cacheRemoteImage( context, "vendor-" + vendorsModel.id, ImageCache.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/vendors/" + group.id + "/" + vendorsModel.image, "vendors/" + group.id + "/" + vendorsModel.image, null, false, new ImageCache.ImageFoundListener()
+			try
 			{
-				@Override
-				public void error( Exception exception )
+				imageViewThumbnail.setImageResource( R.drawable.loading_image );
+				new FileBuilder( "vendor-" + vendorsModel.id ).withLocalFile( new File( ContentManager.getActiveBooklet().getDataDirectory(), "vendors/" + group.id + "/" + vendorsModel.image ) ).withRemoteFile( FileBuilder.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/vendors/" + group.id + "/" + vendorsModel.image ).withExceptionHandler( new BiConsumer<String, Exception>()
 				{
-					ACRAHelper.handleExceptionOnce( "loading_failure_" + group.id + "_" + vendorsModel.image, new RuntimeException( "Failed to load image from Google Firebase [images/vendors/" + group.id + "/" + vendorsModel.image + "]", exception ) );
-					iv_thumbnail.setImageResource( R.drawable.error );
-				}
-
-				@Override
-				public void update( Bitmap bitmap )
-				{
-					iv_thumbnail.setImageBitmap( bitmap );
-				}
-			}, null );
+					@Override
+					public void accept( String id, Exception exception )
+					{
+						ExceptionHelper.handleExceptionOnce( "loading_failure_" + group.id + "_" + vendorsModel.image, new RuntimeException( "Failed to load image from Google Firebase [images/vendors/" + group.id + "/" + vendorsModel.image + "]", exception ) );
+						imageViewThumbnail.setImageResource( R.drawable.error );
+					}
+				} ).withImageView( imageViewThumbnail ).request().start();
+			}
+			catch ( Exception e )
+			{
+				ExceptionHelper.handleExceptionOnce( "vendor-" + vendorsModel.id, new RuntimeException( "Failure in vendor: " + vendorsModel.title + " (" + vendorsModel.id + ").", e ) );
+			}
 		}
 
-		tv_title.setText( vendorsModel.getTitle() );
+		textViewTitle.setText( vendorsModel.getTitle() );
 
 		listItemView.setOnClickListener( new View.OnClickListener()
 		{
