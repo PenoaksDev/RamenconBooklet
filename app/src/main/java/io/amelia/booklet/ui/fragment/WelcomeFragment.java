@@ -145,10 +145,10 @@ public class WelcomeFragment extends ContentFragment<WelcomeHandler>
 		imagerViewHeader.setImageResource( R.drawable.loading_image );
 		try
 		{
-			new FileBuilder( "welcome-header-" + handler.id ).withLocalFile( new File( ContentManager.getActiveBooklet().getDataDirectory(), "header.png" ) ).withRemoteFile( FileBuilder.REMOTE_IMAGES_URL + handler.id + "/header.png" ).withExceptionHandler( new BiConsumer<String, Exception>()
+			new FileBuilder( "welcome-header-" + handler.id ).withLocalFile( new File( ContentManager.getActiveBooklet().getDataDirectory(), "header.png" ) ).withRemoteFile( FileBuilder.REMOTE_IMAGES_URL + handler.id + "/header.png" ).withExceptionHandler( new BiConsumer<String, Throwable>()
 			{
 				@Override
-				public void accept( String id, Exception exception )
+				public void accept( String id, Throwable exception )
 				{
 					ExceptionHelper.handleExceptionOnce( "welcome-header-" + handler.id, new RuntimeException( "Failed to load image from server [images/" + handler.id + "/header.png]", exception ) );
 					imagerViewHeader.setImageResource( R.drawable.error );

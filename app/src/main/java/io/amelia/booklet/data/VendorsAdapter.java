@@ -15,6 +15,7 @@ import io.amelia.R;
 import io.amelia.android.backport.function.BiConsumer;
 import io.amelia.android.files.FileBuilder;
 import io.amelia.android.support.ExceptionHelper;
+import io.amelia.android.support.Objs;
 import io.amelia.booklet.ui.activity.ContentActivity;
 import io.amelia.booklet.ui.fragment.VendorViewFragment;
 
@@ -50,27 +51,27 @@ public class VendorsAdapter extends BaseExpandableListAdapter
 	{
 		View listItemView = convertView == null ? inflater.inflate( R.layout.fragment_guests_listitem, null ) : convertView;
 
-		final VendorsGroupModel group = list.get( groupPosition );
-		final VendorsModel vendorsModel = group.children.get( childPosition );
+		final VendorsGroupModel groupModel = list.get( groupPosition );
+		final VendorsModel vendorsModel = groupModel.children.get( childPosition );
 
-		// PLog.i("Group " + group.id + " // Vendor " + vendor.id);
+		// PLog.i("Group " + groupModel.id + " // Vendor " + vendor.id);
 
 		final ImageView imageViewThumbnail = listItemView.findViewById( R.id.guest_thumbnail );
 		final TextView textViewTitle = listItemView.findViewById( R.id.guest_title );
 
-		if ( vendorsModel.image == null )
+		if ( Objs.isEmpty( vendorsModel.image ) )
 			imageViewThumbnail.setImageResource( R.drawable.noimagefound );
 		else
 		{
 			try
 			{
 				imageViewThumbnail.setImageResource( R.drawable.loading_image );
-				new FileBuilder( "vendor-" + vendorsModel.id ).withLocalFile( new File( ContentManager.getActiveBooklet().getDataDirectory(), "vendors/" + group.id + "/" + vendorsModel.image ) ).withRemoteFile( FileBuilder.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/vendors/" + group.id + "/" + vendorsModel.image ).withExceptionHandler( new BiConsumer<String, Exception>()
+				new FileBuilder( "vendor-" + vendorsModel.id ).withLocalFile( new File( ContentManager.getActiveBooklet().getDataDirectory(), "vendors/" + groupModel.id + "/" + vendorsModel.image ) ).withRemoteFile( FileBuilder.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/vendors/" + groupModel.id + "/" + vendorsModel.image ).withExceptionHandler( new BiConsumer<String, Throwable>()
 				{
 					@Override
-					public void accept( String id, Exception exception )
+					public void accept( String id, Throwable exception )
 					{
-						ExceptionHelper.handleExceptionOnce( "loading_failure_" + group.id + "_" + vendorsModel.image, new RuntimeException( "Failed to load image from Google Firebase [images/vendors/" + group.id + "/" + vendorsModel.image + "]", exception ) );
+						ExceptionHelper.handleExceptionOnce( "loading_failure_" + groupModel.id + "_" + vendorsModel.image, new RuntimeException( "Failed to load image from Google Firebase [images/vendors/" + groupModel.id + "/" + vendorsModel.image + "]", exception ) );
 						imageViewThumbnail.setImageResource( R.drawable.error );
 					}
 				} ).withImageView( imageViewThumbnail ).request().start();
@@ -88,7 +89,7 @@ public class VendorsAdapter extends BaseExpandableListAdapter
 			@Override
 			public void onClick( View v )
 			{
-				ContentActivity.instance.stacker.setFragment( VendorViewFragment.instance( group.id, vendorsModel.id ), true, true );
+				ContentActivity.instance.stacker.setFragment( VendorViewFragment.instance( groupModel.id, vendorsModel.id ), true, true );
 			}
 		} );
 

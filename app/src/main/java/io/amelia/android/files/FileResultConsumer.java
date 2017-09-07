@@ -4,11 +4,10 @@ interface FileResultConsumer
 {
 	/**
 	 * Called if there was problem
-	 *
-	 * @param request   The FileRequest
+	 *  @param request   The FileRequest
 	 * @param exception The exception
 	 */
-	default void exception( FileRequest request, Exception exception )
+	default void exception( FileRequest request, Throwable exception )
 	{
 		// Do Nothing
 	}

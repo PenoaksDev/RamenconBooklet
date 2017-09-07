@@ -4,7 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeSet;
+import java.util.TreeMap;
 import java.util.concurrent.Executors;
 
 import io.amelia.android.backport.MapsBackport;
@@ -23,22 +23,21 @@ import okhttp3.Response;
 
 public class FileRequestHandler
 {
-	private final Map<FileRequestPriority, TreeSet<FileRequest>> builders = new HashMap<>();
+	private final Map<FileRequestPriority, TreeMap<Integer, FileRequest>> builders = new HashMap<>();
+	private AsyncTask<Void, FileRequest, Void> currentTask;
 	private OkHttpClient httpClient;
 	private FileBuilder.ProgressListener progressListener = null;
 
-	public FileRequestHandler enqueueBuilder( FileRequestPriority priority, FileBuilder fileBuilder ) throws FileBuilder.FileBuilderException
+	public void cancelAll()
 	{
-		MapsBackport.computeIfAbsent( builders, priority, new Function<FileRequestPriority, TreeSet<FileRequest>>()
-		{
-			@Override
-			public TreeSet<FileRequest> apply( FileRequestPriority priority )
-			{
-				return new TreeSet<>();
-			}
-		} ).add( fileBuilder.apply() );
+		if ( currentTask != null )
+			currentTask.cancel( true );
 
-		return this;
+		if ( httpClient != null )
+		{
+			httpClient.dispatcher().cancelAll();
+			httpClient.connectionPool().evictAll();
+		}
 	}
 
 	public FileRequestHandler enqueueBuilder( FileBuilder fileBuilder ) throws FileBuilder.FileBuilderException
@@ -46,17 +45,33 @@ public class FileRequestHandler
 		return enqueueBuilder( FileRequestPriority.NORMAL, fileBuilder );
 	}
 
-	public void start( FileRequestMode mode )
+	public FileRequestHandler enqueueBuilder( FileRequestPriority priority, FileBuilder fileBuilder ) throws FileBuilder.FileBuilderException
+	{
+		TreeMap<Integer, FileRequest> map = MapsBackport.computeIfAbsent( builders, priority, new Function<FileRequestPriority, TreeMap<Integer, FileRequest>>()
+		{
+			@Override
+			public TreeMap<Integer, FileRequest> apply( FileRequestPriority priority )
+			{
+				return new TreeMap<>();
+			}
+		} );
+
+		map.put( map.size(), fileBuilder.apply() );
+
+		return this;
+	}
+
+	public FileRequestHandler start( FileRequestMode mode )
 	{
 		if ( builders.size() == 0 )
-			return;
+			return this;
 
 		if ( httpClient != null )
 			throw new FileRequestHandlerException( "The FileRequest has already been started!" );
 
-		new AsyncTask<Void, FileRequest, Void>()
+		currentTask = new AsyncTask<Void, FileRequest, Void>()
 		{
-			Map<FileRequestPriority, TreeSet<FileRequest>> buildersSync;
+			Map<FileRequestPriority, TreeMap<Integer, FileRequest>> buildersSync;
 			FileRequest nextRequest = null;
 
 			@Override
@@ -69,7 +84,7 @@ public class FileRequestHandler
 				{
 					try
 					{
-						Thread.sleep( 1000 );
+						Thread.sleep( 50 );
 					}
 					catch ( InterruptedException e )
 					{
@@ -84,16 +99,45 @@ public class FileRequestHandler
 			{
 				try
 				{
-					PLog.i( "File Request Handle " + hashCode() + " " + LibIO.relPath( nextRequest.fileBuilder.localFile, ContentManager.getCacheDirectory() ) + " // " + nextRequest.exists + " // " + nextRequest.download + " // " + nextRequest.state );
+					// PLog.i( "File Request Handle " + hashCode() + " " + LibIO.relPath( nextRequest.fileBuilder.localFile, ContentManager.getCacheDirectory() ) + " // " + nextRequest.exists + " // " + nextRequest.download + " // " + nextRequest.state );
+
+					if ( nextRequest.state == FileRequestState.FINISHED || nextRequest.state == FileRequestState.ERRORED || nextRequest.state == FileRequestState.DISPOSED )
+						return true;
+
+					if ( nextRequest.progressAck > 0 )
+					{
+						if ( nextRequest.progressAck > 100 )
+						{
+							nextRequest.result.lastException = new RuntimeException( "Progress ACK has timed out! Last state was " + nextRequest.state );
+							setState( nextRequest, FileRequestState.ERRORED );
+							return true;
+						}
+						else
+						{
+							PLog.i( "Ack failure " + nextRequest.fileBuilder.remoteFile + " // State " + nextRequest.state + " // Count " + nextRequest.progressAck );
+							nextRequest.progressAck++;
+							return false;
+						}
+					}
 
 					if ( nextRequest.state == FileRequestState.INIT )
 					{
 						if ( nextRequest.exists )
 						{
-							nextRequest.result.bytes = LibIO.readFileToBytes( nextRequest.fileBuilder.localFile );
+							try
+							{
+								nextRequest.result.bytes = LibIO.readFileToBytes( nextRequest.fileBuilder.localFile );
 
-							for ( FileResultConsumer fileResultConsumer : nextRequest.fileBuilder.resultConsumerList )
-								fileResultConsumer.process( nextRequest );
+								for ( FileResultConsumer fileResultConsumer : nextRequest.fileBuilder.resultConsumerList )
+									fileResultConsumer.process( nextRequest );
+							}
+							catch ( OutOfMemoryError e )
+							{
+								PLog.e( "OUT OF MEMORY!" );
+								nextRequest.result.bytes = new byte[0];
+								System.gc();
+								throw e;
+							}
 						}
 
 						setState( nextRequest, FileRequestState.PRE );
@@ -149,10 +193,8 @@ public class FileRequestHandler
 						else
 							setState( nextRequest, FileRequestState.FINISHED );
 					}
-					else if ( nextRequest.state == FileRequestState.FINISHED || nextRequest.state == FileRequestState.ERRORED || nextRequest.state == FileRequestState.DISPOSED )
-						return true;
 				}
-				catch ( Exception e )
+				catch ( Throwable e )
 				{
 					nextRequest.result.lastException = e;
 					setState( nextRequest, FileRequestState.ERRORED );
@@ -167,7 +209,7 @@ public class FileRequestHandler
 
 				for ( FileRequestPriority priority : FileRequestPriority.values() )
 					if ( builders.containsKey( priority ) )
-						for ( FileRequest nextRequest : builders.get( priority ) )
+						for ( FileRequest nextRequest : builders.get( priority ).values() )
 						{
 							if ( !handleRequest( nextRequest ) )
 								allFinished = false;
@@ -182,10 +224,15 @@ public class FileRequestHandler
 					for ( FileRequestPriority priority : FileRequestPriority.values() )
 						if ( buildersSync.containsKey( priority ) )
 						{
-							nextRequest = buildersSync.get( priority ).pollFirst();
-							if ( nextRequest != null )
+							Map.Entry<Integer, FileRequest> entry = buildersSync.get( priority ).pollFirstEntry();
+							if ( entry != null )
+							{
+								nextRequest = entry.getValue();
 								break;
+							}
 						}
+
+				PLog.i( "Sync cycle: " + ( nextRequest == null ? "null" : nextRequest.fileBuilder.remoteFile ) );
 
 				if ( nextRequest == null )
 					return true;
@@ -203,14 +250,14 @@ public class FileRequestHandler
 				buildersSync = new HashMap<>();
 				for ( FileRequestPriority priority : FileRequestPriority.values() )
 					if ( builders.containsKey( priority ) )
-						MapsBackport.computeIfAbsent( buildersSync, priority, new Function<FileRequestPriority, TreeSet<FileRequest>>()
+						MapsBackport.computeIfAbsent( buildersSync, priority, new Function<FileRequestPriority, TreeMap<Integer, FileRequest>>()
 						{
 							@Override
-							public TreeSet<FileRequest> apply( FileRequestPriority priority )
+							public TreeMap<Integer, FileRequest> apply( FileRequestPriority priority )
 							{
-								return new TreeSet<>();
+								return new TreeMap<>();
 							}
-						} ).addAll( builders.get( priority ) );
+						} ).putAll( builders.get( priority ) );
 			}
 
 			@Override
@@ -218,8 +265,6 @@ public class FileRequestHandler
 			{
 				super.onPostExecute( aVoid );
 
-				for ( TreeSet<FileRequest> set : builders.values() )
-					set.clear();
 				builders.clear();
 				httpClient = null;
 			}
@@ -239,7 +284,11 @@ public class FileRequestHandler
 						( ( FileRequest ) tag ).result.isDone = intermittent;
 
 						if ( ( ( FileRequest ) tag ).state == FileRequestState.WAITING )
+						{
+							if ( ( ( FileRequest ) tag ).progressAck == 0 )
+								( ( FileRequest ) tag ).progressAck = 1;
 							publishProgress( ( FileRequest ) tag );
+						}
 					}
 				} ) );
 
@@ -248,7 +297,7 @@ public class FileRequestHandler
 				else // ASYNC
 					httpClient = builder.build();
 
-				PLog.i( "Start Handler " + hashCode() );
+				// PLog.i( "Start Handler " + hashCode() );
 			}
 
 			@Override
@@ -257,6 +306,7 @@ public class FileRequestHandler
 				super.onProgressUpdate( values );
 
 				for ( FileRequest request : values )
+				{
 					try
 					{
 						// PLog.i( "File Request Progress " + hashCode() + " " + LibIO.relPath( request.fileBuilder.localFile, ContentManager.getCacheDirectory() ) + " // " + request.exists + " // " + request.download + " // " + request.state );
@@ -297,8 +347,6 @@ public class FileRequestHandler
 						}
 						else if ( request.state == FileRequestState.FINISHED )
 						{
-							request.state = FileRequestState.DISPOSED;
-
 							if ( request.download )
 							{
 								if ( request.fileBuilder.progressListener != null )
@@ -307,13 +355,16 @@ public class FileRequestHandler
 									progressListener.finish( request.result );
 
 								for ( FileResultConsumer fileResultConsumer : request.fileBuilder.resultConsumerList )
+								{
+									PLog.i( "Result Consumer " + request.fileBuilder.remoteFile + " // " + fileResultConsumer );
 									fileResultConsumer.accept( request );
+								}
 							}
+
+							request.state = FileRequestState.DISPOSED;
 						}
 						else if ( request.state == FileRequestState.ERRORED )
 						{
-							request.state = FileRequestState.DISPOSED;
-
 							if ( request.result.lastException == null )
 								throw new FileRequestHandlerException( "FileBuilder errored but no exception is reported!" );
 
@@ -323,13 +374,22 @@ public class FileRequestHandler
 							if ( request.fileBuilder.resultExceptionConsumer == null )
 								throw new FileRequestHandlerException( "FileRequest " + request.fileBuilder.id + " threw an exception", request.result.lastException );
 							request.fileBuilder.resultExceptionConsumer.accept( request.fileBuilder.id, request.result.lastException );
+
+							request.state = FileRequestState.DISPOSED;
 						}
 					}
-					catch ( Exception e )
+					catch ( FileRequestHandlerException e )
+					{
+						throw e;
+					}
+					catch ( Throwable e )
 					{
 						request.result.lastException = e;
 						setState( request, FileRequestState.ERRORED );
 					}
+
+					request.progressAck = 0;
+				}
 			}
 
 			void setState( FileRequest nextRequest, FileRequestState state )
@@ -338,15 +398,19 @@ public class FileRequestHandler
 					nextRequest.result.lastException.printStackTrace();
 
 				nextRequest.state = state;
+				if ( nextRequest.progressAck == 0 )
+					nextRequest.progressAck = 1;
 				publishProgress( nextRequest );
 			}
 
 		}.executeOnExecutor( ContentManager.getExecutorThreadPool() );
+
+		return this;
 	}
 
-	public void start()
+	public FileRequestHandler start()
 	{
-		start( FileRequestMode.ASYNC );
+		return start( FileRequestMode.ASYNC );
 	}
 
 	public FileRequestHandler withProgressListener( FileBuilder.ProgressListener progressListener )
@@ -370,9 +434,9 @@ public class FileRequestHandler
 
 	public class FileRequestHandlerException extends RuntimeException
 	{
-		public FileRequestHandlerException( String message, Exception e )
+		public FileRequestHandlerException( String message, Throwable throwable )
 		{
-			super( message, e );
+			super( message, throwable );
 		}
 
 		public FileRequestHandlerException( String message )

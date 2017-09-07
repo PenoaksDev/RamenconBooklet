@@ -14,7 +14,6 @@ import java.util.Map;
 import io.amelia.android.data.BoundData;
 import io.amelia.android.files.FileBuilder;
 import io.amelia.android.files.FileRequestHandler;
-import io.amelia.android.files.FileResult;
 import io.amelia.android.log.PLog;
 import io.amelia.android.support.ExceptionHelper;
 import io.amelia.android.support.LibAndroid;
@@ -478,6 +477,10 @@ public class Booklet
 
 	public void preCacheImages()
 	{
+		// Temp Disabled. Too many memory issues!
+		if ( true )
+			return;
+
 		// Do Not Pre-Cache
 		if ( ContentManager.getImageCacheTimeout() == 0 )
 			return;
@@ -491,33 +494,14 @@ public class Booklet
 			{
 				try
 				{
-					FileRequestHandler fileRequestHandler = new FileRequestHandler().withProgressListener( new FileBuilder.ProgressListener()
-					{
-						@Override
-						public void finish( FileResult result )
-						{
-							// PLog.i( "Image PreCache Finish: " + remoteImage );
-						}
-
-						@Override
-						public void progress( FileResult result, long bytesTransferred, long totalByteCount, boolean indeterminate )
-						{
-							// PLog.i( "Image PreCache Progress (" + remoteImage + "): " + bytesTransferred + " of " + totalByteCount + " // " + result.isDone );
-						}
-
-						@Override
-						public void start( FileResult result )
-						{
-							// PLog.i( "Image PreCache Start: " + remoteImage );
-						}
-					} );
+					FileRequestHandler fileRequestHandler = new FileRequestHandler();
 
 					if ( sectionHandlerList.containsKey( "guide" ) )
 					{
 						GuideHandler handler = getSectionHandler( GuideHandler.class );
 						for ( GuidePageModel guidePageModel : handler.guidePageModels )
 						{
-							final File dest = new File( getDataDirectory(), guidePageModel.getLocalImage() );
+							File dest = new File( getDataDirectory(), guidePageModel.getLocalImage() );
 							if ( !dest.exists() )
 								fileRequestHandler.enqueueBuilder( new FileBuilder( "guide-precache-" + guidePageModel.pageNo ).withLocalFile( dest ).withRemoteFile( guidePageModel.getRemoteImage() ) );
 						}
@@ -528,9 +512,9 @@ public class Booklet
 						MapsHandler handler = getSectionHandler( MapsHandler.class );
 						for ( MapsMapModel mapsMapModel : handler.mapsMapModels )
 						{
-							final File dest = new File( getDataDirectory(), mapsMapModel.getLocalImage() );
+							File dest = new File( getDataDirectory(), mapsMapModel.getLocalImage() );
 							if ( !dest.exists() )
-								fileRequestHandler.enqueueBuilder( new FileBuilder( "map-precache-" + mapsMapModel.id ).withLocalFile( dest ).withRemoteFile( mapsMapModel.getRemoteImage() ) );
+								fileRequestHandler.enqueueBuilder( new FileBuilder( "map-precache-" + mapsMapModel.id ).withLocalFile( new File( getDataDirectory(), mapsMapModel.getLocalImage() ) ).withRemoteFile( mapsMapModel.getRemoteImage() ) );
 						}
 					}
 

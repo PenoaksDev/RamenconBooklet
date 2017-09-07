@@ -14,8 +14,10 @@ import java.io.File;
 import io.amelia.R;
 import io.amelia.android.backport.function.BiConsumer;
 import io.amelia.android.files.FileBuilder;
+import io.amelia.android.files.FileRequestHandler;
 import io.amelia.android.files.FileResult;
 import io.amelia.android.support.ExceptionHelper;
+import io.amelia.android.support.Objs;
 import io.amelia.android.ui.widget.TouchImageView;
 import io.amelia.booklet.data.ContentManager;
 import io.amelia.booklet.data.GuidePageModel;
@@ -23,6 +25,7 @@ import io.amelia.booklet.data.GuidePageModel;
 public class GuideChildFragment extends Fragment
 {
 	private GuidePageModel guidePageModel;
+	private FileRequestHandler handler = null;
 	// private TouchImageView image;
 	private boolean isRefresh;
 	// private ProgressBar progressBar = null;
@@ -55,17 +58,17 @@ public class GuideChildFragment extends Fragment
 		ProgressBar progressBar = getView().findViewById( R.id.guide_progressbar );
 		progressBar.setVisibility( View.VISIBLE );
 
-		if ( guidePageModel.image == null )
+		if ( Objs.isEmpty( guidePageModel.image ) )
 			image.setImageResource( R.drawable.noimagefound );
 		else
 		{
 			image.setImageResource( R.drawable.loading_image );
 			try
 			{
-				new FileBuilder( "guide-image-" + guidePageModel.pageNo ).withLocalFile( new File( ContentManager.getActiveBooklet().getDataDirectory(), guidePageModel.getLocalImage() ) ).withRemoteFile( guidePageModel.getRemoteImage() ).withExceptionHandler( new BiConsumer<String, Exception>()
+				handler = new FileBuilder( "guide-image-" + guidePageModel.pageNo ).withLocalFile( new File( ContentManager.getActiveBooklet().getDataDirectory(), guidePageModel.getLocalImage() ) ).withRemoteFile( guidePageModel.getRemoteImage() ).withExceptionHandler( new BiConsumer<String, Throwable>()
 				{
 					@Override
-					public void accept( String id, Exception exception )
+					public void accept( String id, Throwable exception )
 					{
 						image.setImageResource( R.drawable.error );
 
@@ -107,6 +110,18 @@ public class GuideChildFragment extends Fragment
 			{
 				ExceptionHelper.handleExceptionOnce( "guide-page-" + guidePageModel.pageNo, new RuntimeException( "Failure in guide: " + guidePageModel.title + " // " + guidePageModel.image + ".", e ) );
 			}
+		}
+	}
+
+	@Override
+	public void onStop()
+	{
+		super.onStop();
+
+		if ( handler != null )
+		{
+			handler.cancelAll();
+			handler = null;
 		}
 	}
 }

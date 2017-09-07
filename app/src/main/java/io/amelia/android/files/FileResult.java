@@ -18,7 +18,7 @@ public class FileResult
 	public Call call;
 	public int code;
 	public boolean isDone;
-	public Exception lastException;
+	public Throwable lastException;
 
 	public byte[] resultBytes() throws IOException
 	{

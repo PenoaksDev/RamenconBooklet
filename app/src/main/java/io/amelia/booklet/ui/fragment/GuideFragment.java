@@ -150,6 +150,9 @@ public class GuideFragment extends ContentFragment<GuideHandler> implements Pers
 				{
 					int middle = ( mTwoWayView.getChildCount() / 2 ) - 1;
 
+					if ( middle == 0 )
+						middle = 1;
+
 					if ( selectedPosition < middle )
 						mTwoWayView.setSelection( 0 );
 					else

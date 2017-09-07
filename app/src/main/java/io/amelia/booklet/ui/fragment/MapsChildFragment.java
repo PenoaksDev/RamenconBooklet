@@ -16,6 +16,7 @@ import io.amelia.android.backport.function.BiConsumer;
 import io.amelia.android.files.FileBuilder;
 import io.amelia.android.files.FileResult;
 import io.amelia.android.support.ExceptionHelper;
+import io.amelia.android.support.Objs;
 import io.amelia.android.ui.widget.TouchImageView;
 import io.amelia.booklet.data.ContentManager;
 import io.amelia.booklet.data.MapsMapModel;
@@ -55,17 +56,17 @@ public class MapsChildFragment extends Fragment
 		image.setMaxZoom( 4 );
 		image.setScaleType( ImageView.ScaleType.MATRIX );
 
-		if ( mapsMapModel.image == null )
+		if ( Objs.isEmpty( mapsMapModel.image ) )
 			image.setImageResource( R.drawable.noimagefound );
 		else
 		{
 			image.setImageResource( R.drawable.loading_image );
 			try
 			{
-				new FileBuilder( "map-image-" + mapsMapModel.id ).withLocalFile( new File( ContentManager.getActiveBooklet().getDataDirectory(), mapsMapModel.getLocalImage() ) ).withRemoteFile( mapsMapModel.getRemoteImage() ).withExceptionHandler( new BiConsumer<String, Exception>()
+				new FileBuilder( "map-image-" + mapsMapModel.id ).withLocalFile( new File( ContentManager.getActiveBooklet().getDataDirectory(), mapsMapModel.getLocalImage() ) ).withRemoteFile( mapsMapModel.getRemoteImage() ).withExceptionHandler( new BiConsumer<String, Throwable>()
 				{
 					@Override
-					public void accept( String id, Exception exception )
+					public void accept( String id, Throwable exception )
 					{
 						image.setImageResource( R.drawable.error );
 

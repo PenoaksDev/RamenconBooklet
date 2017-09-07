@@ -50,7 +50,7 @@ public class ScheduleHandler extends ContentHandler
 
 	public TreeSet<ScheduleEventModel> filterRange( ScheduleFilter filter )
 	{
-		TreeSet<ScheduleEventModel> events = new TreeSet<>( new ScheduleEventModelComparator() );
+		TreeSet<ScheduleEventModel> events = new TreeSet<>();
 
 		for ( ScheduleEventModel event : schedule )
 			if ( filter.filter( events, event ) )
@@ -135,7 +135,7 @@ public class ScheduleHandler extends ContentHandler
 		if ( !data.containsKey( "schedule" ) || !data.containsKey( "locations" ) )
 			throw new IllegalStateException( "BoundData is missing the critical 'schedule' and 'locations' keys." );
 
-		schedule = new TreeSet<>( new ScheduleEventModelComparator() );
+		schedule = new TreeSet<>();
 		for ( BoundData section : data.getBoundDataList( "schedule" ) )
 		{
 			ScheduleEventModel scheduleEventModel = new ScheduleEventModel();

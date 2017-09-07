@@ -44,6 +44,7 @@ public class VendorsHandler extends ContentHandler
 				vendorsModel.id = child.getString( "id" );
 				vendorsModel.image = child.getString( "image" );
 				vendorsModel.title = child.getString( "title" );
+				vendorsModel.urls = child.getString( "urls" );
 				vendorsModel.description = child.getString( "description" );
 				models.add( vendorsModel );
 			}

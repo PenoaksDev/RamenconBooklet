@@ -44,6 +44,7 @@ public class GuestsHandler extends ContentHandler
 				guestsModel.id = child.getString( "id" );
 				guestsModel.image = child.getString( "image" );
 				guestsModel.title = child.getString( "title" );
+				guestsModel.urls = child.getString( "urls" );
 				guestsModel.description = child.getString( "description" );
 				models.add( guestsModel );
 			}

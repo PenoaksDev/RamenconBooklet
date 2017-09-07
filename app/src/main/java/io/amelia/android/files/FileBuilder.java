@@ -2,6 +2,7 @@ package io.amelia.android.files;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Rect;
 import android.support.annotation.NonNull;
 import android.widget.ImageView;
 
@@ -10,12 +11,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.amelia.android.backport.function.BiConsumer;
+import io.amelia.android.log.PLog;
 import io.amelia.android.support.LibIO;
 import io.amelia.android.support.Objs;
+import io.amelia.booklet.data.ContentManager;
 
 public class FileBuilder
 {
-	// public static final BitmapFactory.Options BITMAP_FACTORY_OPTIONS = new BitmapFactory.Options();
+	public static final BitmapFactory.Options BITMAP_FACTORY_OPTIONS = new BitmapFactory.Options();
 	public static final String REMOTE_IMAGES_URL = "http://booklet.dev.penoaks.com/images/";
 
 	final String id;
@@ -25,7 +28,7 @@ public class FileBuilder
 	ProgressListener progressListener;
 	String remoteFile = null;
 	List<FileResultConsumer> resultConsumerList = new ArrayList<>();
-	BiConsumer<String, Exception> resultExceptionConsumer;
+	BiConsumer<String, Throwable> resultExceptionConsumer;
 
 	public FileBuilder( String id )
 	{
@@ -47,19 +50,34 @@ public class FileBuilder
 		{
 			request.exists = true;
 			if ( forceDownload )
+			{
+				PLog.i( "File " + remoteFile + " requested: {result: local, exists: yes, timeout: forced}" );
 				request.download = true;
+			}
 			else if ( cacheTimeout > 0 && remoteFile != null )
 			{
 				if ( System.currentTimeMillis() - localFile.lastModified() > cacheTimeout )
+				{
+					PLog.i( "File " + remoteFile + " requested: {result: local, exists: yes, timeout: true} // " + localFile.lastModified() + " -- " + cacheTimeout + " // " + ( System.currentTimeMillis() - localFile.lastModified() ) );
 					request.download = true;
+				}
 				else
+				{
+					PLog.i( "File " + remoteFile + " requested: {result: local, exists: yes, timeout: no}" );
 					request.download = false;
+				}
 			}
 			else
+			{
+				PLog.i( "File " + remoteFile + " requested: {result: local, exists: yes, timeout: no}" );
 				request.download = false;
+			}
 		}
 		else if ( remoteFile != null )
+		{
+			PLog.i( "File " + remoteFile + " requested: {result: download, exists: no, timeout: no}" );
 			request.download = true;
+		}
 
 		try
 		{
@@ -92,7 +110,7 @@ public class FileBuilder
 		return this;
 	}
 
-	public FileBuilder withExceptionHandler( BiConsumer<String, Exception> exceptionConsumer )
+	public FileBuilder withExceptionHandler( BiConsumer<String, Throwable> exceptionConsumer )
 	{
 		this.resultExceptionConsumer = exceptionConsumer;
 		return this;
@@ -132,7 +150,7 @@ public class FileBuilder
 			@Override
 			public void process( FileRequest request ) throws Exception
 			{
-				result = BitmapFactory.decodeStream( request.result.resultInputStream() );
+				result = BitmapFactory.decodeStream( request.result.resultInputStream(), new Rect( 0, 0, 0, 0 ), BITMAP_FACTORY_OPTIONS );
 			}
 
 			@Override
@@ -159,6 +177,8 @@ public class FileBuilder
 			{
 				if ( request.state == FileRequestState.FINISHED )
 				{
+					PLog.i( "Saving file " + remoteFile + " to " + LibIO.relPath( localFile, ContentManager.getCacheDirectory() ) );
+
 					if ( localFile == null )
 						return;
 					LibIO.writeBytesToFile( localFile, request.result.resultBytes() );

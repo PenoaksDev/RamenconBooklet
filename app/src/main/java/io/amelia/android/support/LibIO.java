@@ -44,6 +44,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
+import io.amelia.android.log.PLog;
 import io.amelia.booklet.App;
 
 public class LibIO
@@ -480,6 +481,8 @@ public class LibIO
 	{
 		try
 		{
+			PLog.i( "readStreamToBytes( " + is.available() + " bytes )" );
+
 			byte[] buffer = new byte[is.available()];
 			is.read( buffer );
 			return buffer;
@@ -575,6 +578,7 @@ public class LibIO
 		OutputStream out = null;
 		try
 		{
+			file.getParentFile().mkdirs();
 			if ( !file.exists() )
 				file.createNewFile();
 			out = new FileOutputStream( file );

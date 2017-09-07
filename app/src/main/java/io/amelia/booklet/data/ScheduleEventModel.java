@@ -4,6 +4,7 @@ import android.content.ContentUris;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.CalendarContract;
+import android.support.annotation.NonNull;
 
 import java.util.Date;
 
@@ -11,7 +12,7 @@ import io.amelia.android.data.BoundData;
 import io.amelia.android.support.Strs;
 import io.amelia.booklet.ui.fragment.ScheduleFragment;
 
-public class ScheduleEventModel
+public class ScheduleEventModel implements Comparable<ScheduleEventModel>
 {
 	public String date;
 	public String description;
@@ -20,6 +21,13 @@ public class ScheduleEventModel
 	public String location;
 	public String time;
 	public String title;
+
+	@Override
+	public int compareTo( @NonNull ScheduleEventModel scheduleEventModel )
+	{
+		int comp = Long.compare( scheduleEventModel.getStartTime(), getStartTime() );
+		return comp == 0 ? Long.compare( scheduleEventModel.getEndTime(), getEndTime() ) : comp;
+	}
 
 	public String getDescription()
 	{
