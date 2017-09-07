@@ -208,7 +208,7 @@ public class BookletAdapter extends BaseExpandableListAdapter
 		{
 			final ImageView bookletHeader = rowView.findViewById( R.id.booklet_header );
 			bookletHeader.setImageResource( R.drawable.loading_image );
-			new FileBuilder( "welcome-header-" + booklet.getId() ).withLocalFile( new File( booklet.getDataDirectory(), "header.png" ) ).withRemoteFile( FileBuilder.REMOTE_IMAGES_URL + booklet.getId() + "/header.png" ).withCacheTimeout( ContentManager.getImageCacheTimeout() ).withExceptionHandler( new BiConsumer<String, Throwable>()
+			new FileBuilder( "welcome-header-" + booklet.getId() ).withLocalFile( new File( booklet.getDataDirectory(), "header.png" ) ).withRemoteFile( FileBuilder.REMOTE_IMAGES_URL + booklet.getId() + "/header.png" ).withCacheTimeout( ContentManager.getPrefImageCacheTimeout() ).withExceptionHandler( new BiConsumer<String, Throwable>()
 			{
 				@Override
 				public void accept( String id, Throwable exception )

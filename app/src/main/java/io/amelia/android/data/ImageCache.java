@@ -6,6 +6,8 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.support.annotation.Nullable;
 
+import com.koushikdutta.ion.Ion;
+
 import java.io.File;
 import java.util.concurrent.ExecutorService;
 
@@ -91,7 +93,7 @@ public class ImageCache
 		@Override
 		protected Void doInBackground( Void... params )
 		{
-			int imageCacheTimeout = ContentManager.getImageCacheTimeout() * 60 * 1000; // Minutes to Millis
+			int imageCacheTimeout = ContentManager.getPrefImageCacheTimeout() * 60 * 1000; // Minutes to Millis
 
 			final File dest = new File( bookletId == null ? ContentManager.getActiveBooklet().getDataDirectory() : Booklet.getBooklet( bookletId ).getDataDirectory(), localName );
 			dest.getParentFile().mkdirs();

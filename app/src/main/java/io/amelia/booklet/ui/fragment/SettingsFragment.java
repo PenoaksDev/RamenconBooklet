@@ -48,7 +48,7 @@ public class SettingsFragment extends PreferenceFragment
 			else
 			{
 				String acct = data.getStringExtra( AccountManager.KEY_ACCOUNT_NAME );
-				ContentManager.setCalendarAccount( acct );
+				ContentManager.setPrefCalendarAccount( acct );
 
 				findPreference( "pref_calendar_account" ).setSummary( "Selects which account to use when adding events to the Google Calendar. Current Account: " + ( acct == null ? "Unset" : acct ) );
 			}
@@ -125,7 +125,7 @@ public class SettingsFragment extends PreferenceFragment
 			}
 		} );
 
-		String acct = ContentManager.getCalendarAccount();
+		String acct = ContentManager.getPrefCalendarAccount();
 
 		Preference mCalendarAccount = findPreference( "pref_calendar_account" );
 		mCalendarAccount.setSummary( "Selects which account to use when adding events to the Google Calendar. Current Account: " + ( acct == null ? "Not Set!" : acct ) );

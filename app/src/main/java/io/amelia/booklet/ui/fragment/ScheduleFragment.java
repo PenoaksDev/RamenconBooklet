@@ -110,7 +110,7 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 			else
 			{
 				String acct = data.getStringExtra( AccountManager.KEY_ACCOUNT_NAME );
-				ContentManager.setCalendarAccount( acct );
+				ContentManager.setPrefCalendarAccount( acct );
 
 				Toast.makeText( getContext(), "Google Calendar account was set to " + acct, Toast.LENGTH_SHORT ).show();
 			}
@@ -362,7 +362,7 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 				{
 					ScheduleEventModel event = modelList.get( data.getInt( "position" ) );
 
-					if ( Objs.isEmpty( ContentManager.getCalendarAccount() ) )
+					if ( Objs.isEmpty( ContentManager.getPrefCalendarAccount() ) )
 						showAccountChooser();
 
 					Dexter.withActivity( ContentManager.getActivity() ).withPermissions( Manifest.permission.WRITE_CALENDAR, Manifest.permission.READ_CALENDAR ).withListener( new MultiplePermissionsListener()
@@ -386,7 +386,7 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 							try
 							{
 								int calenderId = -1;
-								String calendarAccount = ContentManager.getCalendarAccount();
+								String calendarAccount = ContentManager.getPrefCalendarAccount();
 								String[] projection = new String[] {CalendarContract.Calendars._ID, CalendarContract.Calendars.ACCOUNT_NAME};
 								ContentResolver contentResolver = ContentManager.getActivity().getContentResolver();
 								Cursor cursor = contentResolver.query( Uri.parse( "content://com.android.calendar/calendars" ), projection, CalendarContract.Calendars.ACCOUNT_NAME + "=? and (" + CalendarContract.Calendars.NAME + "=? or " + CalendarContract.Calendars.CALENDAR_DISPLAY_NAME + "=?)", new String[] {calendarAccount, calendarAccount, calendarAccount}, null );
@@ -424,7 +424,7 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 
 									ContentValues values = new ContentValues();
 
-									int eventReminderDelay = ContentManager.getEventReminderDelay();
+									int eventReminderDelay = ContentManager.getPrefEventReminderDelay();
 									if ( eventReminderDelay > 0 )
 									{
 										// contentResolver.delete( ContentUris.withAppendedId( CalendarContract.Reminders.CONTENT_URI, eventId ), null, null );

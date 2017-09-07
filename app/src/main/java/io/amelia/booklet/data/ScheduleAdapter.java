@@ -1,8 +1,6 @@
 package io.amelia.booklet.data;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -206,8 +204,7 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 				Date from = timeFormat.parse( event.time );
 				Date to = new Date( from.getTime() + ( 60000 * ( event.duration == null ? 0 : Integer.parseInt( event.duration ) ) ) );
 
-				SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences( context );
-				boolean use24h = pref.getBoolean( "pref_military", false );
+				boolean use24h = ContentManager.getPrefMilitaryTime();
 
 				eventTitle.setText( event.getTitle() );
 

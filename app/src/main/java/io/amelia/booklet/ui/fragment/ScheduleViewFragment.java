@@ -14,6 +14,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import io.amelia.R;
+import io.amelia.booklet.data.ContentManager;
 import io.amelia.booklet.data.ScheduleAdapter;
 import io.amelia.booklet.data.ScheduleEventModel;
 
@@ -71,9 +72,7 @@ public class ScheduleViewFragment extends Fragment
 				Date from = adapter.timeFormat.parse( "hh:mm a" );// event.time );
 				Date to = new Date( from.getTime() + ( 60000 * Integer.parseInt( event.duration ) ) );
 
-				SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences( getActivity() );
-				boolean use24h = pref.getBoolean( "pref_military", false );
-
+				boolean use24h = ContentManager.getPrefMilitaryTime();
 				String format_from = use24h ? ScheduleAdapter.DISPLAY_FORMAT_TIME24.format( from ) : ScheduleAdapter.DISPLAY_FORMAT_TIME12.format( from );
 				String format_to = use24h ? ScheduleAdapter.DISPLAY_FORMAT_TIME24.format( to ) : ScheduleAdapter.DISPLAY_FORMAT_TIME12.format( to );
 

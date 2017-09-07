@@ -1,23 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <SwitchPreference
-            android:defaultValue="false"
-            android:key="pref_military"
-            android:summary="Display event time in 24 hour format"
-            android:title="Use Military Time"/>
+    <Preference
+            android:key="pref_calendar_account"
+            android:summary="Selects which account to use when adding events to your Google Calendar"
+            android:title="Select Google Calendar Account"/>
+
+    <ListPreference
+            android:defaultValue="10"
+            android:key="pref_reminder_delays"
+            android:summary="When would you like a reminder before an event?"
+            android:title="Event Reminder Delay"/>
 
     <SwitchPreference
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:key="pref_auto_update"
             android:summary="Should booklets be auto-updated"
             android:title="Auto Update Booklets"/>
-
-    <ListPreference
-            android:defaultValue="360"
-            android:key="pref_image_cache"
-            android:summary="How long should the app keep images cached"
-            android:title="Image Cache Timeout"/>
 
     <!-- <SwitchPreference
             android:defaultValue="true"
@@ -26,20 +25,21 @@
             android:title="Vibrate on Reminder"/> -->
 
     <ListPreference
-            android:defaultValue="10"
-            android:key="pref_reminder_delays"
-            android:summary="When would you like a reminder before an event?"
-            android:title="Event Reminder Delay"/>
-
-    <Preference
-            android:key="pref_calendar_account"
-            android:summary="Selects which account to use when adding events to your Google Calendar"
-            android:title="Select Google Calendar Account"/>
+            android:defaultValue="360"
+            android:key="pref_image_cache"
+            android:summary="How long should the app keep images cached"
+            android:title="Image Cache Timeout"/>
 
     <Preference
             android:key="pref_delete_images"
             android:summary="Forcefully deletes all downloaded image cache"
             android:title="Clear Image Cache"/>
+
+    <SwitchPreference
+            android:defaultValue="false"
+            android:key="pref_military_time"
+            android:summary="Display event time in 24 hour format"
+            android:title="Use Military Time"/>
 
     <Preference
             android:key="pref_force_reset"

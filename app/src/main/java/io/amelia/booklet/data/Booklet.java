@@ -384,7 +384,7 @@ public class Booklet
 						data.put( KEY_LAST_UPDATED, 0 ); // Never Downloaded
 					}
 
-					if ( ContentManager.getAutoUpdate() )
+					if ( ContentManager.getPrefAutoUpdate() )
 						goDownload();
 					else
 						triggerUpdate();
@@ -482,7 +482,7 @@ public class Booklet
 			return;
 
 		// Do Not Pre-Cache
-		if ( ContentManager.getImageCacheTimeout() == 0 )
+		if ( ContentManager.getPrefImageCacheTimeout() == 0 )
 			return;
 
 		updateSectionHandlers();

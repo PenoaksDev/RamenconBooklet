@@ -112,47 +112,14 @@ public class ContentManager
 		return context;
 	}
 
-	public static boolean getAutoUpdate()
-	{
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences( ContentManager.getApplicationContext() );
-		return prefs.getBoolean( "pref_auto_update", false );
-	}
-
 	public static File getCacheDirectory()
 	{
 		return cacheDir;
 	}
 
-	public static String getCalendarAccount()
-	{
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences( ContentManager.getApplicationContext() );
-		return prefs.getString( "pref_calendar_account", null );
-	}
-
-	public static void setCalendarAccount( String calendarAccount )
-	{
-		if ( calendarAccount == null )
-			return;
-		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences( context );
-		pref.edit().putString( "pref_calendar_account", calendarAccount ).commit();
-		Crashlytics.setUserEmail( calendarAccount );
-	}
-
-	public static int getEventReminderDelay()
-	{
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences( ContentManager.getApplicationContext() );
-		return Integer.parseInt( prefs.getString( "pref_reminder_delays", "10" ) );
-	}
-
 	public static ExecutorService getExecutorThreadPool()
 	{
 		return threadPool;
-	}
-
-	public static int getImageCacheTimeout()
-	{
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences( ContentManager.getApplicationContext() );
-		return Integer.parseInt( prefs.getString( "pref_image_cache", "360" ) );
 	}
 
 	public static Booklet getLatestBooklet()
@@ -179,6 +146,44 @@ public class ContentManager
 			}
 		}
 		return last;
+	}
+
+	public static boolean getPrefAutoUpdate()
+	{
+		return getSharedPreferences().getBoolean( "pref_auto_update", false );
+	}
+
+	public static String getPrefCalendarAccount()
+	{
+		return getSharedPreferences().getString( "pref_calendar_account", null );
+	}
+
+	public static void setPrefCalendarAccount( String calendarAccount )
+	{
+		if ( calendarAccount == null )
+			return;
+		getSharedPreferences().edit().putString( "pref_calendar_account", calendarAccount ).commit();
+		Crashlytics.setUserEmail( calendarAccount );
+	}
+
+	public static int getPrefEventReminderDelay()
+	{
+		return Integer.parseInt( getSharedPreferences().getString( "pref_reminder_delays", "10" ) );
+	}
+
+	public static int getPrefImageCacheTimeout()
+	{
+		return Integer.parseInt( getSharedPreferences().getString( "pref_image_cache", "360" ) );
+	}
+
+	public static boolean getPrefMilitaryTime()
+	{
+		return getSharedPreferences().getBoolean( "pref_military_time", false );
+	}
+
+	public static SharedPreferences getSharedPreferences()
+	{
+		return PreferenceManager.getDefaultSharedPreferences( ContentManager.getApplicationContext() );
 	}
 
 	public static BoundData getUserData()
