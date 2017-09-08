@@ -654,6 +654,14 @@ public class LibIO
 
 	}
 
+	public static boolean isImage( @NonNull String fileName )
+	{
+		for ( String ext : new String[] {"jpg", "jpeg", "png", "bmp", "gif"} )
+			if ( fileName.toLowerCase().endsWith( ext ) )
+				return true;
+		return false;
+	}
+
 	static class LibraryPath
 	{
 		private List<String> libPath;

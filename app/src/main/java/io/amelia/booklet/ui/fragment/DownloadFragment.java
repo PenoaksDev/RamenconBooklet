@@ -1,5 +1,6 @@
 package io.amelia.booklet.ui.fragment;
 
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -250,10 +251,28 @@ public class DownloadFragment extends Fragment implements UIUpdater.Receiver
 		// First Run
 		if ( !ContentManager.hasActiveBooklet() )
 		{
-			Booklet booklet = ContentManager.getLatestBooklet();
-			PLog.i( "Latest Booklet: " + booklet );
-			if ( booklet != null )
-				booklet.goDownloadAndOpen();
+			android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder( getContext() );
+			builder.setTitle( "Welcome!" ).setMessage( "It looks like this is your first time using the Ramencon Booklet app. Would you like to download the latest booklet and jump right in? Otherwise, you can also view previous year booklets or change your settings with the Gear icon in the upper-right corner. Have a wonderful day!" ).setPositiveButton( "Yes Please!", new DialogInterface.OnClickListener()
+			{
+				@Override
+				public void onClick( DialogInterface dialog, int which )
+				{
+					Booklet booklet = ContentManager.getLatestBooklet();
+					PLog.i( "Latest Booklet: " + booklet );
+					if ( booklet != null )
+						booklet.goDownloadAndOpen();
+					else
+						Toast.makeText( getContext(), "Sorry, there was a problem getting the latest booklet.", Toast.LENGTH_LONG ).show();
+					dialog.dismiss();
+				}
+			} ).setNegativeButton( "No, I'm a rebel!", new DialogInterface.OnClickListener()
+			{
+				@Override
+				public void onClick( DialogInterface dialog, int which )
+				{
+					dialog.dismiss();
+				}
+			} ).create().show();
 		}
 	}
 }

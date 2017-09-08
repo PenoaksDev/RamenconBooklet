@@ -22,6 +22,7 @@ import java.util.List;
 import io.amelia.R;
 import io.amelia.android.backport.function.BiConsumer;
 import io.amelia.android.files.FileBuilder;
+import io.amelia.android.files.FileFutureBitmap;
 import io.amelia.android.support.DateAndTime;
 import io.amelia.android.support.ExceptionHelper;
 
@@ -208,7 +209,7 @@ public class BookletAdapter extends BaseExpandableListAdapter
 		{
 			final ImageView bookletHeader = rowView.findViewById( R.id.booklet_header );
 			bookletHeader.setImageResource( R.drawable.loading_image );
-			new FileBuilder( "welcome-header-" + booklet.getId() ).withLocalFile( new File( booklet.getDataDirectory(), "header.png" ) ).withRemoteFile( FileBuilder.REMOTE_IMAGES_URL + booklet.getId() + "/header.png" ).withCacheTimeout( ContentManager.getPrefImageCacheTimeout() ).withExceptionHandler( new BiConsumer<String, Throwable>()
+			new FileBuilder( "welcome-header-" + booklet.getId(), FileFutureBitmap.class ).withLocalFile( new File( booklet.getDataDirectory(), "header.png" ) ).withRemoteFile( FileBuilder.REMOTE_IMAGES_URL + booklet.getId() + "/header.png" ).withCacheTimeout( ContentManager.getPrefImageCacheTimeout() ).withExceptionHandler( new BiConsumer<String, Throwable>()
 			{
 				@Override
 				public void accept( String id, Throwable exception )

@@ -14,6 +14,7 @@ import java.util.List;
 import io.amelia.R;
 import io.amelia.android.backport.function.BiConsumer;
 import io.amelia.android.files.FileBuilder;
+import io.amelia.android.files.FileFutureBitmap;
 import io.amelia.android.support.ExceptionHelper;
 import io.amelia.android.support.Objs;
 import io.amelia.booklet.ui.activity.ContentActivity;
@@ -66,7 +67,7 @@ public class GuestsAdapter extends BaseExpandableListAdapter
 			else
 			{
 				imageViewThumbnail.setImageResource( R.drawable.loading_image );
-				new FileBuilder( "guest-image-" + guest.id ).withLocalFile( new File( ContentManager.getActiveBooklet().getDataDirectory(), "guests/" + group.id + "/" + guest.image ) ).withRemoteFile( FileBuilder.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/guests/" + group.id + "/" + guest.image ).withExceptionHandler( new BiConsumer<String, Throwable>()
+				new FileBuilder( "guest-image-" + guest.id, FileFutureBitmap.class ).withLocalFile( new File( ContentManager.getActiveBooklet().getDataDirectory(), "guests/" + group.id + "/" + guest.image ) ).withRemoteFile( FileBuilder.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/guests/" + group.id + "/" + guest.image ).withExceptionHandler( new BiConsumer<String, Throwable>()
 				{
 					@Override
 					public void accept( String id, Throwable exception )

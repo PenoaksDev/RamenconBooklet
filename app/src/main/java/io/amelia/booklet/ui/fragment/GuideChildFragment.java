@@ -14,8 +14,11 @@ import java.io.File;
 import io.amelia.R;
 import io.amelia.android.backport.function.BiConsumer;
 import io.amelia.android.files.FileBuilder;
-import io.amelia.android.files.FileRequestHandler;
-import io.amelia.android.files.FileResult;
+import io.amelia.android.files.FileBuilderException;
+import io.amelia.android.files.FileFutureBitmap;
+import io.amelia.android.files.FileFutureProgressListener;
+import io.amelia.android.files.FileHandler;
+import io.amelia.android.log.PLog;
 import io.amelia.android.support.ExceptionHelper;
 import io.amelia.android.support.Objs;
 import io.amelia.android.ui.widget.TouchImageView;
@@ -25,7 +28,7 @@ import io.amelia.booklet.data.GuidePageModel;
 public class GuideChildFragment extends Fragment
 {
 	private GuidePageModel guidePageModel;
-	private FileRequestHandler handler = null;
+	private FileHandler handler = null;
 	// private TouchImageView image;
 	private boolean isRefresh;
 	// private ProgressBar progressBar = null;
@@ -65,7 +68,7 @@ public class GuideChildFragment extends Fragment
 			image.setImageResource( R.drawable.loading_image );
 			try
 			{
-				handler = new FileBuilder( "guide-image-" + guidePageModel.pageNo ).withLocalFile( new File( ContentManager.getActiveBooklet().getDataDirectory(), guidePageModel.getLocalImage() ) ).withRemoteFile( guidePageModel.getRemoteImage() ).withExceptionHandler( new BiConsumer<String, Throwable>()
+				handler = new FileBuilder( "guide-image-" + guidePageModel.pageNo, FileFutureBitmap.class ).withLocalFile( new File( ContentManager.getActiveBooklet().getDataDirectory(), guidePageModel.getLocalImage() ) ).withRemoteFile( guidePageModel.getRemoteImage() ).withExceptionHandler( new BiConsumer<String, Throwable>()
 				{
 					@Override
 					public void accept( String id, Throwable exception )
@@ -75,28 +78,30 @@ public class GuideChildFragment extends Fragment
 						ExceptionHelper.handleExceptionOnce( "guest-view-image-error-" + id, new RuntimeException( "Recoverable Exception", exception ) );
 						Toast.makeText( getContext(), "We had a problem loading the guest image. The problem was reported to the developer.", Toast.LENGTH_LONG ).show();
 					}
-				} ).withProgressListener( new FileBuilder.ProgressListener()
+				} ).withProgressListener( new FileFutureProgressListener<FileFutureBitmap>()
 				{
 					@Override
-					public void finish( FileResult result )
+					public void finish( FileFutureBitmap result )
 					{
 						if ( progressBar != null )
 							progressBar.setVisibility( View.GONE );
 					}
 
 					@Override
-					public void progress( FileResult result, long bytesTransferred, long totalByteCount, boolean indeterminate )
+					public void progress( FileFutureBitmap result, long bytesTransferred, long totalByteCount, boolean indeterminate )
 					{
 						if ( progressBar != null )
 						{
 							progressBar.setMax( ( int ) totalByteCount );
 							progressBar.setProgress( ( int ) bytesTransferred );
-							progressBar.setIndeterminate( indeterminate );
+							progressBar.setIndeterminate( totalByteCount == -1 ? true : indeterminate );
+
+							PLog.i( "Progress: " + result.fileBuilder.hashCode() + " " + bytesTransferred + " of " + totalByteCount );
 						}
 					}
 
 					@Override
-					public void start( FileResult result )
+					public void start( FileFutureBitmap result )
 					{
 						if ( progressBar != null )
 						{
@@ -106,7 +111,7 @@ public class GuideChildFragment extends Fragment
 					}
 				} ).withImageView( image ).forceDownload( isRefresh ).request().start();
 			}
-			catch ( FileBuilder.FileBuilderException e )
+			catch ( FileBuilderException e )
 			{
 				ExceptionHelper.handleExceptionOnce( "guide-page-" + guidePageModel.pageNo, new RuntimeException( "Failure in guide: " + guidePageModel.title + " // " + guidePageModel.image + ".", e ) );
 			}

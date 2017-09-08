@@ -13,7 +13,9 @@ import java.util.Map;
 
 import io.amelia.android.data.BoundData;
 import io.amelia.android.files.FileBuilder;
-import io.amelia.android.files.FileRequestHandler;
+import io.amelia.android.files.FileFutureBitmap;
+import io.amelia.android.files.FileFutureMode;
+import io.amelia.android.files.FileHandler;
 import io.amelia.android.log.PLog;
 import io.amelia.android.support.ExceptionHelper;
 import io.amelia.android.support.LibAndroid;
@@ -494,7 +496,7 @@ public class Booklet
 			{
 				try
 				{
-					FileRequestHandler fileRequestHandler = new FileRequestHandler();
+					FileHandler fileHandler = new FileHandler();
 
 					if ( sectionHandlerList.containsKey( "guide" ) )
 					{
@@ -503,7 +505,7 @@ public class Booklet
 						{
 							File dest = new File( getDataDirectory(), guidePageModel.getLocalImage() );
 							if ( !dest.exists() )
-								fileRequestHandler.enqueueBuilder( new FileBuilder( "guide-precache-" + guidePageModel.pageNo ).withLocalFile( dest ).withRemoteFile( guidePageModel.getRemoteImage() ) );
+								fileHandler.enqueueBuilder( new FileBuilder( "guide-precache-" + guidePageModel.pageNo, FileFutureBitmap.class ).withLocalFile( dest ).withRemoteFile( guidePageModel.getRemoteImage() ) );
 						}
 					}
 
@@ -514,11 +516,11 @@ public class Booklet
 						{
 							File dest = new File( getDataDirectory(), mapsMapModel.getLocalImage() );
 							if ( !dest.exists() )
-								fileRequestHandler.enqueueBuilder( new FileBuilder( "map-precache-" + mapsMapModel.id ).withLocalFile( new File( getDataDirectory(), mapsMapModel.getLocalImage() ) ).withRemoteFile( mapsMapModel.getRemoteImage() ) );
+								fileHandler.enqueueBuilder( new FileBuilder( "map-precache-" + mapsMapModel.id, FileFutureBitmap.class ).withLocalFile( new File( getDataDirectory(), mapsMapModel.getLocalImage() ) ).withRemoteFile( mapsMapModel.getRemoteImage() ) );
 						}
 					}
 
-					fileRequestHandler.start( FileRequestHandler.FileRequestMode.SYNC );
+					fileHandler.start( FileFutureMode.SYNC );
 				}
 				catch ( Exception e )
 				{

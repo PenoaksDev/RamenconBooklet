@@ -15,6 +15,8 @@ import java.io.File;
 import io.amelia.R;
 import io.amelia.android.backport.function.BiConsumer;
 import io.amelia.android.files.FileBuilder;
+import io.amelia.android.files.FileBuilderException;
+import io.amelia.android.files.FileFutureBitmap;
 import io.amelia.android.support.ExceptionHelper;
 import io.amelia.android.support.Objs;
 import io.amelia.booklet.data.ContentManager;
@@ -65,7 +67,7 @@ public class VendorViewFragment extends Fragment
 
 			try
 			{
-				FileBuilder fileBuilder = new FileBuilder( "vendor-view-image-" + vendor.id ).withLocalFile( new File( ContentManager.getActiveBooklet().getDataDirectory(), "vendors/" + listGroup.id + "/" + vendor.image ) ).withRemoteFile( FileBuilder.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/vendors/" + listGroup.id + "/" + vendor.image ).withExceptionHandler( new BiConsumer<String, Throwable>()
+				FileBuilder fileBuilder = new FileBuilder( "vendor-view-image-" + vendor.id, FileFutureBitmap.class ).withLocalFile( new File( ContentManager.getActiveBooklet().getDataDirectory(), "vendors/" + listGroup.id + "/" + vendor.image ) ).withRemoteFile( FileBuilder.REMOTE_IMAGES_URL + ContentManager.getActiveBooklet().getId() + "/vendors/" + listGroup.id + "/" + vendor.image ).withExceptionHandler( new BiConsumer<String, Throwable>()
 				{
 					@Override
 					public void accept( String id, Throwable exception )
@@ -94,7 +96,7 @@ public class VendorViewFragment extends Fragment
 						{
 							fileBuilder.forceDownload( true ).request().start();
 						}
-						catch ( FileBuilder.FileBuilderException e )
+						catch ( FileBuilderException e )
 						{
 							// Ignore
 						}

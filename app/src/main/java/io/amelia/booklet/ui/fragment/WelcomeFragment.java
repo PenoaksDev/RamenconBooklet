@@ -24,6 +24,7 @@ import io.amelia.R;
 import io.amelia.android.backport.function.BiConsumer;
 import io.amelia.android.data.BoundData;
 import io.amelia.android.files.FileBuilder;
+import io.amelia.android.files.FileFutureBitmap;
 import io.amelia.android.support.DateAndTime;
 import io.amelia.android.support.ExceptionHelper;
 import io.amelia.booklet.data.ContentFragment;
@@ -145,7 +146,7 @@ public class WelcomeFragment extends ContentFragment<WelcomeHandler>
 		imagerViewHeader.setImageResource( R.drawable.loading_image );
 		try
 		{
-			new FileBuilder( "welcome-header-" + handler.id ).withLocalFile( new File( ContentManager.getActiveBooklet().getDataDirectory(), "header.png" ) ).withRemoteFile( FileBuilder.REMOTE_IMAGES_URL + handler.id + "/header.png" ).withExceptionHandler( new BiConsumer<String, Throwable>()
+			new FileBuilder( "welcome-header-" + handler.id, FileFutureBitmap.class ).withLocalFile( new File( ContentManager.getActiveBooklet().getDataDirectory(), "header.png" ) ).withRemoteFile( FileBuilder.REMOTE_IMAGES_URL + handler.id + "/header.png" ).withExceptionHandler( new BiConsumer<String, Throwable>()
 			{
 				@Override
 				public void accept( String id, Throwable exception )

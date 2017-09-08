@@ -2,11 +2,12 @@ package io.amelia.android.files;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Rect;
 import android.support.annotation.NonNull;
 import android.widget.ImageView;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,80 +17,91 @@ import io.amelia.android.support.LibIO;
 import io.amelia.android.support.Objs;
 import io.amelia.booklet.data.ContentManager;
 
-public class FileBuilder
+public class FileBuilder<FutureType extends FileFuture>
 {
 	public static final BitmapFactory.Options BITMAP_FACTORY_OPTIONS = new BitmapFactory.Options();
 	public static final String REMOTE_IMAGES_URL = "http://booklet.dev.penoaks.com/images/";
-
+	final Class<FutureType> futureTypeClass;
 	final String id;
 	long cacheTimeout = 0;
+	boolean download;
+	boolean exists;
+	FileFutureProgressListener fileFutureProgressListener;
 	boolean forceDownload = false;
+	List<FileFutureConsumer<?>> futureConsumerList = new ArrayList<>();
 	File localFile;
-	ProgressListener progressListener;
 	String remoteFile = null;
-	List<FileResultConsumer> resultConsumerList = new ArrayList<>();
 	BiConsumer<String, Throwable> resultExceptionConsumer;
 
-	public FileBuilder( String id )
+	public FileBuilder( String id, Class<FutureType> futureTypeClass )
 	{
 		this.id = id;
+		this.futureTypeClass = futureTypeClass;
 	}
 
-	FileRequest apply() throws FileBuilderException
+	FutureType apply() throws FileBuilderException
 	{
-		FileRequest request = new FileRequest( this );
-
 		if ( localFile == null && remoteFile == null )
-			throw new FileBuilderException( "Both local file and remote file are null!" );
+			throw new FileBuilderException( this, "Both local file and remote file are null!" );
 		if ( forceDownload && remoteFile == null )
-			throw new FileBuilderException( "You force remote download without providing a remote url!" );
+			throw new FileBuilderException( this, "You force remote download without providing a remote url!" );
 		if ( cacheTimeout >= 0 && ( localFile == null || remoteFile == null ) )
-			throw new FileBuilderException( "You can't set a cacheTimeout without providing a local file and/or remote url!" );
+			throw new FileBuilderException( this, "You can't set a cacheTimeout without providing a local file and/or remote url!" );
 
 		if ( localFile.exists() )
 		{
-			request.exists = true;
+			exists = true;
 			if ( forceDownload )
 			{
 				PLog.i( "File " + remoteFile + " requested: {result: local, exists: yes, timeout: forced}" );
-				request.download = true;
+				download = true;
 			}
 			else if ( cacheTimeout > 0 && remoteFile != null )
 			{
 				if ( System.currentTimeMillis() - localFile.lastModified() > cacheTimeout )
 				{
 					PLog.i( "File " + remoteFile + " requested: {result: local, exists: yes, timeout: true} // " + localFile.lastModified() + " -- " + cacheTimeout + " // " + ( System.currentTimeMillis() - localFile.lastModified() ) );
-					request.download = true;
+					download = true;
 				}
 				else
 				{
 					PLog.i( "File " + remoteFile + " requested: {result: local, exists: yes, timeout: no}" );
-					request.download = false;
+					download = false;
 				}
 			}
 			else
 			{
 				PLog.i( "File " + remoteFile + " requested: {result: local, exists: yes, timeout: no}" );
-				request.download = false;
+				download = false;
 			}
 		}
 		else if ( remoteFile != null )
 		{
 			PLog.i( "File " + remoteFile + " requested: {result: download, exists: no, timeout: no}" );
-			request.download = true;
+			download = true;
 		}
 
 		try
 		{
-			for ( FileResultConsumer fileResultConsumer : resultConsumerList )
-				fileResultConsumer.verify( this );
+			for ( FileFutureConsumer fileFutureConsumer : futureConsumerList )
+				fileFutureConsumer.verify( this );
 		}
 		catch ( Exception e )
 		{
-			throw new FileBuilderException( "FileBuilder failed verification!", e );
+			throw new FileBuilderException( this, "FileBuilder failed verification!", e );
 		}
 
-		return request;
+		try
+		{
+			Constructor<FutureType> constructor = futureTypeClass.getDeclaredConstructor();
+			FutureType instance = constructor.newInstance();
+			instance.fileBuilder = ( FileBuilder<FileFuture> ) this;
+			return instance;
+		}
+		catch ( Exception e )
+		{
+			throw new FileBuilderException( this, "Expecting a no-arg constructor for FileFuture " + futureTypeClass.getSimpleName(), e );
+		}
 	}
 
 	public FileBuilder forceDownload( boolean forceDownload )
@@ -98,9 +110,9 @@ public class FileBuilder
 		return this;
 	}
 
-	public FileRequestHandler request() throws FileBuilderException
+	public FileHandler request() throws FileBuilderException
 	{
-		return new FileRequestHandler().enqueueBuilder( this );
+		return new FileHandler().enqueueBuilder( this );
 	}
 
 	public FileBuilder withCacheTimeout( long cacheTimeout )
@@ -116,9 +128,9 @@ public class FileBuilder
 		return this;
 	}
 
-	public FileBuilder withFileResultConsumer( FileResultConsumer fileResultConsumer )
+	public FileBuilder withFileResultConsumer( FileFutureConsumer<?> fileFutureConsumer )
 	{
-		resultConsumerList.add( fileResultConsumer );
+		futureConsumerList.add( fileFutureConsumer );
 		return this;
 	}
 
@@ -126,39 +138,23 @@ public class FileBuilder
 	{
 		Objs.notNull( imageView );
 
-		withFileResultConsumer( new FileResultConsumer()
+		if ( !FileFutureBitmap.class.isAssignableFrom( futureTypeClass ) )
+			throw new FileBuilderException( this, "FileBuilder.withImageView() can only be used with FileFutureBitmap type." );
+
+		withFileResultConsumer( new FileFutureConsumer<FileFutureBitmap>()
 		{
-			private Bitmap result;
-
 			@Override
-			public void accept( FileRequest request ) throws Exception
+			public void accept( FileFutureBitmap request, FileFutureUpdateType updateType ) throws Exception
 			{
-				if ( result == null )
-					throw new IllegalStateException( "There was an internal exception." );
-
-				imageView.setImageBitmap( result );
-			}
-
-			boolean isImage( @NonNull String fileName )
-			{
-				for ( String ext : new String[] {"jpg", "jpeg", "png", "bmp", "gif"} )
-					if ( fileName.toLowerCase().endsWith( ext ) )
-						return true;
-				return false;
-			}
-
-			@Override
-			public void process( FileRequest request ) throws Exception
-			{
-				result = BitmapFactory.decodeStream( request.result.resultInputStream(), new Rect( 0, 0, 0, 0 ), BITMAP_FACTORY_OPTIONS );
+				imageView.setImageBitmap( request.bitmap );
 			}
 
 			@Override
 			public void verify( FileBuilder fileBuilder ) throws Exception
 			{
-				if ( fileBuilder.remoteFile != null && !isImage( fileBuilder.remoteFile ) )
+				if ( fileBuilder.remoteFile != null && !LibIO.isImage( fileBuilder.remoteFile ) )
 					throw new IllegalArgumentException( "Remote file " + fileBuilder.remoteFile + " does not appear to be an image!" );
-				if ( fileBuilder.localFile != null && !isImage( fileBuilder.localFile.getName() ) )
+				if ( fileBuilder.localFile != null && !LibIO.isImage( fileBuilder.localFile.getName() ) )
 					throw new IllegalArgumentException( "Local file " + fileBuilder.localFile + " does not appear to be an image!" );
 			}
 		} );
@@ -166,38 +162,44 @@ public class FileBuilder
 		return this;
 	}
 
-	public FileBuilder withLocalFile( @NonNull File localFile )
+	public FileBuilder withLocalFile( @NonNull File localFile ) throws FileBuilderException
 	{
 		this.localFile = localFile;
 
-		withFileResultConsumer( new FileResultConsumer()
+		if ( !FileFutureBitmap.class.isAssignableFrom( futureTypeClass ) )
+			throw new FileBuilderException( this, "Selected FileFuture is not compatible withLocalFile()." );
+
+		withFileResultConsumer( new FileFutureConsumer<FutureType>()
 		{
 			@Override
-			public void accept( FileRequest request ) throws Exception
+			public void accept( FutureType request, FileFutureUpdateType updateType ) throws Exception
 			{
-				if ( request.state == FileRequestState.FINISHED )
+				if ( request.fileBuilder.download && updateType == FileFutureUpdateType.FINISHED )
 				{
 					PLog.i( "Saving file " + remoteFile + " to " + LibIO.relPath( localFile, ContentManager.getCacheDirectory() ) );
 
 					if ( localFile == null )
 						return;
-					LibIO.writeBytesToFile( localFile, request.result.resultBytes() );
+					if ( request instanceof FileFutureBitmap )
+					{
+						String name = localFile.getName();
+						if ( !LibIO.isImage( name ) )
+							throw new IllegalArgumentException( "Local file " + localFile + " does not appear to be an image!" );
+						localFile.getParentFile().mkdirs();
+						if ( !localFile.exists() )
+							localFile.createNewFile();
+						( ( FileFutureBitmap ) request ).bitmap.compress( name.toLowerCase().endsWith( "png" ) ? Bitmap.CompressFormat.PNG : Bitmap.CompressFormat.JPEG, 93, new FileOutputStream( localFile ) );
+					}
 				}
-			}
-
-			@Override
-			public void process( FileRequest request ) throws Exception
-			{
-
 			}
 		} );
 
 		return this;
 	}
 
-	public FileBuilder withProgressListener( ProgressListener progressListener )
+	public FileBuilder withProgressListener( FileFutureProgressListener fileFutureProgressListener )
 	{
-		this.progressListener = progressListener;
+		this.fileFutureProgressListener = fileFutureProgressListener;
 		return this;
 	}
 
@@ -205,37 +207,5 @@ public class FileBuilder
 	{
 		this.remoteFile = remoteFile;
 		return this;
-	}
-
-	public interface ProgressListener
-	{
-		void finish( FileResult result );
-
-		void progress( FileResult result, long bytesTransferred, long totalByteCount, boolean indeterminate );
-
-		void start( FileResult result );
-	}
-
-	public class FileBuilderException extends Exception
-	{
-		public FileBuilderException( String message )
-		{
-			super( message );
-		}
-
-		public FileBuilderException( String message, Exception exception )
-		{
-			super( message, exception );
-		}
-
-		public FileBuilder getFileBuilder()
-		{
-			return FileBuilder.this;
-		}
-
-		public String getId()
-		{
-			return getFileBuilder().id;
-		}
 	}
 }

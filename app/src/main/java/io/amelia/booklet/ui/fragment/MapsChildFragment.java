@@ -14,7 +14,9 @@ import java.io.File;
 import io.amelia.R;
 import io.amelia.android.backport.function.BiConsumer;
 import io.amelia.android.files.FileBuilder;
-import io.amelia.android.files.FileResult;
+import io.amelia.android.files.FileBuilderException;
+import io.amelia.android.files.FileFutureBitmap;
+import io.amelia.android.files.FileFutureProgressListener;
 import io.amelia.android.support.ExceptionHelper;
 import io.amelia.android.support.Objs;
 import io.amelia.android.ui.widget.TouchImageView;
@@ -63,7 +65,7 @@ public class MapsChildFragment extends Fragment
 			image.setImageResource( R.drawable.loading_image );
 			try
 			{
-				new FileBuilder( "map-image-" + mapsMapModel.id ).withLocalFile( new File( ContentManager.getActiveBooklet().getDataDirectory(), mapsMapModel.getLocalImage() ) ).withRemoteFile( mapsMapModel.getRemoteImage() ).withExceptionHandler( new BiConsumer<String, Throwable>()
+				new FileBuilder( "map-image-" + mapsMapModel.id, FileFutureBitmap.class ).withLocalFile( new File( ContentManager.getActiveBooklet().getDataDirectory(), mapsMapModel.getLocalImage() ) ).withRemoteFile( mapsMapModel.getRemoteImage() ).withExceptionHandler( new BiConsumer<String, Throwable>()
 				{
 					@Override
 					public void accept( String id, Throwable exception )
@@ -73,17 +75,17 @@ public class MapsChildFragment extends Fragment
 						ExceptionHelper.handleExceptionOnce( "map-image-error-" + id, new RuntimeException( "Recoverable Exception", exception ) );
 						Toast.makeText( getContext(), "We had a problem loading the map. The problem was reported to the developer.", Toast.LENGTH_LONG ).show();
 					}
-				} ).withProgressListener( new FileBuilder.ProgressListener()
+				} ).withProgressListener( new FileFutureProgressListener<FileFutureBitmap>()
 				{
 					@Override
-					public void finish( FileResult result )
+					public void finish( FileFutureBitmap result )
 					{
 						if ( progressBar != null )
 							progressBar.setVisibility( View.GONE );
 					}
 
 					@Override
-					public void progress( FileResult result, long bytesTransferred, long totalByteCount, boolean indeterminate )
+					public void progress( FileFutureBitmap result, long bytesTransferred, long totalByteCount, boolean indeterminate )
 					{
 						if ( progressBar != null )
 						{
@@ -94,7 +96,7 @@ public class MapsChildFragment extends Fragment
 					}
 
 					@Override
-					public void start( FileResult result )
+					public void start( FileFutureBitmap result )
 					{
 						if ( progressBar != null )
 						{
@@ -104,7 +106,7 @@ public class MapsChildFragment extends Fragment
 					}
 				} ).withImageView( image ).forceDownload( isRefresh ).request().start();
 			}
-			catch ( FileBuilder.FileBuilderException e )
+			catch ( FileBuilderException e )
 			{
 				ExceptionHelper.handleExceptionOnce( "map-child-" + mapsMapModel.id, new RuntimeException( "Failure in map: " + mapsMapModel.title + " // " + mapsMapModel.image + ".", e ) );
 			}

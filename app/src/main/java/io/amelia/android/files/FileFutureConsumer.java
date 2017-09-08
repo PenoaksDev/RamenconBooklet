@@ -1,24 +1,26 @@
 package io.amelia.android.files;
 
-interface FileResultConsumer
+interface FileFutureConsumer<FutureType extends FileFuture>
 {
-	/**
-	 * Called if there was problem
-	 *  @param request   The FileRequest
-	 * @param exception The exception
-	 */
-	default void exception( FileRequest request, Throwable exception )
-	{
-		// Do Nothing
-	}
-
 	/**
 	 * Called once the FileRequestHandler has finished all downloads.
 	 *
 	 * @param request
+	 * @param updateType
 	 * @throws Exception
 	 */
-	void accept( FileRequest request ) throws Exception;
+	void accept( FutureType request, FileFutureUpdateType updateType ) throws Exception;
+
+	/**
+	 * Called if there was problem
+	 *
+	 * @param request   The FileRequest
+	 * @param exception The exception
+	 */
+	default void exception( FutureType request, Throwable exception )
+	{
+		// Do Nothing
+	}
 
 	/**
 	 * Called if file exists or after successful download
@@ -26,7 +28,10 @@ interface FileResultConsumer
 	 * @param request
 	 * @throws Exception
 	 */
-	void process( FileRequest request ) throws Exception;
+	default void process( FutureType request ) throws Exception
+	{
+		// Do Nothing
+	}
 
 	/**
 	 * Called before FileBuilder.apply() to very the FileBuilder is all in order.
