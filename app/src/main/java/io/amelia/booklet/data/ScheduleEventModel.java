@@ -25,8 +25,8 @@ public class ScheduleEventModel implements Comparable<ScheduleEventModel>
 	@Override
 	public int compareTo( @NonNull ScheduleEventModel scheduleEventModel )
 	{
-		int comp = Long.compare( scheduleEventModel.getStartTime(), getStartTime() );
-		return comp == 0 ? Long.compare( scheduleEventModel.getEndTime(), getEndTime() ) : comp;
+		int comp = Long.compare( getStartTime(), scheduleEventModel.getStartTime() );
+		return comp == 0 ? Long.compare( getEndTime(), scheduleEventModel.getEndTime() ) : comp;
 	}
 
 	public String getDescription()

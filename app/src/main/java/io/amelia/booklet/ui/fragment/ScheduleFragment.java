@@ -43,6 +43,7 @@ import java.util.TimeZone;
 import java.util.TreeSet;
 
 import io.amelia.R;
+import io.amelia.android.backport.function.Supplier;
 import io.amelia.android.data.BoundData;
 import io.amelia.android.data.BoundDataCallback;
 import io.amelia.android.fragments.PersistentFragment;
@@ -358,12 +359,30 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 			BoundDataCallback alarmOnClick = new BoundDataCallback()
 			{
 				@Override
-				public void call( BoundData data )
+				public boolean call( BoundData data )
 				{
-					ScheduleEventModel event = modelList.get( data.getInt( "position" ) );
+					String eventId = data.getString( "eventId" );
+					final ScheduleEventModel eventModel = new Supplier<ScheduleEventModel>()
+					{
+						@Override
+						public ScheduleEventModel get()
+						{
+							for ( ScheduleEventModel model : modelList )
+								if ( model.id.equals( eventId ) )
+									return model;
+
+							return null;
+						}
+					}.get();
+
+					if ( eventModel == null )
+						throw new IllegalStateException( "We had a problem finding event " + eventId + " in list " + modelList + "!" );
 
 					if ( Objs.isEmpty( ContentManager.getPrefCalendarAccount() ) )
+					{
 						showAccountChooser();
+						return false;
+					}
 
 					Dexter.withActivity( ContentManager.getActivity() ).withPermissions( Manifest.permission.WRITE_CALENDAR, Manifest.permission.READ_CALENDAR ).withListener( new MultiplePermissionsListener()
 					{
@@ -397,12 +416,12 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 
 								contentResolver = ContentManager.getActivity().getContentResolver();
 
-								if ( event.hasEventId() )
+								if ( eventModel.hasEventId() )
 								{
-									Uri deleteUri = ContentUris.withAppendedId( CalendarContract.Events.CONTENT_URI, event.getEventId() );
+									Uri deleteUri = ContentUris.withAppendedId( CalendarContract.Events.CONTENT_URI, eventModel.getEventId() );
 									contentResolver.delete( deleteUri, null, null );
 
-									event.setEventId( -1 );
+									eventModel.setEventId( -1 );
 
 									Toast.makeText( ContentManager.getActivity(), "Event reminder removed from your Google Calendar.", Toast.LENGTH_LONG ).show();
 								}
@@ -410,11 +429,11 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 								{
 									ContentValues contentValues = new ContentValues();
 									contentValues.put( CalendarContract.Events.CALENDAR_ID, calenderId );
-									contentValues.put( CalendarContract.Events.TITLE, event.getTitle() );
-									contentValues.put( CalendarContract.Events.DESCRIPTION, event.getDescription() );
-									contentValues.put( CalendarContract.Events.EVENT_LOCATION, event.getLocation().title + " at " + ContentManager.getActiveBooklet().getDataTitle() );
-									contentValues.put( CalendarContract.Events.DTSTART, event.getStartTime() );
-									contentValues.put( CalendarContract.Events.DTEND, event.getEndTime() );
+									contentValues.put( CalendarContract.Events.TITLE, eventModel.getTitle() );
+									contentValues.put( CalendarContract.Events.DESCRIPTION, eventModel.getDescription() );
+									contentValues.put( CalendarContract.Events.EVENT_LOCATION, eventModel.getLocation().title + " at " + ContentManager.getActiveBooklet().getDataTitle() );
+									contentValues.put( CalendarContract.Events.DTSTART, eventModel.getStartTime() );
+									contentValues.put( CalendarContract.Events.DTEND, eventModel.getEndTime() );
 									contentValues.put( CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().getID() );
 									contentValues.put( CalendarContract.Events.HAS_ALARM, 1 );
 
@@ -436,17 +455,19 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 										contentResolver.insert( CalendarContract.Reminders.CONTENT_URI, values );
 									}
 
-									event.setEventId( eventId );
+									eventModel.setEventId( eventId );
 
 									Toast.makeText( ContentManager.getActivity(), "Event reminder added to your Google Calendar.", Toast.LENGTH_LONG ).show();
 								}
 							}
 							catch ( Exception e )
 							{
-								ExceptionHelper.handleExceptionOnce( "event-alarm-" + event.id, e );
+								ExceptionHelper.handleExceptionOnce( "event-" + eventModel.id + "-alarm", e );
 							}
 						}
 					} ).check();
+
+					return true;
 				}
 			};
 

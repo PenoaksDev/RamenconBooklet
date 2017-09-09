@@ -122,11 +122,19 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 				@Override
 				public void onClick( View view )
 				{
-					BoundData boundData = new BoundData();
-					boundData.put( "position", groupPosition );
-					boundData.put( "selected", !view.isSelected() );
-					alarmOnClick.call( boundData );
-					startAnimation( view, false );
+					try
+					{
+						BoundData boundData = new BoundData();
+						boundData.put( "eventId", event.id );
+						boundData.put( "selected", !view.isSelected() );
+						if ( alarmOnClick.call( boundData ) )
+							startAnimation( view, false );
+					}
+					catch ( Exception e )
+					{
+						ExceptionHelper.handleExceptionOnce( "event-" + event.id + "-alarm", e );
+						ContentManager.getActivity().uiShowErrorDialog( "We had a problem setting the alarm. The problem has been reported to the developer." );
+					}
 				}
 			} );
 

@@ -97,7 +97,7 @@
                 android:layout_gravity="center_horizontal"
                 android:textAlignment="center"
                 android:textSize="16dp"
-                android:text="Hurray, we look forward to seeing you soon!"
+                android:text=""
                 android:textColor="@color/colorPurple"
                 android:paddingBottom="10dp"/>
     </LinearLayout>

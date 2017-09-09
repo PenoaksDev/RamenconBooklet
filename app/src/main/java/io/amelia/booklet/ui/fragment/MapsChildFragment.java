@@ -58,6 +58,9 @@ public class MapsChildFragment extends Fragment
 		image.setMaxZoom( 4 );
 		image.setScaleType( ImageView.ScaleType.MATRIX );
 
+		image.setScaleX( 0.60F );
+		image.setScaleY( 0.60F );
+
 		if ( Objs.isEmpty( mapsMapModel.image ) )
 			image.setImageResource( R.drawable.noimagefound );
 		else
@@ -82,6 +85,9 @@ public class MapsChildFragment extends Fragment
 					{
 						if ( progressBar != null )
 							progressBar.setVisibility( View.GONE );
+
+						image.setScaleX( 1F );
+						image.setScaleY( 1F );
 					}
 
 					@Override

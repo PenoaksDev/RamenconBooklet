@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
@@ -52,9 +53,13 @@ public class WelcomeFragment extends ContentFragment<WelcomeHandler>
 		iCal.setType( "vnd.android.cursor.item/event" );
 		iCal.putExtra( CalendarContract.Events.TITLE, handler.title );
 		iCal.putExtra( CalendarContract.Events.DESCRIPTION, handler.description );
-		iCal.putExtra( CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault() );
-		iCal.putExtra( CalendarContract.Events.DTSTART, handler.whenFromDate.getTime() );
-		iCal.putExtra( CalendarContract.Events.DTEND, handler.whenToDate.getTime() );
+		iCal.putExtra( CalendarContract.Events.EVENT_LOCATION, handler.where );
+		iCal.putExtra( CalendarContract.EXTRA_EVENT_BEGIN_TIME, handler.whenFromDate.getTime() );
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime( handler.whenToDate );
+		calendar.add( Calendar.DATE, 1 );
+		iCal.putExtra( CalendarContract.EXTRA_EVENT_END_TIME, calendar.getTime().getTime() );
+		iCal.putExtra( CalendarContract.Events.EVENT_TIMEZONE, TimeZone.getDefault().getID() );
 		iCal.putExtra( CalendarContract.Events.ALL_DAY, true );
 
 		if ( iCal.resolveActivity( getActivity().getPackageManager() ) != null )
@@ -172,17 +177,23 @@ public class WelcomeFragment extends ContentFragment<WelcomeHandler>
 		// PLog.i( "Date Range Debug " + handler.whenFrom + " -- " + handler.whenTo + " = " + DateAndTime.formatDateRange( whenFrom, whenTo ) );
 
 		TextView textViewBlurb = root.findViewById( R.id.welcome_blurb );
-		if ( now.after( handler.whenFromDate ) && now.before( handler.whenToDate ) )
-			textViewBlurb.setText( "Howdy, we hope your enjoying the convention. :D" );
-		else if ( now.before( handler.whenFromDate ) )
-			textViewBlurb.setText( "Hurray, we look forward to seeing you soon!" );
-		else if ( now.after( handler.whenToDate ) )
+
+		try
 		{
-			textViewBlurb.setTextColor( Color.RED );
-			textViewBlurb.setText( "Bummer, this convention was in the past. :( We hope it was an awesome year!" );
+			if ( now.after( handler.whenFromDate ) && now.before( handler.whenToDate ) )
+				textViewBlurb.setText( "Howdy, we hope you're enjoying the convention. :D" );
+			else if ( now.before( handler.whenFromDate ) )
+				textViewBlurb.setText( "Hurray, we look forward to seeing you soon!" );
+			else if ( now.after( handler.whenToDate ) )
+			{
+				textViewBlurb.setText( "You don't have to go hone but can't stay here! :(" );
+				textViewBlurb.setTextColor( Color.RED );
+			}
 		}
-		else
-			textViewBlurb.setText( "" );
+		catch ( Exception e )
+		{
+
+		}
 
 		TextView textViewWhere = root.findViewById( R.id.welcome_where );
 		textViewWhere.setText( handler.where );

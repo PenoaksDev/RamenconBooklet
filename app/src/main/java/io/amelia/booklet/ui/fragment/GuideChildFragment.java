@@ -18,7 +18,6 @@ import io.amelia.android.files.FileBuilderException;
 import io.amelia.android.files.FileFutureBitmap;
 import io.amelia.android.files.FileFutureProgressListener;
 import io.amelia.android.files.FileHandler;
-import io.amelia.android.log.PLog;
 import io.amelia.android.support.ExceptionHelper;
 import io.amelia.android.support.Objs;
 import io.amelia.android.ui.widget.TouchImageView;
@@ -54,12 +53,15 @@ public class GuideChildFragment extends Fragment
 	{
 		super.onStart();
 
+		ProgressBar progressBar = getView().findViewById( R.id.guide_progressbar );
+		progressBar.setVisibility( View.VISIBLE );
+
 		TouchImageView image = getView().findViewById( R.id.guide_image );
 		image.setMaxZoom( 4 );
 		image.setScaleType( ImageView.ScaleType.MATRIX );
 
-		ProgressBar progressBar = getView().findViewById( R.id.guide_progressbar );
-		progressBar.setVisibility( View.VISIBLE );
+		image.setScaleX( 0.60F );
+		image.setScaleY( 0.60F );
 
 		if ( Objs.isEmpty( guidePageModel.image ) )
 			image.setImageResource( R.drawable.noimagefound );
@@ -85,6 +87,9 @@ public class GuideChildFragment extends Fragment
 					{
 						if ( progressBar != null )
 							progressBar.setVisibility( View.GONE );
+
+						image.setScaleX( 1F );
+						image.setScaleY( 1F );
 					}
 
 					@Override
@@ -96,7 +101,7 @@ public class GuideChildFragment extends Fragment
 							progressBar.setProgress( ( int ) bytesTransferred );
 							progressBar.setIndeterminate( totalByteCount == -1 ? true : indeterminate );
 
-							PLog.i( "Progress: " + result.fileBuilder.hashCode() + " " + bytesTransferred + " of " + totalByteCount );
+							// PLog.i( "Progress: " + result.fileBuilder.hashCode() + " " + bytesTransferred + " of " + totalByteCount );
 						}
 					}
 

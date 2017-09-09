@@ -64,7 +64,8 @@ public final class FileHandlerTask extends AsyncTask<Void, Pair<FileFuture, File
 			}
 			catch ( InterruptedException e )
 			{
-				e.printStackTrace();
+				PLog.i( "FileHandlerTask() " + hashCode() + " was interrupted!" );
+				break;
 			}
 		}
 
