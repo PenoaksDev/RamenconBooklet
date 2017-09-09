@@ -2,7 +2,10 @@ package io.amelia.booklet.data;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -159,29 +162,38 @@ public class ScheduleHandler extends ContentHandler
 		}
 	}
 
-	public TreeSet<Date> sampleDays()
+	public TreeSet<Date> sampleDays() throws ParseException
 	{
 		assert schedule.size() > 0;
 
-		return new TreeSet<Date>()
-		{{
-			for ( ScheduleEventModel event : schedule )
-			{
-				try
-				{
-					Date day1 = simpleDateFormat().parse( event.date );
-					boolean add = true;
-					for ( Date day2 : this )
-						if ( day2.equals( day1 ) )
-							add = false;
-					if ( add )
-						add( day1 );
-				}
-				catch ( Exception ignore )
-				{
-				}
-			}
-		}};
+		TreeSet<Date> result = new TreeSet<>();
+
+		if ( schedule.size() == 1 )
+		{
+			result.add( schedule.first().getStartDate() );
+			return result;
+		}
+
+		Date earliestDate = schedule.first().getStartDate();
+		Date latestDate = schedule.last().getEndDate();
+
+		Calendar earliest = Calendar.getInstance();
+		earliest.setTime( earliestDate );
+		if ( earliest.get( Calendar.HOUR ) < 6 ) // Force the inclusion of previous day if before 6am.
+			earliest.add( Calendar.HOUR, -6 );
+
+		while ( earliest.getTime().getTime() <= latestDate.getTime() )
+		{
+			Calendar normalized = ( Calendar ) earliest.clone();
+			normalized.set( Calendar.HOUR, 0 );
+			normalized.set( Calendar.MINUTE, 0 );
+			normalized.set( Calendar.SECOND, 0 );
+			normalized.set( Calendar.MILLISECOND, 0 );
+			result.add( normalized.getTime() );
+			earliest.add( Calendar.DATE, 1 );
+		}
+
+		return result;
 	}
 
 	/**

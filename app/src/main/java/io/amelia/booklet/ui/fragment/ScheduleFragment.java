@@ -59,6 +59,7 @@ import io.amelia.booklet.data.ScheduleDayAdapter;
 import io.amelia.booklet.data.ScheduleEventModel;
 import io.amelia.booklet.data.ScheduleHandler;
 import io.amelia.booklet.data.filters.DefaultScheduleFilter;
+import io.amelia.booklet.data.filters.ScheduleFilter;
 
 public class ScheduleFragment extends ContentFragment<ScheduleHandler> implements PersistentFragment
 {
@@ -71,7 +72,7 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 		return instance;
 	}
 
-	public DefaultScheduleFilter currentFilter = new DefaultScheduleFilter();
+	public ScheduleFilter lastCurrentFilter = null;
 	private ExpandableListView mListView;
 	private Bundle savedState = null;
 	private ScheduleAdapter scheduleAdapter;
@@ -107,7 +108,7 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 		if ( requestCode == REQUEST_CHOOSE_ACCOUNT )
 		{
 			if ( resultCode == 0 || data == null )
-				Toast.makeText( getContext(), "Account Selection Cancelled. No Changes Made.", Toast.LENGTH_SHORT ).show();
+				Toast.makeText( getContext(), "Account Selection Cancelled. No Changes Were Made.", Toast.LENGTH_SHORT ).show();
 			else
 			{
 				String acct = data.getStringExtra( AccountManager.KEY_ACCOUNT_NAME );
@@ -174,15 +175,16 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 						}
 					}
 
-					currentFilter.reset();
+					DefaultScheduleFilter filter = new DefaultScheduleFilter();
 
 					if ( nowMatch != null )
 					{
-						currentFilter.setMin( nowMatch.getTime() );
-						currentFilter.setMax( nowMatch.getTime() + ONE_DAY );
+						filter.setMinLong( nowMatch.getTime() );
+						filter.setMaxLong( nowMatch.getTime() + ONE_DAY );
 					}
 
-					TreeSet<ScheduleEventModel> data = handler.filterRange( currentFilter );
+					TreeSet<ScheduleEventModel> data = handler.filterRange( filter );
+					lastCurrentFilter = filter;
 
 					int positionVisible = -1;
 
@@ -198,7 +200,7 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 						}
 					}
 
-					scheduleDayAdapter.setSelectedPosition( dayPosition, new ArrayList<>( data ), DateAndTime.now( ScheduleDayAdapter.DATEFORMAT, nowMatch ) );
+					scheduleDayAdapter.setSelectedPosition( dayPosition, new ArrayList<>( data ), DateAndTime.now( ScheduleDayAdapter.DATE_FORMAT, nowMatch ) );
 
 					if ( positionVisible > 0 )
 						mListView.setSelectionFromTop( positionVisible, 0 );
@@ -237,11 +239,8 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 
 		ExpandableListView lv = getView().findViewById( R.id.schedule_listview );
 
-		BoundData boundData = new BoundData();
-		boundData.put( "hearted", currentFilter.getHearted().name() );
-		boundData.put( "min", currentFilter.getMin() );
-		boundData.put( "max", currentFilter.getMax() );
-		bundle.putString( "filter", LibAndroid.writeBoundDataToJson( boundData ) );
+		if ( lastCurrentFilter != null )
+			bundle.putString( "filter", LibAndroid.writeBoundDataToJson( lastCurrentFilter.encode() ) );
 
 		if ( lv != null )
 		{
@@ -278,10 +277,10 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 			int positionVisible = 0;
 			int positionOffset = 0;
 
-			currentFilter.reset();
-
 			if ( savedState == null || savedState.isEmpty() )
 			{
+				DefaultScheduleFilter filter = new DefaultScheduleFilter();
+
 				SimpleDateFormat sdf = new SimpleDateFormat( "MM d yyyy" );
 				String now = sdf.format( new Date() );
 
@@ -299,23 +298,24 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 
 				if ( nowMatch != null )
 				{
-					currentFilter.setMin( nowMatch.getTime() );
-					currentFilter.setMax( nowMatch.getTime() + ONE_DAY );
+					filter.setMinLong( nowMatch.getTime() );
+					filter.setMaxLong( nowMatch.getTime() + ONE_DAY );
 					selectedPosition = dayPosition;
 				}
 				else if ( handler.hasHeartedEvents() )
 				{
-					currentFilter.setHearted( DefaultScheduleFilter.TriStateList.SHOW );
+					filter.setHearted( DefaultScheduleFilter.TriStateList.SHOW );
 					selectedPosition = 0;
 				}
 				else if ( days.size() > 0 )
 				{
-					currentFilter.setMin( days.first().getTime() );
-					currentFilter.setMax( days.first().getTime() + ONE_DAY );
+					filter.setMinLong( days.first().getTime() );
+					filter.setMaxLong( days.first().getTime() + ONE_DAY );
 					selectedPosition = 1;
 				}
 
-				data = handler.filterRange( currentFilter );
+				data = handler.filterRange( filter );
+				lastCurrentFilter = filter;
 
 				if ( nowMatch != null )
 				{
@@ -335,18 +335,21 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 			}
 			else
 			{
+				ScheduleFilter filter;
 				try
 				{
-					BoundData boundData = LibAndroid.readJsonToBoundData( savedState.getString( "filter" ) )[0];
-					currentFilter = new DefaultScheduleFilter( DefaultScheduleFilter.TriStateList.valueOf( boundData.getString( "hearted" ) ), boundData.getInteger( "min", -1 ), boundData.getInteger( "max", -1 ) );
+					filter = ScheduleFilter.decode( LibAndroid.readJsonToBoundData( savedState.getString( "filter" ) )[0] );
 				}
 				catch ( Exception e )
 				{
-					currentFilter = new DefaultScheduleFilter();
+					ExceptionHelper.handleExceptionOnce( "decode-schedule-filter", e );
+					filter = new DefaultScheduleFilter();
 				}
 
+				// TODO selected position should be auto-predicted based on the filter. Hate to have different results.
 				selectedPosition = savedState.getInt( "selectedPosition", 0 );
-				data = handler.filterRange( currentFilter );
+				data = handler.filterRange( filter );
+				lastCurrentFilter = filter;
 
 				positionVisible = savedState.getInt( "listViewPositionVisible", 0 );
 				positionOffset = savedState.getInt( "listViewPositionOffset", 0 );

@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -20,6 +21,7 @@ import io.amelia.R;
 import io.amelia.android.data.BoundData;
 import io.amelia.android.data.BoundDataCallback;
 import io.amelia.android.log.PLog;
+import io.amelia.android.support.DateAndTime;
 import io.amelia.android.support.ExceptionHelper;
 import io.amelia.booklet.ui.fragment.ScheduleViewFragment;
 
@@ -196,10 +198,6 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 
 		try
 		{
-			TextView eventTitle = rowView.findViewById( R.id.title );
-			TextView eventTime = rowView.findViewById( R.id.time );
-			TextView eventLocation = rowView.findViewById( R.id.location );
-
 			for ( MapsLocationModel loc : locations )
 				if ( loc.id.equals( event.location ) )
 					event.location = loc.id;
@@ -208,17 +206,29 @@ public class ScheduleAdapter extends BaseExpandableListAdapter
 
 			try
 			{
-				// Date date = dateFormat.parse(event.date);
-				Date from = timeFormat.parse( event.time );
-				Date to = new Date( from.getTime() + ( 60000 * ( event.duration == null ? 0 : Integer.parseInt( event.duration ) ) ) );
+				Calendar calendar = Calendar.getInstance();
+				calendar.setTime( dateFormat.parse( event.date ) );
+
+				Date from = event.getStartDate();
+				Date to = event.getEndDate();
+
+				// Date from = timeFormat.parse( event.time );
+				// Date to = new Date( from.getTime() + ( 60000 * ( event.duration == null ? 0 : Integer.parseInt( event.duration ) ) ) );
 
 				boolean use24h = ContentManager.getPrefMilitaryTime();
 
+				TextView eventTitle = rowView.findViewById( R.id.title );
 				eventTitle.setText( event.getTitle() );
 
+				TextView eventDate = rowView.findViewById( R.id.date );
+				eventDate.setText( DateAndTime.now( "EEE d", from ) );
+
+				TextView eventTime = rowView.findViewById( R.id.time );
 				String formatFrom = use24h ? DISPLAY_FORMAT_TIME24.format( from ) : DISPLAY_FORMAT_TIME12.format( from );
 				String formatTo = use24h ? DISPLAY_FORMAT_TIME24.format( to ) : DISPLAY_FORMAT_TIME12.format( to );
 				eventTime.setText( formatFrom + " — " + formatTo );
+
+				TextView eventLocation = rowView.findViewById( R.id.location );
 				eventLocation.setText( event.getLocation().title );
 			}
 			catch ( ParseException e )

@@ -10,10 +10,13 @@ import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.joanzapata.iconify.IconDrawable;
+import com.joanzapata.iconify.fonts.FontAwesomeIcons;
+
 import org.lucasr.twowayview.TwoWayView;
 
 import java.text.ParseException;
-import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -21,15 +24,16 @@ import io.amelia.R;
 import io.amelia.android.data.BoundDataCallback;
 import io.amelia.android.support.DateAndTime;
 import io.amelia.booklet.data.filters.DefaultScheduleFilter;
+import io.amelia.booklet.data.filters.NoScheduleFilter;
 import io.amelia.booklet.ui.fragment.ScheduleFragment;
 
 public class ScheduleDayAdapter extends BaseAdapter
 {
-	public static final String DATEFORMAT = "MMMM dx yyyy";
+	public static final String DATE_FORMAT = "MMMM dx yyyy";
 	private BoundDataCallback alarmOnClick;
 	private Context context;
-	private List<Date> days = new ArrayList<>();
-	private LayoutInflater inflater = null;
+	private List<Date> days;
+	private LayoutInflater inflater;
 	private TextView mDateDisplay;
 	private TwoWayView mDayView;
 	private ExpandableListView mListView;
@@ -52,7 +56,7 @@ public class ScheduleDayAdapter extends BaseAdapter
 	@Override
 	public int getCount()
 	{
-		return days.size() + 1;
+		return days.size() + 2;
 	}
 
 	@Override
@@ -91,7 +95,7 @@ public class ScheduleDayAdapter extends BaseAdapter
 		if ( position == 0 )
 		{
 			dayName.setText( "Favs" );
-			dayImage.setImageResource( R.drawable.ic_heart );
+			dayImage.setImageDrawable( new IconDrawable( context, FontAwesomeIcons.fa_heart ).colorRes( R.color.colorWhite ).actionBarSize() );
 			dayImage.setVisibility( View.VISIBLE );
 			dayNumber.setVisibility( View.GONE );
 
@@ -105,11 +109,39 @@ public class ScheduleDayAdapter extends BaseAdapter
 				{
 					try
 					{
-						DefaultScheduleFilter filter = ScheduleFragment.instance().currentFilter;
-						filter.reset();
+						DefaultScheduleFilter filter = new DefaultScheduleFilter();
 						filter.setHearted( DefaultScheduleFilter.TriStateList.SHOW );
 
 						setSelectedPosition( position, mScheduleDataReceiver.filterRangeList( filter ), "Favorite Events" );
+						ScheduleFragment.instance().lastCurrentFilter = filter;
+					}
+					catch ( ParseException e )
+					{
+						e.printStackTrace();
+					}
+				}
+			} );
+		}
+		else if ( position == 1 )
+		{
+			dayName.setText( "All" );
+			dayImage.setImageDrawable( new IconDrawable( context, FontAwesomeIcons.fa_bars ).colorRes( R.color.colorWhite ).actionBarSize() );
+			dayImage.setVisibility( View.VISIBLE );
+			dayNumber.setVisibility( View.GONE );
+
+			if ( position == selectedPosition && mDateDisplay != null )
+				mDateDisplay.setText( "All Events" );
+
+			view.setOnClickListener( new View.OnClickListener()
+			{
+				@Override
+				public void onClick( View v )
+				{
+					try
+					{
+						NoScheduleFilter filter = new NoScheduleFilter();
+						setSelectedPosition( position, mScheduleDataReceiver.filterRangeList( filter ), "All Events" );
+						ScheduleFragment.instance().lastCurrentFilter = filter;
 					}
 					catch ( ParseException e )
 					{
@@ -120,13 +152,13 @@ public class ScheduleDayAdapter extends BaseAdapter
 		}
 		else
 		{
-			final Date day = days.get( position - 1 );
+			final Date day = days.get( position - 2 );
 
 			dayName.setText( DateAndTime.now( "EEE", day ) );
 			dayNumber.setText( DateAndTime.now( "d", day ) );
 
 			if ( position == selectedPosition && mDateDisplay != null )
-				mDateDisplay.setText( DateAndTime.now( DATEFORMAT, day ) );
+				mDateDisplay.setText( DateAndTime.now( DATE_FORMAT, day ) );
 
 			view.setOnClickListener( new View.OnClickListener()
 			{
@@ -135,12 +167,23 @@ public class ScheduleDayAdapter extends BaseAdapter
 				{
 					try
 					{
-						DefaultScheduleFilter filter = ScheduleFragment.instance().currentFilter;
-						filter.reset();
-						filter.setMin( day.getTime() );
-						filter.setMax( day.getTime() + ( 1440 * 60 * 1000 ) ); // One Day
+						DefaultScheduleFilter filter = new DefaultScheduleFilter();
 
-						setSelectedPosition( position, mScheduleDataReceiver.filterRangeList( filter ), DateAndTime.now( DATEFORMAT, day ) );
+						Calendar startCalendar = Calendar.getInstance();
+						startCalendar.setTime( day );
+						startCalendar.set( Calendar.HOUR, 6 );
+						startCalendar.set( Calendar.MINUTE, 0 );
+						startCalendar.set( Calendar.SECOND, 0 );
+						startCalendar.set( Calendar.MILLISECOND, 0 );
+
+						Calendar endCalendar = ( Calendar ) startCalendar.clone();
+						endCalendar.add( Calendar.HOUR, 24 );
+
+						filter.setMin( startCalendar.getTime() );
+						filter.setMax( endCalendar.getTime() );
+
+						setSelectedPosition( position, mScheduleDataReceiver.filterRangeList( filter ), DateAndTime.now( DATE_FORMAT, day ) );
+						ScheduleFragment.instance().lastCurrentFilter = filter;
 					}
 					catch ( ParseException e )
 					{

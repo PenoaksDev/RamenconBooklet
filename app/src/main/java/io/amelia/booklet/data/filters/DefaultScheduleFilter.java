@@ -1,14 +1,18 @@
 package io.amelia.booklet.data.filters;
 
+import java.util.Date;
 import java.util.TreeSet;
 
+import io.amelia.android.data.BoundData;
 import io.amelia.booklet.data.ScheduleEventModel;
 
 public class DefaultScheduleFilter implements ScheduleFilter
 {
 	private TriStateList hearted = TriStateList.UNSET;
-	private long max = -1;
-	private long min = -1;
+	// private long max = -1;
+	// private long min = -1;
+	private Date max = null;
+	private Date min = null;
 	// private TriStateList timed = TriStateList.UNSET;
 
 	public DefaultScheduleFilter()
@@ -16,23 +20,36 @@ public class DefaultScheduleFilter implements ScheduleFilter
 
 	}
 
-	public DefaultScheduleFilter( TriStateList hearted, long min, long max )
+	public DefaultScheduleFilter( BoundData boundData )
 	{
-		this.hearted = hearted;
-		this.max = max;
-		this.min = min;
-		// this.timed = timed;
+		hearted = DefaultScheduleFilter.TriStateList.valueOf( boundData.getString( "hearted" ) );
+		Long minLong = boundData.getLong( "min", null );
+		min = minLong == null || minLong < 0 ? null : new Date( minLong );
+		Long maxLong = boundData.getLong( "max", null );
+		max = maxLong == null || maxLong < 0 ? null : new Date( maxLong );
+	}
+
+	@Override
+	public BoundData encode()
+	{
+		BoundData boundData = new BoundData();
+		boundData.put( "class", getClass().getName() );
+		boundData.put( "hearted", getHearted().name() );
+		boundData.put( "min", getMinLong() );
+		boundData.put( "max", getMaxLong() );
+		return boundData;
 	}
 
 	@Override
 	public boolean filter( TreeSet<ScheduleEventModel> events, ScheduleEventModel event )
 	{
-		long epoch = event.getStartTime();
+		Date startTime = event.getStartDate();
+		// long epoch = event.getStartTime();
 
-		if ( min >= 0 && epoch < min )
+		if ( min != null && startTime.before( min ) )
 			return false;
 
-		if ( max >= 0 && epoch > max )
+		if ( max != null && startTime.after( max ) )
 			return false;
 
 		if ( hearted == TriStateList.SHOW && !event.isHearted() )
@@ -55,23 +72,9 @@ public class DefaultScheduleFilter implements ScheduleFilter
 		return hearted;
 	}
 
-	public long getMax()
+	public DefaultScheduleFilter setHearted( TriStateList hearted )
 	{
-		return max;
-	}
-
-	public long getMin()
-	{
-		return min;
-	}
-
-	public DefaultScheduleFilter reset()
-	{
-		min = -1;
-		max = -1;
-		hearted = TriStateList.UNSET;
-		// timed = TriStateList.UNSET;
-
+		this.hearted = hearted;
 		return this;
 	}
 
@@ -81,22 +84,55 @@ public class DefaultScheduleFilter implements ScheduleFilter
 		return this;
 	} */
 
-	public DefaultScheduleFilter setHearted( TriStateList hearted )
+	public Date getMax()
 	{
-		this.hearted = hearted;
-		return this;
+		return max;
 	}
 
-	public DefaultScheduleFilter setMax( long max )
+	public DefaultScheduleFilter setMax( Date max )
 	{
 		this.max = max;
 		return this;
 	}
 
-	public DefaultScheduleFilter setMin( long min )
+	public long getMaxLong()
+	{
+		return max == null ? -1 : max.getTime();
+	}
+
+	public DefaultScheduleFilter setMaxLong( long max )
+	{
+		this.max = max < 0 ? null : new Date( max );
+		return this;
+	}
+
+	public Date getMin()
+	{
+		return min;
+	}
+
+	public DefaultScheduleFilter setMin( Date min )
 	{
 		this.min = min;
 		return this;
+	}
+
+	public long getMinLong()
+	{
+		return min == null ? -1 : min.getTime();
+	}
+
+	public DefaultScheduleFilter setMinLong( long min )
+	{
+		this.min = min < 0 ? null : new Date( min );
+		return this;
+	}
+
+	public void reset()
+	{
+		min = null;
+		max = null;
+		hearted = TriStateList.UNSET;
 	}
 
 	public enum TriStateList

@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.provider.CalendarContract;
 import android.support.annotation.NonNull;
 
+import java.util.Calendar;
 import java.util.Date;
 
 import io.amelia.android.data.BoundData;
@@ -37,6 +38,14 @@ public class ScheduleEventModel implements Comparable<ScheduleEventModel>
 	public int getDuration()
 	{
 		return Integer.parseInt( duration );
+	}
+
+	public Date getEndDate()
+	{
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime( getStartDate() );
+		calendar.add( Calendar.MILLISECOND, getDuration() * 60 * 1000 );
+		return calendar.getTime();
 	}
 
 	public long getEndTime()
@@ -88,14 +97,7 @@ public class ScheduleEventModel implements Comparable<ScheduleEventModel>
 
 	public long getStartTime()
 	{
-		try
-		{
-			return ScheduleHandler.simpleCombinedFormat().parse( date + " " + time ).getTime();
-		}
-		catch ( Exception e )
-		{
-			throw new RuntimeException( e.getMessage() + " Pattern: " + ScheduleHandler.simpleCombinedFormat().toPattern(), e );
-		}
+		return getStartDate().getTime();
 	}
 
 	public String getTitle()
