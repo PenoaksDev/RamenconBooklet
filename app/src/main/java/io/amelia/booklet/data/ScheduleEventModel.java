@@ -27,6 +27,7 @@ public class ScheduleEventModel implements Comparable<ScheduleEventModel>
 	public int compareTo( @NonNull ScheduleEventModel scheduleEventModel )
 	{
 		int comp = Long.compare( getStartTime(), scheduleEventModel.getStartTime() );
+		comp = comp == 0 ? Strs.compare( location, scheduleEventModel.location ) : comp;
 		return comp == 0 ? Long.compare( getEndTime(), scheduleEventModel.getEndTime() ) : comp;
 	}
 

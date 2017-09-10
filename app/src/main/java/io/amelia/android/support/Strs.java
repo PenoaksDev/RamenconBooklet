@@ -51,6 +51,18 @@ public class Strs
 		return false;
 	}
 
+	public static int compare( String left, String right )
+	{
+		if ( left == null && right == null )
+			return 0;
+		if ( left == null )
+			return 1;
+		if ( right == null )
+			return -1;
+
+		return left.compareTo( right );
+	}
+
 	public static boolean containsValidChars( String ref )
 	{
 		return ref.matches( "[a-z0-9_]*" );
