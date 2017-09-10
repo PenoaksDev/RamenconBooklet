@@ -43,7 +43,6 @@ import java.util.TimeZone;
 import java.util.TreeSet;
 
 import io.amelia.R;
-import io.amelia.android.backport.function.Supplier;
 import io.amelia.android.data.BoundData;
 import io.amelia.android.data.BoundDataCallback;
 import io.amelia.android.fragments.PersistentFragment;
@@ -365,18 +364,7 @@ public class ScheduleFragment extends ContentFragment<ScheduleHandler> implement
 				public boolean call( BoundData data )
 				{
 					String eventId = data.getString( "eventId" );
-					final ScheduleEventModel eventModel = new Supplier<ScheduleEventModel>()
-					{
-						@Override
-						public ScheduleEventModel get()
-						{
-							for ( ScheduleEventModel model : modelList )
-								if ( model.id.equals( eventId ) )
-									return model;
-
-							return null;
-						}
-					}.get();
+					final ScheduleEventModel eventModel = handler.getModel( eventId );
 
 					if ( eventModel == null )
 						throw new IllegalStateException( "We had a problem finding event " + eventId + " in list " + modelList + "!" );

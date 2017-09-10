@@ -2,8 +2,6 @@ package io.amelia.booklet.data;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -72,6 +70,15 @@ public class ScheduleHandler extends ContentHandler
 		for ( ScheduleEventModel event : schedule )
 			if ( id.equals( event.id ) )
 				return event;
+		return null;
+	}
+
+	public ScheduleEventModel getModel( String eventId )
+	{
+		for ( ScheduleEventModel model : schedule )
+			if ( model.id.equals( eventId ) )
+				return model;
+
 		return null;
 	}
 
