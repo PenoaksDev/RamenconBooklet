@@ -9,8 +9,8 @@ android {
 		applicationId "com.ramencon"
 		minSdkVersion 16
 		targetSdkVersion 26
-		versionCode 2061
-		versionName "2.0.6a"
+		versionCode 2063
+		versionName "2.0.6c"
 		vectorDrawables.useSupportLibrary = true
 	}
 
@@ -38,6 +38,11 @@ dependencies {
 		transitive = true
 	}
 
+	compile( 'com.crashlytics.sdk.android:answers:1.3.13@aar' ) {
+		transitive = true;
+	}
+
+	compile 'com.faendir:acra:4.10.0'
 	// compile 'pl.droidsonroids.gif:android-gif-drawable:1.1.+'
 	// compile 'com.android.support:multidex:1.0.1'
 	compile 'com.squareup.okhttp3:okhttp:3.6.0'

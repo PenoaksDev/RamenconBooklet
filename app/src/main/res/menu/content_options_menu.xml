@@ -5,13 +5,13 @@
     app:showAsAction="always"
     xmlns:app="http://schemas.android.com/apk/res-auto" -->
 
-    <item
+    <!-- <item
             android:id="@+id/options_booklets"
             android:icon="@drawable/ic_options_booklets"
             android:title="Back to Booklet Selection"
             android:checkable="false"
             android:checked="false"
             android:enabled="true"
-            android:visible="true"/>
+            android:visible="true"/> -->
 
 </menu>

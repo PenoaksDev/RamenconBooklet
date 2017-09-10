@@ -4,13 +4,17 @@ import android.app.Application;
 import android.content.Context;
 
 import com.crashlytics.android.Crashlytics;
+import com.crashlytics.android.answers.Answers;
 import com.joanzapata.iconify.Iconify;
 import com.joanzapata.iconify.fonts.FontAwesomeModule;
+
+import org.acra.ACRA;
+import org.acra.annotation.ReportsCrashes;
 
 import io.amelia.booklet.data.ContentManager;
 import io.fabric.sdk.android.Fabric;
 
-/* @ReportsCrashes( formUri = "https://collector.tracepot.com/63ad0e5d" ) */
+@ReportsCrashes( formUri = "https://collector.tracepot.com/63ad0e5d" )
 public final class App extends Application
 {
 	@Override
@@ -18,7 +22,7 @@ public final class App extends Application
 	{
 		super.attachBaseContext( base );
 
-		// ACRA.init( this );
+		ACRA.init( this );
 	}
 
 	@Override
@@ -30,7 +34,7 @@ public final class App extends Application
 
 		Iconify.with( new FontAwesomeModule() );
 
-		Fabric.with( this, new Crashlytics() );
+		Fabric.with( this, new Crashlytics(), new Answers() );
 
 		// FacebookSdk.sdkInitialize(getApplicationContext());
 		// AppEventsLogger.activateApp(this);

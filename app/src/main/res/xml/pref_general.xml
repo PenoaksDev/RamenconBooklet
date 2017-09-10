@@ -46,4 +46,9 @@
             android:summary="Forcefully reverts the app to it's initial install state"
             android:title="App Data Reset"/>
 
+    <Preference
+            android:key="pref_send_bug_report"
+            android:summary="Compiles a bug report and forwards it to the app developer"
+            android:title="Send Bug Report to Developer"/>
+
 </PreferenceScreen>

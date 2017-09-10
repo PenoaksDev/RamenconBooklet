@@ -64,37 +64,48 @@
             android:title="Check-in with Friends"/> -->
     </group>
 
-    <!-- <group
+    <group
             android:id="@+id/menu_group_social"
             android:checkableBehavior="single">
 
         <item
-            android:id="@+id/nav_login_with_google"
-            android:checkable="false"
-            android:checked="false"
-            android:enabled="true"
-            android:icon="@drawable/ic_menu_signout"
-            android:title="Sync with Google"
-            android:visible="true"/>
+                android:id="@+id/nav_booklets"
+                android:icon="@drawable/ic_options_booklets"
+                android:title="Back to Booklet Selection"
+                android:checkable="false"
+                android:checked="false"
+                android:enabled="true"
+                android:visible="true"/>
+
+        <!--
+        <item
+                android:id="@+id/nav_login_with_google"
+                android:checkable="false"
+                android:checked="false"
+                android:enabled="true"
+                android:icon="@drawable/ic_menu_signout"
+                android:title="Sync with Google"
+                android:visible="true"/>
 
         <item
-            android:id="@+id/nav_signout"
-            android:checkable="false"
-            android:checked="false"
-            android:enabled="true"
-            android:icon="@drawable/ic_menu_signout"
-            android:title="Unlink with Google"
-            android:visible="true"/>
+                android:id="@+id/nav_signout"
+                android:checkable="false"
+                android:checked="false"
+                android:enabled="true"
+                android:icon="@drawable/ic_menu_signout"
+                android:title="Unlink with Google"
+                android:visible="true"/>
 
         <item
-            android:id="@+id/nav_share"
-            android:icon="@drawable/ic_menu_share"
-            android:title="Share"/>
+                android:id="@+id/nav_share"
+                android:icon="@drawable/ic_menu_share"
+                android:title="Share"/>
 
-         <item
-            android:id="@+id/nav_signout"
-            android:icon="@drawable/ic_menu_signout"
-            android:title="Sign-out &amp; More"/>
-    </group> -->
+        <item
+                android:id="@+id/nav_signout"
+                android:icon="@drawable/ic_menu_signout"
+                android:title="Sign-out &amp; More"/>
+        -->
+    </group>
 
 </menu>

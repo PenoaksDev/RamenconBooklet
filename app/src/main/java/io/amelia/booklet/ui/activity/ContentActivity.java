@@ -144,6 +144,8 @@ public class ContentActivity extends BaseActivity implements NavigationView.OnNa
 		MenuItem itemGuide = menu.findItem( R.id.nav_guide );
 		itemGuide.setVisible( booklet.hasSection( "guide" ) );
 		itemGuide.setIcon( new IconDrawable( this, FontAwesomeIcons.fa_book ).colorRes( R.color.colorAccent ).sizeDp( dpSize ) );
+		MenuItem itemBooklet = menu.findItem( R.id.nav_booklets );
+		itemBooklet.setIcon( new IconDrawable( this, FontAwesomeIcons.fa_chevron_circle_left ).colorRes( R.color.colorAccent ).sizeDp( dpSize ) );
 
 		final ActionBarDrawerToggle toggle = new ActionBarDrawerToggle( this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close );
 		// toggle.getDrawerArrowDrawable().setColor( android.graphics.Color.argb( 0xFF, 0xA6, 0x00, 0xFF ) );
@@ -221,7 +223,7 @@ public class ContentActivity extends BaseActivity implements NavigationView.OnNa
 	@Override
 	public boolean onCreateOptionsMenu( Menu menu )
 	{
-		getMenuInflater().inflate( R.menu.content_options_menu, menu );
+		// getMenuInflater().inflate( R.menu.content_options_menu, menu );
 		return super.onCreateOptionsMenu( menu );
 	}
 
@@ -234,10 +236,10 @@ public class ContentActivity extends BaseActivity implements NavigationView.OnNa
 		if ( item.getItemId() == R.id.nav_login_with_google )
 			signinWorker.signinWithGoogle();
 		else */
-		/* if ( item.getItemId() == R.id.nav_booklets )
+		if ( item.getItemId() == R.id.nav_booklets )
 			startActivity( new Intent( this, BootActivity.class ) );
-		else */
-		stacker.setFragmentById( item.getItemId() );
+		else
+			stacker.setFragmentById( item.getItemId() );
 
 		DrawerLayout drawer = findViewById( R.id.drawer_layout );
 		assert drawer != null;
@@ -249,12 +251,12 @@ public class ContentActivity extends BaseActivity implements NavigationView.OnNa
 	@Override
 	public boolean onOptionsItemSelected( MenuItem item )
 	{
-		switch ( item.getItemId() )
+		/*switch ( item.getItemId() )
 		{
 			case R.id.options_booklets:
 				startActivity( new Intent( this, BootActivity.class ) );
 				return true;
-		}
+		}*/
 		return super.onOptionsItemSelected( item );
 	}
 
