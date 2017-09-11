@@ -46,6 +46,7 @@ public class DownloadFragment extends Fragment implements UIUpdater.Receiver
 
 	private ExpandableListView bookletListview;
 	private SwipeRefreshLayout refreshLayout;
+	private boolean started = false;
 
 	public DownloadFragment()
 	{
@@ -156,6 +157,7 @@ public class DownloadFragment extends Fragment implements UIUpdater.Receiver
 	public void onStart()
 	{
 		super.onStart();
+		started = true;
 
 		ContentManager.refreshBooklets();
 		getBootActivity().uiShowProgressBar( null, null );
@@ -165,12 +167,14 @@ public class DownloadFragment extends Fragment implements UIUpdater.Receiver
 			@Override
 			public boolean isReady()
 			{
-				return !ContentManager.isBookletsRefreshing();
+				return !ContentManager.isBookletsRefreshing() || !started;
 			}
 
 			@Override
 			public void onFinish()
 			{
+				if ( !started || getActivity() == null )
+					return;
 				getBootActivity().uiHideProgressBar();
 				updateBookletsView();
 			}
@@ -178,10 +182,19 @@ public class DownloadFragment extends Fragment implements UIUpdater.Receiver
 			@Override
 			public void onTimeout()
 			{
+				if ( !started || getActivity() == null )
+					return;
 				getBootActivity().uiHideProgressBar();
 				updateBookletsView();
 			}
 		}, 10000 );
+	}
+
+	@Override
+	public void onStop()
+	{
+		super.onStop();
+		started = false;
 	}
 
 	@Override

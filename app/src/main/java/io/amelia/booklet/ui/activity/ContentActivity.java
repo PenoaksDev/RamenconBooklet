@@ -78,7 +78,8 @@ public class ContentActivity extends BaseActivity implements NavigationView.OnNa
 		else if ( stacker.hasBackstack() )
 			stacker.popBackstack();
 		else
-			startActivity( new Intent( this, BootActivity.class ) );
+			finish();
+		// startActivity( new Intent( this, BootActivity.class ) );
 		/*else if ( backClickTime > 0 && backClickTime - System.currentTimeMillis() < 3000 )
 			finish();
 		else
@@ -212,7 +213,8 @@ public class ContentActivity extends BaseActivity implements NavigationView.OnNa
 			catch ( RuntimeException e )
 			{
 				ExceptionHelper.handleExceptionOnce( "welcome-fragment-exception", e );
-				startActivity( new Intent( this, BootActivity.class ) );
+				finish();
+				// startActivity( new Intent( this, BootActivity.class ) );
 			}
 		else
 			stacker.loadInstanceState( savedInstanceState );
@@ -237,7 +239,8 @@ public class ContentActivity extends BaseActivity implements NavigationView.OnNa
 			signinWorker.signinWithGoogle();
 		else */
 		if ( item.getItemId() == R.id.nav_booklets )
-			startActivity( new Intent( this, BootActivity.class ) );
+			finish();
+			// startActivity( new Intent( this, BootActivity.class ) );
 		else
 			stacker.setFragmentById( item.getItemId() );
 

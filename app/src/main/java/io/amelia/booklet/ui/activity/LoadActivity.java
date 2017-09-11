@@ -53,6 +53,7 @@ public class LoadActivity extends BaseActivity
 					// Send to DownloadActivity
 					startActivity( new Intent( LoadActivity.this, BootActivity.class ) );
 				}
+				finish();
 			}
 
 			@Override
